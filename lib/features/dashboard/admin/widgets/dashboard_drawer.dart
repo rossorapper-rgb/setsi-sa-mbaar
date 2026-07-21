@@ -45,9 +45,7 @@ class DashboardDrawer extends StatelessWidget {
 
             const Text(
               "Administration",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
+              style: TextStyle(color: Colors.grey),
             ),
 
             const SizedBox(height: 25),
@@ -125,9 +123,7 @@ class DashboardDrawer extends StatelessWidget {
                 "Déconnexion",
                 style: TextStyle(color: Colors.red),
               ),
-              onTap: () {
-                context.go('/login');
-              },
+              onTap: () => context.go('/login'),
             ),
 
             const SizedBox(height: 10),
@@ -163,11 +159,17 @@ class DashboardDrawer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       onTap: () {
-        Navigator.pop(context);
-
         switch (index) {
           case 0:
             context.go('/dashboard/admin');
+            break;
+
+          case 1:
+            context.go('/clients');
+            break;
+
+          case 4:
+            context.go('/interventions');
             break;
 
           default:

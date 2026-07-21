@@ -21,11 +21,14 @@ dependencies:
   # Navigation
   go_router: ^16.0.0
 
-  # État
+  # Gestion d'état
   flutter_riverpod: ^2.6.1
 
   # Utilitaires
   intl: ^0.20.2
+
+  # Graphiques
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:

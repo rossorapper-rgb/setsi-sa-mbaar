@@ -1,64 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'stat_card.dart';
+import 'package:setsi_sa_mbaar/core/theme/app_colors.dart';
+import 'package:setsi_sa_mbaar/core/widgets/stat_card.dart';
+import 'package:setsi_sa_mbaar/providers/dashboard_provider.dart';
 
-class DashboardStats extends StatelessWidget {
+class DashboardStats extends ConsumerWidget {
   const DashboardStats({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboard = ref.watch(dashboardProvider);
 
-    int crossAxisCount = 4;
+    final width = MediaQuery.of(context).size.width;
 
-    if (width < 1200) {
+    int crossAxisCount;
+
+    if (width >= 1400) {
+      crossAxisCount = 4;
+    } else if (width >= 900) {
       crossAxisCount = 2;
-    }
-
-    if (width < 700) {
+    } else {
       crossAxisCount = 1;
     }
 
-    return GridView.count(
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 20,
-      mainAxisSpacing: 20,
-      childAspectRatio: 1.45,
-      children: const [
-        StatCard(
-          icon: Icons.people,
-          title: "Clients",
-          value: "128",
-          evolution: "+12%",
-          color: Colors.blue,
-        ),
+      itemCount: 4,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 20,
+        mainAxisSpacing: 20,
+        childAspectRatio: width < 700 ? 1.75 : 1.25,
+      ),
+      itemBuilder: (context, index) {
+        switch (index) {
+          case 0:
+            return StatCard(
+              title: "Clients",
+              value: dashboard.clients.toString(),
+              subtitle: "Clients enregistrés",
+              evolution: "+12%",
+              icon: Icons.people_alt_rounded,
+              color: AppColors.info,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Module Clients (bientôt disponible)"),
+                  ),
+                );
+              },
+            );
 
-        StatCard(
-          icon: Icons.pets,
-          title: "Moutons",
-          value: "325",
-          evolution: "+8%",
-          color: Colors.green,
-        ),
+          case 1:
+            return StatCard(
+              title: "Moutons",
+              value: dashboard.moutons.toString(),
+              subtitle: "Dans le système",
+              evolution: "+8%",
+              icon: Icons.pets_rounded,
+              color: AppColors.success,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Module Moutons (bientôt disponible)"),
+                  ),
+                );
+              },
+            );
 
-        StatCard(
-          icon: Icons.build_circle,
-          title: "Interventions",
-          value: "42",
-          evolution: "+5%",
-          color: Colors.orange,
-        ),
+          case 2:
+            return StatCard(
+              title: "Interventions",
+              value: dashboard.interventions.toString(),
+              subtitle: "Ce mois",
+              evolution: "+5%",
+              icon: Icons.home_repair_service_rounded,
+              color: AppColors.warning,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Module Interventions (bientôt disponible)"),
+                  ),
+                );
+              },
+            );
 
-        StatCard(
-          icon: Icons.payments,
-          title: "Revenus",
-          value: "3,2 M FCFA",
-          evolution: "+18%",
-          color: Colors.red,
-        ),
-      ],
+          default:
+            return StatCard(
+              title: "Revenus",
+              value: dashboard.revenusFormat,
+              subtitle: "Ce mois",
+              evolution: "+18%",
+              icon: Icons.payments_rounded,
+              color: AppColors.danger,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Module Revenus (bientôt disponible)"),
+                  ),
+                );
+              },
+            );
+        }
+      },
     );
   }
 }
