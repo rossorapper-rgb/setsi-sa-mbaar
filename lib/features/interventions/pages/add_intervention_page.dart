@@ -8,6 +8,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/services/intervention_service.dart';
+import '../providers/intervention_provider.dart';
 
 class AddInterventionPage extends ConsumerStatefulWidget {
   const AddInterventionPage({super.key});
@@ -60,23 +62,32 @@ class _AddInterventionPageState
   void _enregistrer() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Ici viendront :
-    //
-    // final intervention =
-    //     InterventionService.creerIntervention(...);
-    //
-    // ref.read(interventionProvider.notifier)
-    //    .addIntervention(intervention);
-    //
-    // Navigator.pop(context);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'La logique Riverpod sera branchée à cette étape.',
+    if (_date == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Veuillez choisir une date."),
         ),
-      ),
+      );
+      return;
+    }
+
+    final intervention = InterventionService.creerIntervention(
+      clientNom: _clientController.text.trim(),
+      dateIntervention: _date!,
+      nombreMoutons: int.tryParse(_nombreController.text) ?? 0,
+      lavage: _lavage,
+      nettoyageBergerie: _nettoyage,
+      desinfection: _desinfection,
+      agent: _agentController.text.trim(),
+      vehicule: _vehiculeController.text.trim(),
+      observations: _observationController.text.trim(),
     );
+
+    ref
+        .read(interventionProvider.notifier)
+        .addIntervention(intervention);
+
+    Navigator.pop(context);
   }
 
   @override
