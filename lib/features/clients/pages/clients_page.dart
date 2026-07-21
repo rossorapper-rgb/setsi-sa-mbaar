@@ -8,6 +8,7 @@ import '../widgets/client_card.dart';
 import '../widgets/client_search_bar.dart';
 import '../widgets/client_stats.dart';
 import 'client_details_page.dart';
+import 'edit_client_page.dart';
 
 class ClientsPage extends ConsumerWidget {
   const ClientsPage({super.key});
@@ -122,11 +123,23 @@ class ClientsPage extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     return ClientCard(
                       client: clients[index],
+
                       onView: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => ClientDetailsPage(
+                              client: clients[index],
+                            ),
+                          ),
+                        );
+                      },
+
+                      onEdit: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditClientPage(
                               client: clients[index],
                             ),
                           ),
