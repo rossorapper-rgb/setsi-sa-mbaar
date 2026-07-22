@@ -1,121 +1,219 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/intervention_model.dart';
+import '../providers/intervention_provider.dart';
+import 'edit_intervention_page.dart';
 
-class InterventionDetailsPage extends StatelessWidget {
-  final InterventionModel intervention;
+class InterventionDetailsPage extends ConsumerWidget {
+final InterventionModel intervention;
 
-  const InterventionDetailsPage({
-    super.key,
-    required this.intervention,
-  });
+const InterventionDetailsPage({
+super.key,
+required this.intervention,
+});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(intervention.numero),
+@override
+Widget build(BuildContext context, WidgetRef ref) {
+
+final interventionCourante = ref.watch(
+interventionProvider.select(
+(liste) => liste.firstWhere(
+(i) => i.id == intervention.id,
+orElse: () => intervention,
+),
+),
+);
+
+return Scaffold(
+backgroundColor: const Color(0xFFF5F7FA),
+
+appBar: AppBar(
+title: Text(interventionCourante.numero),
+),
+
+body: SingleChildScrollView(
+padding: const EdgeInsets.all(24),
+
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+
+//==========================
+// CLIENT
+//==========================
+
+_SectionCard(
+title: "Client",
+icon: Icons.person,
+children: [
+_InfoRow("Nom", interventionCourante.clientNom),
+_InfoRow("Identifiant", interventionCourante.clientId),
+_InfoRow(
+"Nombre de moutons",
+interventionCourante.nombreMoutons.toString(),
+),
+],
+),
+
+const SizedBox(height: 20),
+
+//==========================
+// PLANIFICATION
+//==========================
+
+_SectionCard(
+title: "Planification",
+icon: Icons.calendar_month,
+children: [
+_InfoRow(
+"Date",
+"${interventionCourante.dateIntervention.day}/${interventionCourante.dateIntervention.month}/${interventionCourante.dateIntervention.year}",
+),
+_InfoRow(
+"Début",
+interventionCourante.heureDebut,
+),
+_InfoRow(
+"Fin",
+interventionCourante.heureFin,
+),
+_InfoRow(
+"Statut",
+interventionCourante.statut,
+),
+],
+),
+
+const SizedBox(height: 20),
+
+//==========================
+// PRESTATIONS
+//==========================
+
+_SectionCard(
+title: "Prestations",
+icon: Icons.cleaning_services,
+children: [
+_BooleanRow(
+"Lavage",
+interventionCourante.lavage,
+),
+_BooleanRow(
+"Nettoyage bergerie",
+interventionCourante.nettoyageBergerie,
+),
+_BooleanRow(
+"Désinfection",
+interventionCourante.desinfection,
+),
+],
+),
+
+const SizedBox(height: 20),
+
+//==========================
+// RESSOURCES
+//==========================
+
+_SectionCard(
+title: "Ressources",
+icon: Icons.groups,
+children: [
+_InfoRow(
+"Agent",
+interventionCourante.agent,
+),
+_InfoRow(
+"Véhicule",
+interventionCourante.vehicule,
+),
+],
+),
+
+const SizedBox(height: 20),
+
+//==========================
+// OBSERVATIONS
+//==========================
+
+_SectionCard(
+title: "Observations",
+icon: Icons.description,
+children: [
+Text(interventionCourante.observations),
+],
+),
+
+const SizedBox(height: 30),
+
+  SizedBox(
+    width: double.infinity,
+    child: FilledButton.icon(
+      icon: const Icon(Icons.edit),
+      label: const Text("Modifier l'intervention"),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditInterventionPage(
+              intervention: interventionCourante,
+            ),
+          ),
+        );
+      },
+    ),
+  ),
+
+  const SizedBox(height: 12),
+
+  SizedBox(
+    width: double.infinity,
+    child: FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.red,
       ),
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            //==========================
-            // CLIENT
-            //==========================
-
-            _SectionCard(
-              title: "Client",
-              icon: Icons.person,
-              children: [
-                _InfoRow("Nom", intervention.clientNom),
-                _InfoRow("Identifiant", intervention.clientId),
-                _InfoRow("Nombre de moutons",
-                    intervention.nombreMoutons.toString()),
-              ],
+      icon: const Icon(Icons.delete),
+      label: const Text("Supprimer l'intervention"),
+      onPressed: () async {
+        final confirmation = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Confirmation"),
+            content: const Text(
+              "Voulez-vous vraiment supprimer cette intervention ?",
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Annuler"),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Supprimer"),
+              ),
+            ],
+          ),
+        );
 
-            const SizedBox(height: 20),
+        if (confirmation == true) {
+          ref
+              .read(interventionProvider.notifier)
+              .deleteIntervention(interventionCourante.id);
 
-            //==========================
-            // PLANIFICATION
-            //==========================
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      },
+    ),
+  ),
 
-            _SectionCard(
-              title: "Planification",
-              icon: Icons.calendar_month,
-              children: [
-                _InfoRow(
-                  "Date",
-                  "${intervention.dateIntervention.day}/${intervention.dateIntervention.month}/${intervention.dateIntervention.year}",
-                ),
-                _InfoRow("Début", intervention.heureDebut),
-                _InfoRow("Fin", intervention.heureFin),
-                _InfoRow("Statut", intervention.statut),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            //==========================
-            // PRESTATIONS
-            //==========================
-
-            _SectionCard(
-              title: "Prestations",
-              icon: Icons.cleaning_services,
-              children: [
-                _BooleanRow(
-                  "Lavage",
-                  intervention.lavage,
-                ),
-                _BooleanRow(
-                  "Nettoyage bergerie",
-                  intervention.nettoyageBergerie,
-                ),
-                _BooleanRow(
-                  "Désinfection",
-                  intervention.desinfection,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            //==========================
-            // RESSOURCES
-            //==========================
-
-            _SectionCard(
-              title: "Ressources",
-              icon: Icons.groups,
-              children: [
-                _InfoRow("Agent", intervention.agent),
-                _InfoRow("Véhicule", intervention.vehicule),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            //==========================
-            // OBSERVATIONS
-            //==========================
-
-            _SectionCard(
-              title: "Observations",
-              icon: Icons.description,
-              children: [
-                Text(intervention.observations),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+],
+),
+),
+);
+}
 }
 
 class _SectionCard extends StatelessWidget {
@@ -138,7 +236,6 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Row(
               children: [
                 Icon(icon),
@@ -152,9 +249,7 @@ class _SectionCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const Divider(height: 30),
-
             ...children,
           ],
         ),
@@ -205,7 +300,9 @@ class _BooleanRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Expanded(child: Text(label)),
+          Expanded(
+            child: Text(label),
+          ),
           Icon(
             value ? Icons.check_circle : Icons.cancel,
             color: value ? Colors.green : Colors.red,

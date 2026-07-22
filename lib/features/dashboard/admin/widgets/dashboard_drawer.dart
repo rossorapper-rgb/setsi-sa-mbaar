@@ -9,23 +9,25 @@ class DashboardDrawer extends StatelessWidget {
     required this.selectedIndex,
   });
 
+  static const Color primaryColor = Color(0xFF0B6E4F);
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      elevation: 0,
       backgroundColor: Colors.white,
+      elevation: 0,
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             const CircleAvatar(
-              radius: 36,
-              backgroundColor: Color(0xFF0B6E4F),
+              radius: 38,
+              backgroundColor: primaryColor,
               child: Icon(
                 Icons.pets,
-                size: 38,
                 color: Colors.white,
+                size: 40,
               ),
             ),
 
@@ -33,11 +35,10 @@ class DashboardDrawer extends StatelessWidget {
 
             const Text(
               "SET'SI SA MBAAR",
-              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0B6E4F),
+                color: primaryColor,
               ),
             ),
 
@@ -54,59 +55,78 @@ class DashboardDrawer extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildItem(
+                  _menuItem(
                     context,
+                    index: 0,
                     icon: Icons.dashboard_rounded,
                     title: "Tableau de bord",
-                    index: 0,
+                    route: "/dashboard/admin",
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 1,
+                    icon: Icons.calendar_month_rounded,
+                    title: "Planning",
+                    route: "/planning",
+                  ),
+
+                  _menuItem(
+                    context,
+                    index: 2,
                     icon: Icons.people_alt_rounded,
                     title: "Clients",
-                    index: 1,
+                    route: "/clients",
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 3,
                     icon: Icons.home_work_rounded,
                     title: "Troupeaux",
-                    index: 2,
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 4,
                     icon: Icons.pets,
                     title: "Moutons",
-                    index: 3,
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 5,
                     icon: Icons.build_circle_rounded,
                     title: "Interventions",
-                    index: 4,
+                    route: "/interventions",
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 6,
                     icon: Icons.card_membership_rounded,
                     title: "Abonnements",
-                    index: 5,
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 7,
                     icon: Icons.payments_rounded,
                     title: "Paiements",
-                    index: 6,
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 8,
                     icon: Icons.bar_chart_rounded,
                     title: "Rapports",
-                    index: 7,
                   ),
-                  _buildItem(
+
+                  _menuItem(
                     context,
+                    index: 9,
                     icon: Icons.settings_rounded,
                     title: "Paramètres",
-                    index: 8,
                   ),
                 ],
               ),
@@ -123,7 +143,7 @@ class DashboardDrawer extends StatelessWidget {
                 "Déconnexion",
                 style: TextStyle(color: Colors.red),
               ),
-              onTap: () => context.go('/login'),
+              onTap: () => context.go("/login"),
             ),
 
             const SizedBox(height: 10),
@@ -133,23 +153,24 @@ class DashboardDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildItem(
+  Widget _menuItem(
       BuildContext context, {
+        required int index,
         required IconData icon,
         required String title,
-        required int index,
+        String? route,
       }) {
     final bool selected = selectedIndex == index;
 
     return ListTile(
       leading: Icon(
         icon,
-        color: selected ? const Color(0xFF0B6E4F) : Colors.grey,
+        color: selected ? primaryColor : Colors.grey,
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: selected ? const Color(0xFF0B6E4F) : Colors.black87,
+          color: selected ? primaryColor : Colors.black87,
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -159,25 +180,16 @@ class DashboardDrawer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       onTap: () {
-        switch (index) {
-          case 0:
-            context.go('/dashboard/admin');
-            break;
-
-          case 1:
-            context.go('/clients');
-            break;
-
-          case 4:
-            context.go('/interventions');
-            break;
-
-          default:
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("$title : module en cours de développement"),
+        if (route != null) {
+          context.go(route);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "$title : module en cours de développement",
               ),
-            );
+            ),
+          );
         }
       },
     );

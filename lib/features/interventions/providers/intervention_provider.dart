@@ -73,7 +73,7 @@ class InterventionNotifier extends StateNotifier<List<InterventionModel>> {
     }).toList();
   }
 
-  void removeIntervention(String id) {
+  void deleteIntervention(String id) {
     state = state.where((item) => item.id != id).toList();
   }
 
