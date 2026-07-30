@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891939444570",
+    "project_id": "setsi-sa-mbaar",
+    "storage_bucket": "setsi-sa-mbaar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891939444570:android:c24abe785b7aea59c6c563",
+        "android_client_info": {
+          "package_name": "com.example.setsi_sa_mbaar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI8zUUVyVyAvaW8RSL4vzzdfm-OrcVa-E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
