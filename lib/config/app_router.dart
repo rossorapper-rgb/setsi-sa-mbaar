@@ -5,6 +5,7 @@ import '../features/dashboard/admin/dashboard_admin_page.dart';
 import '../features/clients/pages/clients_page.dart';
 import '../features/clients/pages/add_client_page.dart';
 import '../features/interventions/pages/interventions_page.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
 

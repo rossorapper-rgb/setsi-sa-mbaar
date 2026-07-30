@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/client_model.dart';
+import '../providers/client_provider.dart';
 
-class EditClientPage extends StatefulWidget {
+class EditClientPage extends ConsumerStatefulWidget {
   final ClientModel client;
 
   const EditClientPage({
@@ -11,10 +13,12 @@ class EditClientPage extends StatefulWidget {
   });
 
   @override
-  State<EditClientPage> createState() => _EditClientPageState();
+  ConsumerState<EditClientPage> createState() =>
+      _EditClientPageState();
 }
 
-class _EditClientPageState extends State<EditClientPage> {
+class _EditClientPageState
+    extends ConsumerState<EditClientPage> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nomController;
@@ -27,26 +31,39 @@ class _EditClientPageState extends State<EditClientPage> {
   late String _abonnement;
   late bool _actif;
 
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
 
     _nomController =
         TextEditingController(text: widget.client.nom);
+
     _telephoneController =
-        TextEditingController(text: widget.client.telephone);
+        TextEditingController(
+          text: widget.client.telephone,
+        );
+
     _quartierController =
-        TextEditingController(text: widget.client.quartier);
+        TextEditingController(
+          text: widget.client.quartier,
+        );
+
     _adresseController =
-        TextEditingController(text: widget.client.adresse);
+        TextEditingController(
+          text: widget.client.adresse,
+        );
 
-    _troupeauxController = TextEditingController(
-      text: widget.client.nombreTroupeaux.toString(),
-    );
+    _troupeauxController =
+        TextEditingController(
+          text: widget.client.nombreTroupeaux.toString(),
+        );
 
-    _moutonsController = TextEditingController(
-      text: widget.client.nombreMoutons.toString(),
-    );
+    _moutonsController =
+        TextEditingController(
+          text: widget.client.nombreMoutons.toString(),
+        );
 
     _abonnement = widget.client.abonnement;
     _actif = widget.client.actif;
@@ -63,15 +80,61 @@ class _EditClientPageState extends State<EditClientPage> {
     super.dispose();
   }
 
-  void _modifierClient() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _modifierClient() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final client = widget.client.copyWith(
+        nom: _nomController.text.trim(),
+        telephone: _telephoneController.text.trim(),
+        quartier: _quartierController.text.trim(),
+        adresse: _adresseController.text.trim(),
+        nombreTroupeaux:
+        int.tryParse(_troupeauxController.text) ?? 0,
+        nombreMoutons:
+        int.tryParse(_moutonsController.text) ?? 0,
+        abonnement: _abonnement,
+        actif: _actif,
+      );
+
+      await ref
+          .read(clientNotifierProvider.notifier)
+          .modifierClient(client);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "Modification enregistrée (Firebase à venir)",
+            "Client modifié avec succès",
           ),
         ),
       );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            "Erreur : $e",
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 
@@ -214,9 +277,22 @@ class _EditClientPageState extends State<EditClientPage> {
             const SizedBox(height: 30),
 
             FilledButton.icon(
-              onPressed: _modifierClient,
-              icon: const Icon(Icons.save),
-              label: const Text("Enregistrer les modifications"),
+              onPressed: _isSaving ? null : _modifierClient,
+              icon: _isSaving
+                  ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+                  : const Icon(Icons.save),
+              label: Text(
+                _isSaving
+                    ? "Enregistrement..."
+                    : "Enregistrer les modifications",
+              ),
             ),
 
             const SizedBox(height: 12),

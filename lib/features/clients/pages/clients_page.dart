@@ -9,18 +9,89 @@ import '../widgets/client_card.dart';
 import '../widgets/client_search_bar.dart';
 import '../widgets/client_stats.dart';
 import 'client_details_page.dart';
+import 'edit_client_page.dart';
 
-class ClientsPage extends ConsumerWidget {
-const ClientsPage({super.key});
+class ClientsPage extends ConsumerStatefulWidget {
+  const ClientsPage({super.key});
+
+  @override
+  ConsumerState<ClientsPage> createState() =>
+      _ClientsPageState();
+}
+
+class _ClientsPageState
+    extends ConsumerState<ClientsPage> {
+bool _isRefreshing = false;
+
+Future<void> _refreshClients() async {
+if (_isRefreshing) return;
+
+setState(() {
+_isRefreshing = true;
+});
+
+try {
+ref.invalidate(clientsProvider);
+
+await ref.read(clientsProvider.future);
+
+if (!mounted) return;
+
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(
+content: Text(
+"Liste des clients actualisée",
+),
+duration: Duration(seconds: 2),
+),
+);
+} catch (e) {
+if (!mounted) return;
+
+ScaffoldMessenger.of(context).showSnackBar(
+SnackBar(
+backgroundColor: Colors.red,
+content: Text(
+"Erreur lors de l'actualisation : $e",
+),
+),
+);
+} finally {
+if (mounted) {
+setState(() {
+_isRefreshing = false;
+});
+}
+}
+}
 
 @override
-Widget build(BuildContext context, WidgetRef ref) {
+Widget build(BuildContext context) {
 final clientsAsync = ref.watch(clientsProvider);
-
 return Scaffold(
-backgroundColor: const Color(0xFFF5F7FA),
-body: SafeArea(
-child: clientsAsync.when(
+    backgroundColor: const Color(0xFFF5F7FA),
+
+    appBar: AppBar(
+      elevation: 0,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          context.go('/dashboard/admin');
+        },
+      ),
+      title: const Text(
+        "Gestion des clients",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      centerTitle: false,
+    ),
+
+    body: SafeArea(
+      child: clientsAsync.when(
 loading: () => const Center(
 child: CircularProgressIndicator(),
 ),
@@ -83,26 +154,7 @@ child: Column(
 crossAxisAlignment:
 CrossAxisAlignment.start,
 children: [
-const Row(
-children: [
-Icon(
-Icons.people_alt_rounded,
-size: 34,
-),
-SizedBox(width: 12),
-Expanded(
-child: Text(
-"Gestion des clients",
-style: TextStyle(
-fontSize: 30,
-fontWeight: FontWeight.bold,
-),
-),
-),
-],
-),
 
-const SizedBox(height: 24),
 
 ClientStats(
 totalClients: totalClients,
@@ -111,37 +163,40 @@ totalTroupeaux: totalTroupeaux,
 ),
 
 const SizedBox(height: 24),
-ClientActionsBar(
-totalClients: totalClients,
+  ClientActionsBar(
+    totalClients: totalClients,
+    isRefreshing: _isRefreshing,
 
-onAdd: () {
-context.push('/clients/add');
-},
+    onAdd: () {
+      context.push('/clients/add');
+    },
 
-onRefresh: () {
-ref.invalidate(clientsProvider);
-},
+    onRefresh: _isRefreshing
+        ? null
+        : () async {
+      await _refreshClients();
+    },
 
-onExportPdf: () {
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text(
-"Export PDF bientôt disponible",
-),
-),
-);
-},
+    onExportPdf: () {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Export PDF bientôt disponible",
+          ),
+        ),
+      );
+    },
 
-onExportExcel: () {
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text(
-"Export Excel bientôt disponible",
-),
-),
-);
-},
-),
+    onExportExcel: () {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Export Excel bientôt disponible",
+          ),
+        ),
+      );
+    },
+  ),
 
 const SizedBox(height: 24),
 
@@ -216,12 +271,30 @@ return ClientCard(
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            ClientDetailsPage(
-              client: client,
-            ),
+        builder: (_) => ClientDetailsPage(
+          client: client,
+        ),
       ),
     );
+  },
+
+  onEdit: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditClientPage(
+          client: client,
+        ),
+      ),
+    );
+  },
+
+  onCall: () {
+    // À implémenter
+  },
+
+  onWhatsapp: () {
+    // À compléter plus tard
   },
 );
 },

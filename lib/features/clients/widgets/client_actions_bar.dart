@@ -6,11 +6,13 @@ class ClientActionsBar extends StatelessWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onExportPdf;
   final VoidCallback? onExportExcel;
+  final bool isRefreshing;
 
   const ClientActionsBar({
     super.key,
     required this.totalClients,
     required this.onAdd,
+    required this.isRefreshing,
     this.onRefresh,
     this.onExportPdf,
     this.onExportExcel,
@@ -22,9 +24,21 @@ class ClientActionsBar extends StatelessWidget {
 
     final actions = [
       OutlinedButton.icon(
-        onPressed: onRefresh,
-        icon: const Icon(Icons.refresh),
-        label: const Text("Actualiser"),
+        onPressed: isRefreshing ? null : onRefresh,
+        icon: isRefreshing
+            ? const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+          ),
+        )
+            : const Icon(Icons.refresh),
+        label: Text(
+          isRefreshing
+              ? "Actualisation..."
+              : "Actualiser",
+        ),
       ),
       OutlinedButton.icon(
         onPressed: onExportPdf,
@@ -71,9 +85,7 @@ class ClientActionsBar extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-
         const Spacer(),
-
         ...actions.expand(
               (button) => [
             button,
