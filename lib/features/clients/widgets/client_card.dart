@@ -148,7 +148,7 @@ class ClientCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            client.statut,
+                            client.actif ? "Actif" : "Inactif",
                             style: TextStyle(
                               color: statutColor,
                               fontWeight: FontWeight.bold,

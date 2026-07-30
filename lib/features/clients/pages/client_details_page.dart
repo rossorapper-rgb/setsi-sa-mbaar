@@ -81,7 +81,7 @@ class ClientDetailsPage extends StatelessWidget {
           _InfoTile(
             icon: client.actif ? Icons.check_circle : Icons.cancel,
             title: "Statut",
-            value: client.statut,
+            value: client.actif ? "Actif" : "Inactif",
           ),
 
           const SizedBox(height: 30),

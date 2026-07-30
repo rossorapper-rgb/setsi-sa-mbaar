@@ -91,19 +91,19 @@ return snapshot.size;
 }
 
 Future<List<AbonnementModel>> rechercherAbonnements(
-String recherche,
-) async {
-final abonnements = await getAbonnements();
+    String recherche,
+    ) async {
+  final abonnements = await getAbonnements();
 
-final filtre = recherche.toLowerCase().trim();
+  final filtre = recherche.toLowerCase().trim();
 
-return abonnements.where((abonnement) {
-return abonnement.numero
-.toLowerCase()
-.contains(filtre) ||
-abonnement.clientNom
-.toLowerCase()
-.contains(filtre) ||
-abonnement.bergerieNom
-.toLowerCase()
-.contains(filtre) ||
+  return abonnements.where((abonnement) {
+    return abonnement.numero.toLowerCase().contains(filtre) ||
+        abonnement.clientNom.toLowerCase().contains(filtre) ||
+        abonnement.bergerieNom.toLowerCase().contains(filtre) ||
+        abonnement.pack.toLowerCase().contains(filtre) ||
+        abonnement.statut.toLowerCase().contains(filtre);
+  }).toList();
+}
+
+}
