@@ -19,13 +19,16 @@ class DashboardDrawer extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
 
-            const CircleAvatar(
-              radius: 36,
-              backgroundColor: Color(0xFF0B6E4F),
-              child: Icon(
-                Icons.pets,
-                size: 38,
-                color: Colors.white,
+            CircleAvatar(
+              radius: 42,
+              backgroundColor: Colors.transparent,
+              child: ClipOval(
+                child: Image.asset(
+                  "assets/images/app_icon.png",
+                  width: 84,
+                  height: 84,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
 

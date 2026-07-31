@@ -108,8 +108,8 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  "assets/images/logo.png",
-                  height: 120,
+                  "assets/images/app_icon.png",
+                  height: 180,
                 ),
 
                 const SizedBox(height: 20),
