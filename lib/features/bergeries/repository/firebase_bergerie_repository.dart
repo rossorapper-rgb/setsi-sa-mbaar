@@ -37,7 +37,12 @@ class FirebaseBergerieRepository implements BergerieRepository {
     final snapshot = await _firestore.collection(_collection).get();
 
     return snapshot.docs
-        .map((doc) => BergerieModel.fromMap(doc.data()))
+        .map(
+          (doc) => BergerieModel.fromMap({
+        ...doc.data(),
+        'id': doc.id,
+      }),
+    )
         .toList();
   }
 
@@ -47,6 +52,9 @@ class FirebaseBergerieRepository implements BergerieRepository {
 
     if (!doc.exists) return null;
 
-    return BergerieModel.fromMap(doc.data()!);
+    return BergerieModel.fromMap({
+      ...doc.data()!,
+      'id': doc.id,
+    });
   }
 }

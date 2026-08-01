@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/app_action_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/responsive_page.dart';
 
 import '../../bergeries/models/bergerie_model.dart';
+
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 import '../widgets/mouton_card.dart';
+
 import 'add_mouton_page.dart';
 import 'mouton_details_page.dart';
 
@@ -21,20 +22,28 @@ class MoutonsPage extends StatefulWidget {
   });
 
   @override
-  State<MoutonsPage> createState() => _MoutonsPageState();
+  State<MoutonsPage> createState() =>
+      _MoutonsPageState();
 }
 
-class _MoutonsPageState extends State<MoutonsPage> {
-final FirebaseMoutonRepository _repository =
+class _MoutonsPageState
+    extends State<MoutonsPage> {
+
+final FirebaseMoutonRepository
+_repository =
 FirebaseMoutonRepository();
 
-final TextEditingController _searchController =
+final TextEditingController
+_searchController =
 TextEditingController();
 
-late Future<List<MoutonModel>> _futureMoutons;
+late Future<List<MoutonModel>>
+_futureMoutons;
 
 List<MoutonModel> _moutons = [];
-List<MoutonModel> _moutonsFiltres = [];
+
+List<MoutonModel>
+_moutonsFiltres = [];
 
 @override
 void initState() {
@@ -42,45 +51,65 @@ super.initState();
 
 _chargerMoutons();
 
-_searchController.addListener(_filtrerMoutons);
+_searchController
+.addListener(
+_filtrerMoutons,
+);
 }
 
 @override
 void dispose() {
-_searchController.removeListener(_filtrerMoutons);
+_searchController
+.removeListener(
+_filtrerMoutons,
+);
+
 _searchController.dispose();
+
 super.dispose();
 }
 
 void _chargerMoutons() {
 _futureMoutons =
-_repository.getMoutonsByBergerie(widget.bergerie.id);
+_repository
+.getMoutonsByBergerie(
+widget.bergerie.id,
+);
 }
 
 void _filtrerMoutons() {
 final recherche =
-_searchController.text.trim().toLowerCase();
+_searchController.text
+.trim()
+.toLowerCase();
 
 setState(() {
 if (recherche.isEmpty) {
-_moutonsFiltres = List.from(_moutons);
+_moutonsFiltres =
+List.from(_moutons);
 return;
 }
 
-_moutonsFiltres = _moutons.where((mouton) {
+_moutonsFiltres =
+_moutons.where(
+(mouton) {
 return mouton.nom
 .toLowerCase()
-.contains(recherche) ||
-mouton.numeroIdentification
+.contains(
+recherche) ||
+mouton
+.numeroIdentification
 .toLowerCase()
-.contains(recherche) ||
+.contains(
+recherche) ||
 mouton.race
 .toLowerCase()
-.contains(recherche);
-}).toList();
+.contains(
+recherche);
+},
+).toList();
 });
 }
-
 Future<void> _ajouterMouton() async {
 final resultat = await Navigator.push(
 context,
@@ -91,7 +120,9 @@ bergerie: widget.bergerie,
 ),
 );
 
-if (resultat == true && mounted) {
+if (!mounted) return;
+
+if (resultat == true) {
 setState(() {
 _chargerMoutons();
 });
@@ -101,7 +132,7 @@ _chargerMoutons();
 Future<void> _ouvrirDetails(
 MoutonModel mouton,
 ) async {
-await Navigator.push(
+final resultat = await Navigator.push(
 context,
 MaterialPageRoute(
 builder: (_) => MoutonDetailsPage(
@@ -112,9 +143,11 @@ mouton: mouton,
 
 if (!mounted) return;
 
+if (resultat == true) {
 setState(() {
 _chargerMoutons();
 });
+}
 }
 
 Future<void> _rafraichir() async {
@@ -127,15 +160,29 @@ await _futureMoutons;
 
 @override
 Widget build(BuildContext context) {
-return ResponsivePage(
-title: "Moutons - ${widget.bergerie.nom}",
-child: FutureBuilder<List<MoutonModel>>(
+return Scaffold(
+appBar: AppBar(
+leading: IconButton(
+icon: const Icon(
+Icons.arrow_back,
+),
+onPressed: () {
+Navigator.of(context).pop();
+},
+),
+title: Text(
+"Moutons - ${widget.bergerie.nom}",
+),
+centerTitle: true,
+),
+body: FutureBuilder<List<MoutonModel>>(
 future: _futureMoutons,
 builder: (context, snapshot) {
 if (snapshot.connectionState ==
 ConnectionState.waiting) {
 return const Center(
-child: CircularProgressIndicator(),
+child:
+CircularProgressIndicator(),
 );
 }
 
@@ -143,27 +190,38 @@ if (snapshot.hasError) {
 return Center(
 child: AppCard(
 child: Padding(
-padding: const EdgeInsets.all(30),
+padding:
+const EdgeInsets.all(
+30,
+),
 child: Column(
-mainAxisSize: MainAxisSize.min,
+mainAxisSize:
+MainAxisSize.min,
 children: [
 const Icon(
 Icons.error_outline,
 color: Colors.red,
 size: 70,
 ),
-const SizedBox(height: 20),
+const SizedBox(
+height: 20,
+),
 const Text(
 "Une erreur est survenue",
 style: TextStyle(
 fontSize: 20,
-fontWeight: FontWeight.bold,
+fontWeight:
+FontWeight.bold,
 ),
 ),
-const SizedBox(height: 10),
+const SizedBox(
+height: 10,
+),
 Text(
-snapshot.error.toString(),
-textAlign: TextAlign.center,
+snapshot.error
+.toString(),
+textAlign:
+TextAlign.center,
 ),
 ],
 ),
@@ -172,37 +230,43 @@ textAlign: TextAlign.center,
 );
 }
 
-_moutons = snapshot.data ?? [];
+_moutons =
+snapshot.data ?? [];
 
-if (_searchController.text.isEmpty) {
-_moutonsFiltres = List.from(_moutons);
+if (_searchController
+.text.isEmpty) {
+_moutonsFiltres =
+List.from(_moutons);
 } else {
 WidgetsBinding.instance
-.addPostFrameCallback((_) {
+.addPostFrameCallback(
+(_) {
 if (mounted) {
 _filtrerMoutons();
 }
-});
+},
+);
 }
 
-final total = _moutons.length;
+final total =
+_moutons.length;
 
-final beliers = _moutons.where((m) {
-final sexe = m.sexe.toLowerCase();
+final beliers =
+_moutons.where((m) {
+final sexe =
+m.sexe.toLowerCase();
+
 return sexe == "male" ||
 sexe == "mâle";
 }).length;
 
-final brebis = total - beliers;
+final brebis =
+total - beliers;
 return RefreshIndicator(
 onRefresh: _rafraichir,
 child: ListView(
 padding: const EdgeInsets.all(20),
 children: [
-
-/// ==========================
-/// Statistiques
-/// ==========================
 
 AppCard(
 child: Column(
@@ -268,10 +332,6 @@ icon: Icons.female,
 
 const SizedBox(height: 24),
 
-/// ==========================
-/// Recherche
-/// ==========================
-
 AppTextField(
 controller: _searchController,
 icon: Icons.search,
@@ -280,10 +340,6 @@ label: "Recherche",
 
 const SizedBox(height: 20),
 
-/// ==========================
-/// Bouton Ajouter
-/// ==========================
-
 AppActionButton(
 icon: Icons.add,
 label: "Ajouter un mouton",
@@ -291,10 +347,6 @@ onPressed: _ajouterMouton,
 ),
 
 const SizedBox(height: 24),
-
-/// ==========================
-/// Liste
-/// ==========================
 
 if (_moutonsFiltres.isEmpty)
 
@@ -361,73 +413,78 @@ mouton,
 );
 }
 }
-
 class _StatItem extends StatelessWidget {
-  final String titre;
-  final String valeur;
-  final IconData icon;
+final String titre;
+final String valeur;
+final IconData icon;
 
-  const _StatItem({
-    required this.titre,
-    required this.valeur,
-    required this.icon,
-  });
+const _StatItem({
+required this.titre,
+required this.valeur,
+required this.icon,
+});
 
-  @override
-  Widget build(BuildContext context) {
-    final primary =
-        Theme.of(context).colorScheme.primary;
+@override
+Widget build(BuildContext context) {
+final primary =
+Theme.of(context).colorScheme.primary;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 4,
-      ),
-      padding: const EdgeInsets.symmetric(
-        vertical: 18,
-        horizontal: 12,
-      ),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: primary.withValues(alpha: 0.15),
-        ),
-      ),
-      child: Column(
-        children: [
+return Container(
+margin: const EdgeInsets.symmetric(
+horizontal: 4,
+),
+padding: const EdgeInsets.symmetric(
+vertical: 18,
+horizontal: 12,
+),
+decoration: BoxDecoration(
+color: primary.withValues(alpha: 0.08),
+borderRadius:
+BorderRadius.circular(14),
+border: Border.all(
+color: primary.withValues(
+alpha: 0.15,
+),
+),
+),
+child: Column(
+children: [
+CircleAvatar(
+radius: 22,
+backgroundColor:
+primary.withValues(
+alpha: 0.12,
+),
+child: Icon(
+icon,
+color: primary,
+),
+),
 
-          CircleAvatar(
-            radius: 22,
-            backgroundColor:
-            primary.withValues(alpha: 0.12),
-            child: Icon(
-              icon,
-              color: primary,
-            ),
-          ),
+const SizedBox(height: 12),
 
-          const SizedBox(height: 12),
+Text(
+valeur,
+style: const TextStyle(
+fontSize: 24,
+fontWeight:
+FontWeight.bold,
+),
+),
 
-          Text(
-            valeur,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+const SizedBox(height: 4),
 
-          const SizedBox(height: 4),
-
-          Text(
-            titre,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+Text(
+titre,
+textAlign: TextAlign.center,
+style: TextStyle(
+color:
+Colors.grey.shade700,
+fontSize: 13,
+),
+),
+],
+),
+);
+}
 }

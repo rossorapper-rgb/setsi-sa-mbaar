@@ -49,46 +49,51 @@ _chargerDonnees();
 }
 
 Future<void> _chargerDonnees() async {
-try {
-final bergerie =
-await _bergerieRepository
-.getBergerieById(
-widget.mouton.bergerieId,
-);
+  try {
+    debugPrint("========== DIAGNOSTIC ==========");
+    debugPrint("Mouton id        : '${widget.mouton.id}'");
+    debugPrint("Bergerie id      : '${widget.mouton.bergerieId}'");
 
-if (bergerie == null) {
-setState(() {
-_loading = false;
-_error = "Bergerie introuvable.";
-});
-return;
-}
+    if (widget.mouton.bergerieId.trim().isEmpty) {
+      throw Exception("bergerieId est vide");
+    }
 
-final client =
-await _clientRepository
-.getClientById(
-bergerie.clientId,
-);
+    final bergerie = await _bergerieRepository.getBergerieById(
+      widget.mouton.bergerieId,
+    );
 
-if (client == null) {
-setState(() {
-_loading = false;
-_error = "Client introuvable.";
-});
-return;
-}
+    debugPrint("Bergerie trouvée : ${bergerie?.nom}");
 
-setState(() {
-_bergerie = bergerie;
-_client = client;
-_loading = false;
-});
-} catch (e) {
-setState(() {
-_loading = false;
-_error = e.toString();
-});
-}
+    if (bergerie == null) {
+      throw Exception("Bergerie introuvable");
+    }
+
+    debugPrint("Client id        : '${bergerie.clientId}'");
+
+    if (bergerie.clientId.trim().isEmpty) {
+      throw Exception("clientId est vide");
+    }
+
+    final client = await _clientRepository.getClientById(
+      bergerie.clientId,
+    );
+
+    debugPrint("Client trouvé    : ${client?.nom}");
+
+    setState(() {
+      _bergerie = bergerie;
+      _client = client;
+      _loading = false;
+    });
+  } catch (e, s) {
+    debugPrint(e.toString());
+    debugPrint(s.toString());
+
+    setState(() {
+      _loading = false;
+      _error = e.toString();
+    });
+  }
 }
 
 String _formatDate(DateTime? date) {

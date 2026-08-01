@@ -2,217 +2,175 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardDrawer extends StatelessWidget {
-  final int selectedIndex;
+const DashboardDrawer({
+super.key,
+required this.selectedIndex,
+});
 
-  const DashboardDrawer({
-    super.key,
-    required this.selectedIndex,
-  });
+final int selectedIndex;
 
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      elevation: 0,
-      backgroundColor: Colors.white,
-      child: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
+static const List<_DrawerItem> _items = [
+_DrawerItem(
+icon: Icons.dashboard,
+title: "Tableau de bord",
+),
+_DrawerItem(
+icon: Icons.people,
+title: "Clients",
+),
+_DrawerItem(
+icon: Icons.home_work,
+title: "Bergeries",
+),
+_DrawerItem(
+icon: Icons.pets,
+title: "Moutons",
+),
+_DrawerItem(
+icon: Icons.pregnant_woman,
+title: "Gestations",
+),
+_DrawerItem(
+icon: Icons.cleaning_services,
+title: "Interventions",
+),
+_DrawerItem(
+icon: Icons.card_membership,
+title: "Abonnements",
+),
+_DrawerItem(
+icon: Icons.payments,
+title: "Paiements",
+),
+_DrawerItem(
+icon: Icons.bar_chart,
+title: "Rapports",
+),
+_DrawerItem(
+icon: Icons.settings,
+title: "Paramètres",
+),
+];
 
-            CircleAvatar(
-              radius: 42,
-              backgroundColor: Colors.transparent,
-              child: ClipOval(
-                child: Image.asset(
-                  "assets/images/app_icon.png",
-                  width: 84,
-                  height: 84,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+@override
+Widget build(BuildContext context) {
+return Drawer(
+child: SafeArea(
+child: Column(
+children: [
+Container(
+width: double.infinity,
+padding: const EdgeInsets.all(24),
+color: Theme.of(context).colorScheme.primary,
+child: const Column(
+children: [
+CircleAvatar(
+radius: 36,
+child: Icon(
+Icons.pets,
+size: 36,
+),
+),
+SizedBox(height: 12),
+Text(
+"SET'SI SA MBAAR",
+style: TextStyle(
+color: Colors.white,
+fontSize: 20,
+fontWeight: FontWeight.bold,
+),
+),
+],
+),
+),
 
-            const SizedBox(height: 15),
+Expanded(
+child: ListView.builder(
+itemCount: _items.length,
+itemBuilder: (context, index) {
+final item = _items[index];
+return ListTile(
+leading: Icon(item.icon),
+title: Text(item.title),
+selected: selectedIndex == index,
+selectedTileColor: Theme.of(context)
+.colorScheme
+.primary
+.withValues(alpha: 0.10),
+shape: RoundedRectangleBorder(
+borderRadius: BorderRadius.circular(10),
+),
+onTap: () {
+switch (index) {
+case 0:
+context.go('/dashboard/admin');
+break;
 
-            const Text(
-              "SET'SI SA MBAAR",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0B6E4F),
-              ),
-            ),
+case 1:
+context.go('/clients');
+break;
 
-            const SizedBox(height: 5),
+case 2:
+context.go('/bergeries');
+break;
 
-            const Text(
-              "Administration",
-              style: TextStyle(color: Colors.grey),
-            ),
+case 3:
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(
+content: Text(
+"Veuillez d'abord ouvrir une bergerie pour accéder aux moutons.",
+),
+),
+);
+break;
+case 4:
+context.go('/gestations');
+break;
 
-            const SizedBox(height: 25),
+case 5:
+context.go('/interventions');
+break;
 
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildItem(
-                    context,
-                    icon: Icons.dashboard_rounded,
-                    title: "Tableau de bord",
-                    index: 0,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.people_alt_rounded,
-                    title: "Clients",
-                    index: 1,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.home_rounded,
-                    title: "Bergeries",
-                    index: 2,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.pets,
-                    title: "Moutons",
-                    index: 3,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.favorite_rounded,
-                    title: "Gestations",
-                    index: 4,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.build_circle_rounded,
-                    title: "Interventions",
-                    index: 5,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.card_membership_rounded,
-                    title: "Abonnements",
-                    index: 6,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.payments_rounded,
-                    title: "Paiements",
-                    index: 7,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.bar_chart_rounded,
-                    title: "Rapports",
-                    index: 8,
-                  ),
-                  _buildItem(
-                    context,
-                    icon: Icons.settings_rounded,
-                    title: "Paramètres",
-                    index: 9,
-                  ),
-                ],
-              ),
-            ),
+case 6:
+case 7:
+case 8:
+case 9:
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(
+content: Text(
+"Ce module sera disponible prochainement.",
+),
+),
+);
+break;
+}
+},
+);
+},
+),
+),
 
-            const Divider(),
+const Divider(height: 1),
 
-            ListTile(
-              leading: const Icon(
-                Icons.logout,
-                color: Colors.red,
-              ),
-              title: const Text(
-                "Déconnexion",
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () => context.go('/login'),
-            ),
+ListTile(
+leading: const Icon(Icons.logout),
+title: const Text("Déconnexion"),
+onTap: () {
+context.go('/login');
+},
+),
+],
+),
+),
+);
+}
+}
+class _DrawerItem {
+final IconData icon;
+final String title;
 
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItem(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required int index,
-      }) {
-    final bool selected = selectedIndex == index;
-
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: selected ? const Color(0xFF0B6E4F) : Colors.grey,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: selected ? const Color(0xFF0B6E4F) : Colors.black87,
-          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-      selected: selected,
-      selectedTileColor: const Color(0xFFE8F5F0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      onTap: () {
-        switch (index) {
-          case 0:
-            context.go('/dashboard/admin');
-            break;
-
-          case 1:
-            context.go('/clients');
-            break;
-
-          case 2:
-            context.go('/bergeries');
-            break;
-
-          case 3:
-            context.go('/moutons');
-            break;
-
-          case 4:
-            context.go('/gestations');
-            break;
-
-          case 5:
-            context.go('/interventions');
-            break;
-
-          case 6:
-            context.go('/abonnements');
-            break;
-
-          case 7:
-            context.go('/paiements');
-            break;
-
-          case 8:
-            context.go('/rapports');
-            break;
-
-          case 9:
-            context.go('/parametres');
-            break;
-
-          default:
-            break;
-        }
-      },
-    );
-  }
+const _DrawerItem({
+required this.icon,
+required this.title,
+});
 }
