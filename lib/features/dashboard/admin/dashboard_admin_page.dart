@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'widgets/dashboard_drawer.dart';
-import 'widgets/dashboard_header.dart';
-import 'widgets/dashboard_stats.dart';
-import 'widgets/dashboard_recent_activity.dart';
+
+import 'widgets/dashboard_admin_body.dart';
 
 class DashboardAdminPage extends StatelessWidget {
   const DashboardAdminPage({super.key});
@@ -122,25 +121,7 @@ class DashboardAdminPage extends StatelessWidget {
                     ),
 
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-
-                          DashboardHeader(),
-
-                          SizedBox(height: 30),
-
-                          DashboardStats(),
-
-                          SizedBox(height: 30),
-
-                          RecentActivity(),
-
-                        ],
-                      ),
-                    ),
+                    child: const DashboardAdminBody(),
                   ),
                 ],
               ),
