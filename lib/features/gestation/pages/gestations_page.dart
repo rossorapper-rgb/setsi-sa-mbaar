@@ -10,15 +10,22 @@ import '../widgets/gestation_dashboard.dart';
 import 'add_gestation_page.dart';
 import 'gestation_details_page.dart';
 import 'mise_bas_page.dart';
+import '../../bergeries/models/bergerie_model.dart';
 
 class GestationsPage extends StatefulWidget {
-  const GestationsPage({super.key});
+  final BergerieModel? bergerie;
+
+  const GestationsPage({
+    super.key,
+    this.bergerie,
+  });
 
   @override
-  State<GestationsPage> createState() => _GestationsPageState();
+  State<GestationsPage> createState() =>
+      _GestationsPageState();
 }
-
-class _GestationsPageState extends State<GestationsPage> {
+class _GestationsPageState
+    extends State<GestationsPage> {
 final FirebaseGestationRepository _repository =
 FirebaseGestationRepository();
 
@@ -42,7 +49,12 @@ setState(() {
 _loading = true;
 });
 
-final gestations = await _repository.getGestations();
+final gestations =
+widget.bergerie == null
+    ? await _repository.getGestations()
+    : await _repository.getGestationsParBergerie(
+  widget.bergerie!.id,
+);
 final moutons = await _moutonRepository.getMoutons();
 
 if (!mounted) return;
@@ -55,16 +67,18 @@ _loading = false;
 }
 
 Future<void> _nouvelleGestation() async {
-final result = await Navigator.push<bool>(
-context,
-MaterialPageRoute(
-builder: (_) => const AddGestationPage(),
-),
-);
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => AddGestationPage(
+        bergerie: widget.bergerie,
+      ),
+    ),
+  );
 
-if (result == true) {
-_charger();
-}
+  if (result == true) {
+    _charger();
+  }
 }
 
 Future<void> _ouvrirDetails(
@@ -119,7 +133,11 @@ _charger();
 Widget build(BuildContext context) {
 return Scaffold(
 appBar: AppBar(
-title: const Text("Gestion des gestations"),
+  title: Text(
+    widget.bergerie == null
+        ? "Gestion des gestations"
+        : "Gestations - ${widget.bergerie!.nom}",
+  ),
 actions: [
 IconButton(
 icon: const Icon(Icons.refresh),

@@ -4,7 +4,10 @@ import 'package:uuid/uuid.dart';
 import '../../moutons/models/mouton_model.dart';
 import '../../moutons/repository/firebase_mouton_repository.dart';
 import '../models/gestation_model.dart';
+import '../../bergeries/models/bergerie_model.dart';
 import '../repositories/firebase_gestation_repository.dart';
+import '../widgets/femelle_info_card.dart';
+import '../widgets/belier_info_card.dart';
 
 enum TypeBelier {
   troupeau,
@@ -13,16 +16,19 @@ enum TypeBelier {
 
 class AddGestationPage extends StatefulWidget {
   final GestationModel? gestation;
+  final BergerieModel? bergerie;
 
   const AddGestationPage({
     super.key,
     this.gestation,
+    this.bergerie,
   });
 
   bool get isEdition => gestation != null;
 
   @override
-  State<AddGestationPage> createState() => _AddGestationPageState();
+  State<AddGestationPage> createState() =>
+      _AddGestationPageState();
 }
 
 class _AddGestationPageState extends State<AddGestationPage> {
@@ -110,8 +116,17 @@ class _AddGestationPageState extends State<AddGestationPage> {
   }
 
   Future<void> _charger() async {
-    final brebis = await _moutonRepo.getBrebis();
-    final beliers = await _moutonRepo.getBeliers();
+    final brebis = widget.bergerie == null
+        ? await _moutonRepo.getBrebis()
+        : await _moutonRepo.getBrebisByBergerie(
+      widget.bergerie!.id,
+    );
+
+    final beliers = widget.bergerie == null
+        ? await _moutonRepo.getBeliers()
+        : await _moutonRepo.getBeliersByBergerie(
+      widget.bergerie!.id,
+    );
 
     brebis.sort(
           (a, b) =>
@@ -502,7 +517,9 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
             const SizedBox(height: 16),
 
-            _infoFemelle(),
+            FemelleInfoCard(
+              femelle: _brebisSelectionnee,
+            ),
 
             const SizedBox(height: 24),
 
@@ -577,7 +594,9 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
               const SizedBox(height: 16),
 
-              _infoBelier(),
+              BelierInfoCard(
+                belier: _belierSelectionne,
+              ),
             ],
 
             if (_typeBelier == TypeBelier.exterieur) ...[

@@ -22,17 +22,14 @@ class DashboardDrawer extends StatelessWidget {
       icon: Icons.home_work_rounded,
       title: "Bergeries",
     ),
-    _DrawerItem(
-      icon: Icons.pets_rounded,
-      title: "Moutons",
-    ),
-    _DrawerItem(
-      icon: Icons.favorite_rounded,
-      title: "Gestations",
-    ),
+
     _DrawerItem(
       icon: Icons.cleaning_services_rounded,
       title: "Interventions",
+    ),
+    _DrawerItem(
+      icon: Icons.local_hospital_rounded,
+      title: "Allo Véto",
     ),
     _DrawerItem(
       icon: Icons.workspace_premium_rounded,
@@ -196,27 +193,17 @@ class DashboardDrawer extends StatelessWidget {
         break;
 
       case 3:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Veuillez d'abord ouvrir une bergerie pour accéder aux moutons.",
-            ),
-          ),
-        );
-        break;
-
-      case 4:
-        context.go('/gestations');
-        break;
-
-      case 5:
         context.go('/interventions');
         break;
 
+      case 4:
+        context.go('/allo-veto');
+        break;
+
+      case 5:
       case 6:
       case 7:
       case 8:
-      case 9:
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(

@@ -13,6 +13,7 @@ import '../features/interventions/pages/interventions_page.dart';
 
 
 import '../features/gestation/pages/gestations_page.dart';
+import '../features/allo_veto/pages/allo_veto_page.dart';
 
 // Décommente ces imports uniquement si les pages existent déjà.
 
@@ -59,6 +60,10 @@ GoRoute(
 path: '/gestations',
 builder: (context, state) => const GestationsPage(),
 ),
+      GoRoute(
+        path: '/allo-veto',
+        builder: (context, state) => const AlloVetoPage(),
+      ),
 // Décommente ces routes uniquement lorsque les pages existent.
 
 /*
