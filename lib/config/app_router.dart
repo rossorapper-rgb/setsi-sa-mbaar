@@ -11,7 +11,6 @@ import '../features/bergeries/pages/bergeries_page.dart';
 
 import '../features/interventions/pages/interventions_page.dart';
 
-import '../features/moutons/pages/moutons_page.dart';
 
 import '../features/gestation/pages/gestations_page.dart';
 

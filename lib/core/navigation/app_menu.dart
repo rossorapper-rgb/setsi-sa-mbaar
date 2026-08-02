@@ -11,80 +11,110 @@ class AppMenu {
     AppMenuItem(
       key: AppMenuKey.dashboard,
       icon: Icons.dashboard_outlined,
-      title: "Tableau de bord",
-      route: "/dashboard/admin",
+      title: 'Tableau de bord',
+      route: '/dashboard/admin',
       roles: [
         UserRole.admin,
         UserRole.responsable,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.clients,
       icon: Icons.people_outline,
-      title: "Clients",
-      route: "/clients",
+      title: 'Clients',
+      route: '/clients',
       roles: [
         UserRole.admin,
         UserRole.responsable,
         UserRole.agent,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.bergeries,
       icon: Icons.home_work_outlined,
-      title: "Bergeries",
-      route: "/bergeries",
+      title: 'Bergeries',
+      route: '/bergeries',
       roles: [
         UserRole.admin,
         UserRole.responsable,
         UserRole.agent,
       ],
+      children: [
+        AppMenuItem(
+          key: AppMenuKey.moutons,
+          icon: Icons.pets_outlined,
+          title: 'Moutons',
+          route: '/moutons',
+          roles: [
+            UserRole.admin,
+            UserRole.responsable,
+            UserRole.agent,
+          ],
+        ),
+        AppMenuItem(
+          key: AppMenuKey.gestations,
+          icon: Icons.favorite_outline,
+          title: 'Gestations',
+          route: '/gestations',
+          roles: [
+            UserRole.admin,
+            UserRole.responsable,
+          ],
+        ),
+      ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.interventions,
       icon: Icons.cleaning_services_outlined,
-      title: "Interventions",
-      route: "/interventions",
+      title: 'Interventions',
+      route: '/interventions',
       roles: [
         UserRole.admin,
         UserRole.responsable,
         UserRole.agent,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.abonnements,
       icon: Icons.card_membership_outlined,
-      title: "Abonnements",
-      route: "/abonnements",
+      title: 'Abonnements',
+      route: '/abonnements',
       roles: [
         UserRole.admin,
         UserRole.responsable,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.rapports,
       icon: Icons.bar_chart_outlined,
-      title: "Rapports",
-      route: "/rapports",
+      title: 'Rapports',
+      route: '/rapports',
       roles: [
         UserRole.admin,
         UserRole.responsable,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.parametres,
       icon: Icons.settings_outlined,
-      title: "Paramètres",
-      route: "/parametres",
+      title: 'Paramètres',
+      route: '/parametres',
       roles: [
         UserRole.admin,
       ],
     ),
+
     AppMenuItem(
       key: AppMenuKey.utilisateurs,
       icon: Icons.manage_accounts_outlined,
-      title: "Gestion des utilisateurs",
-      route: "/utilisateurs",
+      title: 'Gestion des utilisateurs',
+      route: '/utilisateurs',
       roles: [
         UserRole.admin,
       ],

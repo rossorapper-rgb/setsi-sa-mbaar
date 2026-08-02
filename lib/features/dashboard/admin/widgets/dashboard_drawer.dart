@@ -2,175 +2,239 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardDrawer extends StatelessWidget {
-const DashboardDrawer({
-super.key,
-required this.selectedIndex,
-});
+  const DashboardDrawer({
+    super.key,
+    required this.selectedIndex,
+  });
 
-final int selectedIndex;
+  final int selectedIndex;
 
-static const List<_DrawerItem> _items = [
-_DrawerItem(
-icon: Icons.dashboard,
-title: "Tableau de bord",
-),
-_DrawerItem(
-icon: Icons.people,
-title: "Clients",
-),
-_DrawerItem(
-icon: Icons.home_work,
-title: "Bergeries",
-),
-_DrawerItem(
-icon: Icons.pets,
-title: "Moutons",
-),
-_DrawerItem(
-icon: Icons.pregnant_woman,
-title: "Gestations",
-),
-_DrawerItem(
-icon: Icons.cleaning_services,
-title: "Interventions",
-),
-_DrawerItem(
-icon: Icons.card_membership,
-title: "Abonnements",
-),
-_DrawerItem(
-icon: Icons.payments,
-title: "Paiements",
-),
-_DrawerItem(
-icon: Icons.bar_chart,
-title: "Rapports",
-),
-_DrawerItem(
-icon: Icons.settings,
-title: "Paramètres",
-),
-];
+  static const List<_DrawerItem> _items = [
+    _DrawerItem(
+      icon: Icons.dashboard_rounded,
+      title: "Tableau de bord",
+    ),
+    _DrawerItem(
+      icon: Icons.people_alt_rounded,
+      title: "Clients",
+    ),
+    _DrawerItem(
+      icon: Icons.home_work_rounded,
+      title: "Bergeries",
+    ),
+    _DrawerItem(
+      icon: Icons.pets_rounded,
+      title: "Moutons",
+    ),
+    _DrawerItem(
+      icon: Icons.favorite_rounded,
+      title: "Gestations",
+    ),
+    _DrawerItem(
+      icon: Icons.cleaning_services_rounded,
+      title: "Interventions",
+    ),
+    _DrawerItem(
+      icon: Icons.workspace_premium_rounded,
+      title: "Abonnements",
+    ),
+    _DrawerItem(
+      icon: Icons.payments_rounded,
+      title: "Paiements",
+    ),
+    _DrawerItem(
+      icon: Icons.bar_chart_rounded,
+      title: "Rapports",
+    ),
+    _DrawerItem(
+      icon: Icons.settings_rounded,
+      title: "Paramètres",
+    ),
+  ];
 
-@override
-Widget build(BuildContext context) {
-return Drawer(
-child: SafeArea(
-child: Column(
-children: [
-Container(
-width: double.infinity,
-padding: const EdgeInsets.all(24),
-color: Theme.of(context).colorScheme.primary,
-child: const Column(
-children: [
-CircleAvatar(
-radius: 36,
-child: Icon(
-Icons.pets,
-size: 36,
-),
-),
-SizedBox(height: 12),
-Text(
-"SET'SI SA MBAAR",
-style: TextStyle(
-color: Colors.white,
-fontSize: 20,
-fontWeight: FontWeight.bold,
-),
-),
-],
-),
-),
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
 
-Expanded(
-child: ListView.builder(
-itemCount: _items.length,
-itemBuilder: (context, index) {
-final item = _items[index];
-return ListTile(
-leading: Icon(item.icon),
-title: Text(item.title),
-selected: selectedIndex == index,
-selectedTileColor: Theme.of(context)
-.colorScheme
-.primary
-.withValues(alpha: 0.10),
-shape: RoundedRectangleBorder(
-borderRadius: BorderRadius.circular(10),
-),
-onTap: () {
-switch (index) {
-case 0:
-context.go('/dashboard/admin');
-break;
+    return Drawer(
+      elevation: 0,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+              decoration: BoxDecoration(
+                color: primary,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.pets_rounded,
+                      color: Colors.white,
+                      size: 38,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    "SET'SI SA MBAAR",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: .4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Gestion intelligente d'élevage",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                itemCount: _items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                itemBuilder: (context, index) {
+                  final item = _items[index];
+                  final selected = selectedIndex == index;
 
-case 1:
-context.go('/clients');
-break;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? primary.withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        item.icon,
+                        color: selected ? primary : Colors.grey.shade700,
+                      ),
+                      title: Text(
+                        item.title,
+                        style: TextStyle(
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: selected ? primary : null,
+                        ),
+                      ),
+                      selected: selected,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      onTap: () => _onItemSelected(context, index),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red,
+                ),
+                title: const Text(
+                  "Déconnexion",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                onTap: () => context.go('/login'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-case 2:
-context.go('/bergeries');
-break;
+  void _onItemSelected(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/dashboard/admin');
+        break;
 
-case 3:
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text(
-"Veuillez d'abord ouvrir une bergerie pour accéder aux moutons.",
-),
-),
-);
-break;
-case 4:
-context.go('/gestations');
-break;
+      case 1:
+        context.go('/clients');
+        break;
 
-case 5:
-context.go('/interventions');
-break;
+      case 2:
+        context.go('/bergeries');
+        break;
 
-case 6:
-case 7:
-case 8:
-case 9:
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text(
-"Ce module sera disponible prochainement.",
-),
-),
-);
-break;
+      case 3:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Veuillez d'abord ouvrir une bergerie pour accéder aux moutons.",
+            ),
+          ),
+        );
+        break;
+
+      case 4:
+        context.go('/gestations');
+        break;
+
+      case 5:
+        context.go('/interventions');
+        break;
+
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Ce module sera disponible prochainement.",
+            ),
+          ),
+        );
+        break;
+    }
+  }
 }
-},
-);
-},
-),
-),
 
-const Divider(height: 1),
-
-ListTile(
-leading: const Icon(Icons.logout),
-title: const Text("Déconnexion"),
-onTap: () {
-context.go('/login');
-},
-),
-],
-),
-),
-);
-}
-}
 class _DrawerItem {
-final IconData icon;
-final String title;
+  final IconData icon;
+  final String title;
 
-const _DrawerItem({
-required this.icon,
-required this.title,
-});
+  const _DrawerItem({
+    required this.icon,
+    required this.title,
+  });
 }

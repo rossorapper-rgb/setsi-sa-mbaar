@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/session/current_user.dart';
-import '../../../../core/roles/user_role.dart';
+import '../../../../../core/session/current_user.dart';
+import '../../../../../core/roles/user_role.dart';
 
 class DrawerHeaderWidget extends StatelessWidget {
   const DrawerHeaderWidget({
