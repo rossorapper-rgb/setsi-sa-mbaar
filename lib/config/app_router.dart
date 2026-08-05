@@ -14,10 +14,11 @@ import '../features/interventions/pages/interventions_page.dart';
 
 import '../features/gestation/pages/gestations_page.dart';
 import '../features/allo_veto/pages/allo_veto_page.dart';
+import '../features/abonnements/pages/abonnements_page.dart';
 
 // Décommente ces imports uniquement si les pages existent déjà.
 
-// import '../features/abonnements/pages/abonnements_page.dart';
+
 // import '../features/paiements/pages/paiements_page.dart';
 // import '../features/rapports/pages/rapports_page.dart';
 // import '../features/parametres/pages/parametres_page.dart';
@@ -66,12 +67,12 @@ builder: (context, state) => const GestationsPage(),
       ),
 // Décommente ces routes uniquement lorsque les pages existent.
 
-/*
+
     GoRoute(
       path: '/abonnements',
       builder: (context, state) => const AbonnementsPage(),
     ),
-
+/*
     GoRoute(
       path: '/paiements',
       builder: (context, state) => const PaiementsPage(),

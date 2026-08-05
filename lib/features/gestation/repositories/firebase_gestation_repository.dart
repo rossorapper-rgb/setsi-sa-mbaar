@@ -162,27 +162,34 @@ doc.id,
 
 Future<List<GestationModel>>
 getGestationsParBergerie(
-String bergerieId,
-) async {
-final snapshot = await _gestations
-.where(
-'bergerieId',
-isEqualTo: bergerieId,
-)
-.orderBy(
-'dateCreation',
-descending: true,
-)
-.get();
+    String bergerieId,
+    ) async {
 
-return snapshot.docs
-.map(
-(doc) => GestationModel.fromMap(
-doc.data(),
-doc.id,
-),
-)
-.toList();
+  try {
+
+    final snapshot = await _gestations
+        .where(
+      'bergerieId',
+      isEqualTo: bergerieId,
+    )
+        .get();
+
+    return snapshot.docs
+        .map(
+          (doc) => GestationModel.fromMap(
+        doc.data(),
+        doc.id,
+      ),
+    )
+        .toList();
+
+  } catch (e) {
+
+    print(e);
+
+    return [];
+
+  }
 }
 
 Future<List<GestationModel>>

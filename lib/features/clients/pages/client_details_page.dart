@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/client_model.dart';
+import '../providers/client_provider.dart';
 import 'edit_client_page.dart';
 
-class ClientDetailsPage extends StatelessWidget {
+class ClientDetailsPage extends ConsumerWidget {
   final ClientModel client;
 
   const ClientDetailsPage({
@@ -12,7 +14,7 @@ class ClientDetailsPage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Détails du client"),
@@ -103,6 +105,58 @@ class ClientDetailsPage extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          const SizedBox(height: 12),
+
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              final confirmation = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text("Confirmation"),
+                  content: Text(
+                    "Supprimer définitivement ${client.nom} ?",
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext, false);
+                      },
+                      child: const Text("Annuler"),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext, true);
+                      },
+                      child: const Text("Supprimer"),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmation != true) return;
+
+              await ref
+                  .read(clientNotifierProvider.notifier)
+                  .supprimerClient(client.id);
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Client supprimé"),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.delete),
+            label: const Text("Supprimer"),
+          ),
+
+          const SizedBox(height: 12),
+
           OutlinedButton.icon(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back),
@@ -113,6 +167,7 @@ class ClientDetailsPage extends StatelessWidget {
     );
   }
 }
+
 
 class _InfoTile extends StatelessWidget {
   final IconData icon;

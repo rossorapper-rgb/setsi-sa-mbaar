@@ -10,6 +10,7 @@ import '../widgets/client_search_bar.dart';
 import '../widgets/client_stats.dart';
 import 'client_details_page.dart';
 import 'edit_client_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ClientsPage extends ConsumerStatefulWidget {
   const ClientsPage({super.key});
@@ -289,12 +290,30 @@ return ClientCard(
     );
   },
 
-  onCall: () {
-    // À implémenter
+  onCall: () async {
+    final uri = Uri(
+      scheme: 'tel',
+      path: client.telephone,
+    );
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   },
 
-  onWhatsapp: () {
-    // À compléter plus tard
+  onWhatsapp: () async {
+    final numero = client.telephone.replaceAll(' ', '');
+
+    final uri = Uri.parse(
+      'https://wa.me/$numero',
+    );
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    }
   },
 );
 },
