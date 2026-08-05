@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setsi_sa_mbaar/core/theme/app_colors.dart';
 import 'package:setsi_sa_mbaar/core/widgets/stat_card.dart';
 import 'package:setsi_sa_mbaar/providers/dashboard_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardStats extends ConsumerWidget {
   const DashboardStats({super.key});
@@ -100,23 +101,17 @@ class DashboardStats extends ConsumerWidget {
           onTap: () {
             switch (card.title) {
               case "Clients":
-              // TODO: Navigation vers Clients
+                context.go('/clients');
                 break;
 
               case "Bergeries":
-              // TODO: Navigation vers Bergeries
-                break;
-
               case "Moutons":
-              // TODO: Navigation vers Moutons
-                break;
-
               case "Gestations":
-              // TODO: Navigation vers Gestations
+                context.go('/bergeries');
                 break;
 
               case "Interventions":
-              // TODO: Navigation vers Interventions
+                context.go('/interventions');
                 break;
 
               case "Revenus":

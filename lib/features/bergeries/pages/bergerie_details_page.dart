@@ -5,11 +5,12 @@ import '../../../core/widgets/app_back_bar.dart';
 import '../../clients/models/client_model.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
 import '../../moutons/pages/moutons_page.dart';
-import '../../gestation/pages/gestations_page.dart';
+
 import 'add_bergerie_page.dart';
 
 import '../models/bergerie_model.dart';
-
+import '../../interventions/pages/interventions_page.dart';
+import '../../gestation/pages/gestations_page.dart';
 class BergerieDetailsPage extends StatefulWidget {
   final BergerieModel bergerie;
 
@@ -181,13 +182,31 @@ const SizedBox(height: 25),
     icon: Icons.medical_services,
     title: "Interventions",
     subtitle: "Historique des interventions",
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const InterventionsPage(),
+        ),
+      );
+    },
   ),
 
   _menuCard(
     context,
     icon: Icons.calendar_month,
-    title: "Planning",
-    subtitle: "Calendrier des visites",
+    title: "Gestations",
+    subtitle: "Suivi des gestations",
+    onTap: () async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => GestationsPage(
+            bergerie: widget.bergerie,
+          ),
+        ),
+      );
+    },
   ),
 
   _menuCard(
@@ -195,6 +214,23 @@ const SizedBox(height: 25),
     icon: Icons.bar_chart,
     title: "Statistiques",
     subtitle: "Indicateurs de la bergerie",
+    onTap: () {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Statistiques"),
+          content: const Text(
+            "Cette fonctionnalité sera disponible après l'intégration complète des moutons et des gestations dans la bergerie.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    },
   ),
 
   _menuCard(
@@ -202,6 +238,13 @@ const SizedBox(height: 25),
     icon: Icons.settings,
     title: "Paramètres",
     subtitle: "Configuration",
+    onTap: () {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Paramètres de la bergerie bientôt disponibles."),
+        ),
+      );
+    },
   ),
 ],
 ),
