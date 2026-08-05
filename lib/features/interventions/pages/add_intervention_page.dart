@@ -302,6 +302,9 @@ try {
       clientNom:
       _clientSelectionne!.nom,
 
+      bergerieId: "",
+      bergerieNom: "",
+
       dateIntervention:
       _dateIntervention,
 

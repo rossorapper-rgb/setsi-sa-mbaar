@@ -23,18 +23,30 @@ class InterventionService {
     return InterventionModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       numero: numero,
+
       clientId: "",
       clientNom: clientNom,
+
+      bergerieId: "",
+      bergerieNom: "",
+
+      origineIntervention: "Ponctuelle",
+
       dateIntervention: dateIntervention,
       heureDebut: "",
       heureFin: "",
+
       lavage: lavage,
       nettoyageBergerie: nettoyageBergerie,
       desinfection: desinfection,
+
       agent: agent,
       vehicule: vehicule,
+
       nombreMoutons: nombreMoutons,
+
       observations: observations,
+
       statut: "Planifiée",
     );
   }

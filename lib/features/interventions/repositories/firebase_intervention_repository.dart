@@ -20,6 +20,8 @@ _firestore.collection('interventions');
 Future<InterventionModel> createIntervention({
 required String clientId,
 required String clientNom,
+  required String bergerieId,
+  required String bergerieNom,
 required DateTime dateIntervention,
 required String heureDebut,
 required String heureFin,
@@ -29,6 +31,18 @@ required bool desinfection,
 required String agent,
 required String vehicule,
 required int nombreMoutons,
+  String? abonnementId,
+  List<String> moutonsConcernes = const [],
+
+  bool vermifugation = false,
+  String produitVermifuge = "",
+  DateTime? prochaineVermifugation,
+
+  bool traitementEnCours = false,
+  String maladie = "",
+  DateTime? finTraitement,
+
+  String recommandations = "",
 String observations = "",
 }) async {
 final doc = _collection.doc();
@@ -40,9 +54,15 @@ prefix: "INT",
 final intervention = InterventionModel(
 id: doc.id,
 numero: numero,
-clientId: clientId,
-clientNom: clientNom,
-dateIntervention: dateIntervention,
+  clientId: clientId,
+  clientNom: clientNom,
+
+  bergerieId: bergerieId,
+  bergerieNom: bergerieNom,
+
+  origineIntervention: "Ponctuelle",
+  abonnementId: abonnementId,
+  dateIntervention: dateIntervention,
 heureDebut: heureDebut,
 heureFin: heureFin,
 lavage: lavage,
@@ -51,7 +71,19 @@ desinfection: desinfection,
 agent: agent,
 vehicule: vehicule,
 nombreMoutons: nombreMoutons,
+  moutonsConcernes: moutonsConcernes,
+
+  vermifugation: vermifugation,
+  produitVermifuge: produitVermifuge,
+  prochaineVermifugation:
+  prochaineVermifugation,
+
+  traitementEnCours:
+  traitementEnCours,
+  maladie: maladie,
+  finTraitement: finTraitement,
 observations: observations,
+  recommandations: recommandations,
 statut: "Planifiée",
 );
 

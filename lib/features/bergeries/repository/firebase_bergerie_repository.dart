@@ -57,4 +57,34 @@ class FirebaseBergerieRepository implements BergerieRepository {
       'id': doc.id,
     });
   }
+  //====================================================
+// BERGERIES D'UN CLIENT
+//====================================================
+
+  Future<List<BergerieModel>> getBergeriesByClient(
+      String clientId,
+      ) async {
+    final snapshot = await _firestore
+        .collection(_collection)
+        .where(
+      'clientId',
+      isEqualTo: clientId,
+    )
+        .get();
+
+    final liste = snapshot.docs
+        .map(
+          (doc) => BergerieModel.fromMap({
+        ...doc.data(),
+        'id': doc.id,
+      }),
+    )
+        .toList();
+
+    liste.sort(
+          (a, b) => a.nom.compareTo(b.nom),
+    );
+
+    return liste;
+  }
 }

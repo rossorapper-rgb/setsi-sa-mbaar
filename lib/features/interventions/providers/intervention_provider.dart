@@ -31,6 +31,8 @@ state = AsyncError(e, st);
 Future<void> ajouterIntervention({
 required String clientId,
 required String clientNom,
+  required String bergerieId,
+  required String bergerieNom,
 required DateTime dateIntervention,
 required String heureDebut,
 required String heureFin,
@@ -40,12 +42,26 @@ required bool desinfection,
 required String agent,
 required String vehicule,
 required int nombreMoutons,
+  String? abonnementId,
+  List<String> moutonsConcernes = const [],
+
+  bool vermifugation = false,
+  String produitVermifuge = "",
+  DateTime? prochaineVermifugation,
+
+  bool traitementEnCours = false,
+  String maladie = "",
+  DateTime? finTraitement,
+
+  String recommandations = "",
 String observations = "",
 }) async {
 try {
 await _repository.createIntervention(
 clientId: clientId,
 clientNom: clientNom,
+  bergerieId: bergerieId,
+  bergerieNom: bergerieNom,
 dateIntervention: dateIntervention,
 heureDebut: heureDebut,
 heureFin: heureFin,
@@ -55,6 +71,18 @@ desinfection: desinfection,
 agent: agent,
 vehicule: vehicule,
 nombreMoutons: nombreMoutons,
+  abonnementId: abonnementId,
+  moutonsConcernes: moutonsConcernes,
+
+  vermifugation: vermifugation,
+  produitVermifuge: produitVermifuge,
+  prochaineVermifugation: prochaineVermifugation,
+
+  traitementEnCours: traitementEnCours,
+  maladie: maladie,
+  finTraitement: finTraitement,
+
+  recommandations: recommandations,
 observations: observations,
 );
 
