@@ -197,4 +197,14 @@ class FirebaseMoutonRepository {
           sexe == 'mâle';
     }).toList();
   }
+
+  /// Supprimer (archiver) un mouton
+  Future<void> deleteMouton(String id) async {
+    await _firestore
+        .collection(_collection)
+        .doc(id)
+        .update({
+      'actif': false,
+    });
+  }
 }

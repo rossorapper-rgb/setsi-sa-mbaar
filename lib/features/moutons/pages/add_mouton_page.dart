@@ -430,16 +430,7 @@ Future<void> _enregistrer() async {
     return;
   }
 
-  if (_dateNaissance == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Veuillez sélectionner une date de naissance.",
-        ),
-      ),
-    );
-    return;
-  }
+
 
   setState(() {
     _loading = true;
@@ -454,7 +445,7 @@ Future<void> _enregistrer() async {
       _numeroController.text.trim(),
       race: _race,
       sexe: _sexe,
-      dateNaissance: _dateNaissance!,
+      dateNaissance: _dateNaissance,
       poids: _poidsController.text.trim().isEmpty
           ? 0
           : double.tryParse(

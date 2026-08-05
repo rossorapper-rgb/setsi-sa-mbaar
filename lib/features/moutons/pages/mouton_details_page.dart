@@ -11,6 +11,8 @@ import '../../clients/repositories/firebase_client_repository.dart';
 import '../models/mouton_model.dart';
 import '../widgets/mouton_header.dart';
 import '../widgets/mouton_reproduction_tab.dart';
+import 'add_mouton_page.dart';
+import '../repository/firebase_mouton_repository.dart';
 
 class MoutonDetailsPage extends StatefulWidget {
   final MoutonModel mouton;
@@ -35,6 +37,9 @@ FirebaseBergerieRepository();
 final FirebaseClientRepository
 _clientRepository =
 FirebaseClientRepository();
+final FirebaseMoutonRepository
+_moutonRepository =
+FirebaseMoutonRepository();
 
 BergerieModel? _bergerie;
 ClientModel? _client;
@@ -485,17 +490,23 @@ icon: Icons.edit,
 texte:
 "Modifier le mouton",
 couleur: Colors.orange,
-onPressed: () {
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"La modification sera connectée prochainement.",
-),
-),
-);
-},
+  onPressed: () async {
+    final resultat = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddMoutonPage(
+          bergerie: _bergerie!,
+          mouton: widget.mouton,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (resultat == true) {
+      Navigator.pop(context, true);
+    }
+  },
 ),
 
 const SizedBox(height: 12),
@@ -505,61 +516,57 @@ icon: Icons.delete,
 texte:
 "Supprimer le mouton",
 couleur: Colors.red,
-onPressed: () async {
-final supprimer =
-await showDialog<
-bool>(
-context: context,
-builder: (_) =>
-AlertDialog(
-title: const Text(
-"Confirmation",
-),
-content: Text(
-"Voulez-vous supprimer ${widget.mouton.nom} ?",
-),
-actions: [
-TextButton(
-onPressed: () {
-Navigator.pop(
-context,
-false,
-);
-},
-child: const Text(
-"Annuler",
-),
-),
+  onPressed: () async {
+    final supprimer = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Confirmation"),
+        content: Text(
+          "Voulez-vous supprimer ${widget.mouton.nom} ?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuler"),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Supprimer"),
+          ),
+        ],
+      ),
+    );
 
-FilledButton(
-onPressed: () {
-Navigator.pop(
-context,
-true,
-);
-},
-child: const Text(
-"Supprimer",
-),
-),
-],
-),
-);
+    if (supprimer != true) return;
 
-if (supprimer != true) {
-return;
-}
+    try {
+      await _moutonRepository.deleteMouton(widget.mouton.id);
 
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"La suppression Firebase sera ajoutée dans la prochaine étape.",
-),
-),
-);
-},
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Le mouton a été supprimé avec succès.",
+          ),
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            "Erreur : $e",
+          ),
+        ),
+      );
+    }
+  },
 ),
 
 const SizedBox(height: 12),
