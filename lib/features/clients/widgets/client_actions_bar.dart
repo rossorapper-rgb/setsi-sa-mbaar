@@ -4,8 +4,6 @@ class ClientActionsBar extends StatelessWidget {
   final int totalClients;
   final VoidCallback onAdd;
   final VoidCallback? onRefresh;
-  final VoidCallback? onExportPdf;
-  final VoidCallback? onExportExcel;
   final bool isRefreshing;
 
   const ClientActionsBar({
@@ -14,8 +12,6 @@ class ClientActionsBar extends StatelessWidget {
     required this.onAdd,
     required this.isRefreshing,
     this.onRefresh,
-    this.onExportPdf,
-    this.onExportExcel,
   });
 
   @override
@@ -40,16 +36,7 @@ class ClientActionsBar extends StatelessWidget {
               : "Actualiser",
         ),
       ),
-      OutlinedButton.icon(
-        onPressed: onExportPdf,
-        icon: const Icon(Icons.picture_as_pdf),
-        label: const Text("PDF"),
-      ),
-      OutlinedButton.icon(
-        onPressed: onExportExcel,
-        icon: const Icon(Icons.table_chart),
-        label: const Text("Excel"),
-      ),
+
       FilledButton.icon(
         onPressed: onAdd,
         icon: const Icon(Icons.person_add_alt_1),

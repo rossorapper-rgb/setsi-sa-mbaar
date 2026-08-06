@@ -178,25 +178,7 @@ const SizedBox(height: 24),
       await _refreshClients();
     },
 
-    onExportPdf: () {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Export PDF bientôt disponible",
-          ),
-        ),
-      );
-    },
 
-    onExportExcel: () {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Export Excel bientôt disponible",
-          ),
-        ),
-      );
-    },
   ),
 
 const SizedBox(height: 24),
