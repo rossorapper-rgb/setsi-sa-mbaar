@@ -139,7 +139,17 @@ return "$ans an${ans > 1 ? "s" : ""}";
 
 return "$ans an${ans > 1 ? "s" : ""} - $reste mois";
 }
+String _identificationCourte(String numero) {
+  if (numero.trim().isEmpty) {
+    return "-";
+  }
 
+  if (numero.length <= 6) {
+    return numero;
+  }
+
+  return "#${numero.substring(numero.length - 6)}";
+}
 Widget _sectionTitle(
 IconData icon,
 String titre,
@@ -314,12 +324,13 @@ Icons.badge,
 AppCard(
 child: Column(
 children: [
-_infoTile(
-icon: Icons.qr_code,
-titre: "Identification",
-valeur: widget.mouton
-.numeroIdentification,
-),
+  _infoTile(
+    icon: Icons.qr_code,
+    titre: "Identification",
+    valeur: _identificationCourte(
+      widget.mouton.numeroIdentification,
+    ),
+  ),
 
 _infoTile(
 icon: Icons.pets,
@@ -482,174 +493,94 @@ Icons.dashboard_customize,
 "Actions",
 ),
 
-AppCard(
-child: Column(
-children: [
-_actionButton(
-icon: Icons.edit,
-texte:
-"Modifier le mouton",
-couleur: Colors.orange,
-  onPressed: () async {
-    final resultat = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddMoutonPage(
-          bergerie: _bergerie!,
-          mouton: widget.mouton,
+  AppCard(
+    child: Column(
+      children: [
+        _actionButton(
+          icon: Icons.edit,
+          texte: "Modifier le mouton",
+          couleur: Colors.orange,
+          onPressed: () async {
+            final resultat = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AddMoutonPage(
+                  bergerie: _bergerie!,
+                  mouton: widget.mouton,
+                ),
+              ),
+            );
+
+            if (!mounted) return;
+
+            if (resultat == true) {
+              Navigator.pop(context, true);
+            }
+          },
         ),
-      ),
-    );
 
-    if (!mounted) return;
+        const SizedBox(height: 12),
 
-    if (resultat == true) {
-      Navigator.pop(context, true);
-    }
-  },
-),
+        _actionButton(
+          icon: Icons.delete,
+          texte: "Supprimer le mouton",
+          couleur: Colors.red,
+          onPressed: () async {
+            final supprimer = await showDialog<bool>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text("Confirmation"),
+                content: Text(
+                  "Voulez-vous supprimer ${widget.mouton.nom} ?",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Annuler"),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text("Supprimer"),
+                  ),
+                ],
+              ),
+            );
 
-const SizedBox(height: 12),
+            if (supprimer != true) return;
 
-_actionButton(
-icon: Icons.delete,
-texte:
-"Supprimer le mouton",
-couleur: Colors.red,
-  onPressed: () async {
-    final supprimer = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Confirmation"),
-        content: Text(
-          "Voulez-vous supprimer ${widget.mouton.nom} ?",
+            try {
+              await _moutonRepository.deleteMouton(widget.mouton.id);
+
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: Colors.green,
+                  content: Text(
+                    "Le mouton a été supprimé avec succès.",
+                  ),
+                ),
+              );
+
+              Navigator.pop(context, true);
+            } catch (e) {
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: Colors.red,
+                  content: Text("Erreur : $e"),
+                ),
+              );
+            }
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Annuler"),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Supprimer"),
-          ),
-        ],
-      ),
-    );
+      ],
+    ),
+  ),
 
-    if (supprimer != true) return;
+  const SizedBox(height: 30),
 
-    try {
-      await _moutonRepository.deleteMouton(widget.mouton.id);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.green,
-          content: Text(
-            "Le mouton a été supprimé avec succès.",
-          ),
-        ),
-      );
-
-      Navigator.pop(context, true);
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            "Erreur : $e",
-          ),
-        ),
-      );
-    }
-  },
-),
-
-const SizedBox(height: 12),
-
-_actionButton(
-icon: Icons.favorite,
-texte: "Santé",
-couleur: Colors.red,
-onPressed: () {
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"Le module Santé sera bientôt disponible.",
-),
-),
-);
-},
-),
-
-const SizedBox(height: 12),
-_actionButton(
-icon: Icons.pregnant_woman,
-texte: "Gestation",
-couleur: Colors.deepPurple,
-onPressed: () {
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"Ouverture du module Gestation prochainement.",
-),
-),
-);
-},
-),
-
-const SizedBox(height: 12),
-
-_actionButton(
-icon:
-Icons.cleaning_services,
-texte: "Interventions",
-couleur: Colors.green,
-onPressed: () {
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"Ouverture du module Interventions prochainement.",
-),
-),
-);
-},
-),
-
-const SizedBox(height: 12),
-
-_actionButton(
-icon: Icons.history,
-texte: "Historique",
-couleur:
-Colors.blueGrey,
-onPressed: () {
-ScaffoldMessenger.of(
-context)
-.showSnackBar(
-const SnackBar(
-content: Text(
-"L'historique complet sera disponible dans une prochaine version.",
-),
-),
-);
-},
-),
-],
-),
-),
-
-const SizedBox(height: 30),
 ],
 ),
 );

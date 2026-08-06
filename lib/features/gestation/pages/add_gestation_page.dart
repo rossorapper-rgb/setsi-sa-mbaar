@@ -603,18 +603,10 @@ class _AddGestationPageState extends State<AddGestationPage> {
               TextFormField(
                 controller: _nomBelierController,
                 decoration: const InputDecoration(
-                  labelText: "Nom du bélier",
+                  labelText: "Nom du bélier (facultatif)",
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (_typeBelier ==
-                      TypeBelier.exterieur &&
-                      (value == null ||
-                          value.trim().isEmpty)) {
-                    return "Nom obligatoire";
-                  }
-                  return null;
-                },
+                validator: (_) => null,
               ),
 
               const SizedBox(height: 16),
