@@ -209,43 +209,7 @@ const SizedBox(height: 25),
     },
   ),
 
-  _menuCard(
-    context,
-    icon: Icons.bar_chart,
-    title: "Statistiques",
-    subtitle: "Indicateurs de la bergerie",
-    onTap: () {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Statistiques"),
-          content: const Text(
-            "Cette fonctionnalité sera disponible après l'intégration complète des moutons et des gestations dans la bergerie.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    },
-  ),
 
-  _menuCard(
-    context,
-    icon: Icons.settings,
-    title: "Paramètres",
-    subtitle: "Configuration",
-    onTap: () {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Paramètres de la bergerie bientôt disponibles."),
-        ),
-      );
-    },
-  ),
 ],
 ),
 ),
