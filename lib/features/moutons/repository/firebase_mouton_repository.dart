@@ -139,36 +139,9 @@ class FirebaseMoutonRepository {
 
     return moutons.where((m) {
       return m.sexe.toLowerCase() == 'femelle';
-      /// Toutes les brebis d'une bergerie
-      Future<List<MoutonModel>> getBrebisByBergerie(
-          String bergerieId,
-          ) async {
-        final moutons = await getMoutonsByBergerie(
-          bergerieId,
-        );
-
-        return moutons.where((m) {
-          return m.sexe.toLowerCase() == 'femelle';
-        }).toList();
-      }
-
-      /// Tous les béliers d'une bergerie
-      Future<List<MoutonModel>> getBeliersByBergerie(
-          String bergerieId,
-          ) async {
-        final moutons = await getMoutonsByBergerie(
-          bergerieId,
-        );
-
-        return moutons.where((m) {
-          final sexe = m.sexe.toLowerCase();
-
-          return sexe == 'male' ||
-              sexe == 'mâle';
-        }).toList();
-      }
     }).toList();
   }
+
   /// Toutes les brebis d'une bergerie
   Future<List<MoutonModel>> getBrebisByBergerie(
       String bergerieId,
@@ -193,8 +166,7 @@ class FirebaseMoutonRepository {
     return moutons.where((m) {
       final sexe = m.sexe.toLowerCase();
 
-      return sexe == 'male' ||
-          sexe == 'mâle';
+      return sexe == 'male' || sexe == 'mâle';
     }).toList();
   }
 

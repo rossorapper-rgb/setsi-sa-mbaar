@@ -6,6 +6,16 @@ import '../../clients/models/client_model.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
 import '../providers/intervention_provider.dart';
 import '../models/intervention_model.dart';
+import '../widgets/intervention_client_section.dart';
+import '../widgets/intervention_bergerie_section.dart';
+import '../widgets/intervention_moutons_section.dart';
+import '../widgets/intervention_planning_section.dart';
+import '../widgets/intervention_prestations_section.dart';
+import '../widgets/intervention_traitement_section.dart';
+import '../../bergeries/models/bergerie_model.dart';
+import '../../bergeries/repository/firebase_bergerie_repository.dart';
+import '../../moutons/models/mouton_model.dart';
+import '../../moutons/repository/firebase_mouton_repository.dart';
 class AddInterventionPage extends ConsumerStatefulWidget {
   final bool isEdition;
   final InterventionModel? intervention;
@@ -49,12 +59,35 @@ List<ClientModel> _clients = [];
 
 ClientModel? _clientSelectionne;
 
+final FirebaseBergerieRepository _bergerieRepository =
+FirebaseBergerieRepository();
+
+List<BergerieModel> _bergeries = [];
+
+BergerieModel? _bergerieSelectionnee;
+final FirebaseMoutonRepository _moutonRepository =
+FirebaseMoutonRepository();
+
+List<MoutonModel> _moutons = [];
+
+List<String> _moutonsSelectionnes = [];
+
 bool _chargement = true;
 bool _enregistrement = false;
 
 bool _lavage = true;
 bool _nettoyageBergerie = false;
 bool _desinfection = false;
+bool _traitementEnCours = false;
+
+DateTime? _finTraitement;
+
+final TextEditingController _maladieController =
+TextEditingController();
+
+final TextEditingController
+_recommandationsController =
+TextEditingController();
 
 DateTime _dateIntervention = DateTime.now();
 
@@ -152,25 +185,41 @@ _heureFinController.dispose();
 _agentController.dispose();
 _vehiculeController.dispose();
 _observationsController.dispose();
-
+_maladieController.dispose();
+_recommandationsController.dispose();
 super.dispose();
 }
 Future<void> _selectionnerDate() async {
-final DateTime? date = await showDatePicker(
-context: context,
-initialDate: _dateIntervention,
-firstDate: DateTime(2024),
-lastDate: DateTime(2100),
-locale: const Locale('fr', 'FR'),
-);
+  final DateTime? date = await showDatePicker(
+    context: context,
+    initialDate: _dateIntervention,
+    firstDate: DateTime(2024),
+    lastDate: DateTime(2100),
+    locale: const Locale('fr', 'FR'),
+  );
 
-if (date == null) return;
+  if (date == null) return;
 
-setState(() {
-_dateIntervention = date;
-_dateController.text =
-DateFormat('dd/MM/yyyy').format(date);
-});
+  setState(() {
+    _dateIntervention = date;
+    _dateController.text =
+        DateFormat('dd/MM/yyyy').format(date);
+  });
+}
+
+Future<void> _selectionnerFinTraitement() async {
+  final DateTime? date = await showDatePicker(
+    context: context,
+    initialDate: _finTraitement ?? DateTime.now(),
+    firstDate: DateTime(2024),
+    lastDate: DateTime(2100),
+  );
+
+  if (date == null) return;
+
+  setState(() {
+    _finTraitement = date;
+  });
 }
 
 Future<void> _selectionnerHeureDebut() async {
@@ -261,31 +310,47 @@ try {
         clientId: _clientSelectionne!.id,
         clientNom: _clientSelectionne!.nom,
 
-        dateIntervention:
-        _dateIntervention,
+        dateIntervention: _dateIntervention,
 
-        heureDebut:
-        _heureDebutController.text.trim(),
+        heureDebut: _heureDebutController.text.trim(),
 
-        heureFin:
-        _heureFinController.text.trim(),
+        heureFin: _heureFinController.text.trim(),
 
         lavage: _lavage,
 
-        nettoyageBergerie:
-        _nettoyageBergerie,
+        nettoyageBergerie: _nettoyageBergerie,
 
-        desinfection:
-        _desinfection,
+        desinfection: _desinfection,
 
-        agent:
-        _agentController.text.trim(),
+        agent: _agentController.text.trim(),
 
-        vehicule:
-        _vehiculeController.text.trim(),
+        vehicule: _vehiculeController.text.trim(),
+
+        bergerieId:
+        _bergerieSelectionnee?.id ??
+            widget.intervention!.bergerieId,
+
+        bergerieNom:
+        _bergerieSelectionnee?.nom ??
+            widget.intervention!.bergerieNom,
 
         nombreMoutons:
         _clientSelectionne!.nombreMoutons,
+
+        moutonsConcernes:
+        _moutonsSelectionnes,
+
+        traitementEnCours:
+        _traitementEnCours,
+
+        maladie:
+        _maladieController.text.trim(),
+
+        finTraitement:
+        _finTraitement,
+
+        recommandations:
+        _recommandationsController.text.trim(),
 
         observations:
         _observationsController.text.trim(),
@@ -302,8 +367,8 @@ try {
       clientNom:
       _clientSelectionne!.nom,
 
-      bergerieId: "",
-      bergerieNom: "",
+      bergerieId: _bergerieSelectionnee?.id ?? "",
+      bergerieNom: _bergerieSelectionnee?.nom ?? "",
 
       dateIntervention:
       _dateIntervention,
@@ -385,202 +450,123 @@ child: ListView(
 padding: const EdgeInsets.all(16),
 children: [
 
-/// CLIENT
-DropdownButtonFormField<ClientModel>(
-value: _clientSelectionne,
-decoration: const InputDecoration(
-labelText: "Client",
-border: OutlineInputBorder(),
-prefixIcon: Icon(Icons.person),
-),
-items: _clients
-.map(
-(client) => DropdownMenuItem(
-value: client,
-child: Text(client.nom),
-),
-)
-.toList(),
-onChanged: (client) {
-setState(() {
-_clientSelectionne = client;
-});
-},
-validator: (value) {
-if (value == null) {
-return "Veuillez sélectionner un client";
-}
-return null;
-},
-),
-
-const SizedBox(height: 16),
-
-if (_clientSelectionne != null)
-Card(
-child: Padding(
-padding: const EdgeInsets.all(12),
-child: Column(
-crossAxisAlignment:
-CrossAxisAlignment.start,
-children: [
-
-Text(
-_clientSelectionne!.nom,
-style: const TextStyle(
-fontWeight: FontWeight.bold,
-fontSize: 18,
-),
-),
-
-const SizedBox(height: 8),
-
-Text(
-"Téléphone : ${_clientSelectionne!.telephone}",
-),
-
-Text(
-"Quartier : ${_clientSelectionne!.quartier}",
-),
-
-Text(
-"Moutons : ${_clientSelectionne!.nombreMoutons}",
-),
-
-Text(
-"Abonnement : ${_clientSelectionne!.abonnement}",
-),
-],
-),
-),
-),
-
-const SizedBox(height: 20),
-
-/// DATE
-TextFormField(
-controller: _dateController,
-readOnly: true,
-decoration: InputDecoration(
-labelText: "Date d'intervention",
-border: const OutlineInputBorder(),
-suffixIcon: IconButton(
-icon: const Icon(Icons.calendar_month),
-onPressed: _selectionnerDate,
-),
-),
-),
-
-const SizedBox(height: 16),
-
-Row(
-children: [
-
-Expanded(
-child: TextFormField(
-controller:
-_heureDebutController,
-readOnly: true,
-decoration: InputDecoration(
-labelText: "Début",
-border:
-const OutlineInputBorder(),
-suffixIcon: IconButton(
-icon: const Icon(Icons.access_time),
-onPressed:
-_selectionnerHeureDebut,
-),
-),
-),
-),
-
-const SizedBox(width: 12),
-
-Expanded(
-child: TextFormField(
-controller:
-_heureFinController,
-readOnly: true,
-decoration: InputDecoration(
-labelText: "Fin",
-border:
-const OutlineInputBorder(),
-suffixIcon: IconButton(
-icon: const Icon(Icons.access_time),
-onPressed:
-_selectionnerHeureFin,
-),
-),
-),
-),
-],
-),
-
-const SizedBox(height: 20),
-  const Text(
-    "Prestations",
-    style: TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-
-  CheckboxListTile(
-    value: _lavage,
-    title: const Text("Lavage"),
-    onChanged: (value) {
+  InterventionClientSection(
+    clients: _clients,
+    clientSelectionne: _clientSelectionne,
+    onClientChanged: (client) async {
       setState(() {
-        _lavage = value ?? false;
+        _clientSelectionne = client;
+        _bergerieSelectionnee = null;
+        _bergeries = [];
+      });
+
+      if (client == null) return;
+
+      final liste = await _bergerieRepository
+          .getBergeriesByClient(client.id);
+
+      if (!mounted) return;
+
+      setState(() {
+        _bergeries = liste;
       });
     },
   ),
 
-  CheckboxListTile(
-    value: _nettoyageBergerie,
-    title: const Text("Nettoyage de la bergerie"),
-    onChanged: (value) {
+const SizedBox(height: 20),
+  InterventionBergerieSection(
+    bergeries: _bergeries,
+    bergerieSelectionnee: _bergerieSelectionnee,
+    onBergerieChanged: (bergerie) async {
       setState(() {
-        _nettoyageBergerie = value ?? false;
+        _bergerieSelectionnee = bergerie;
+        _moutons = [];
+        _moutonsSelectionnes = [];
       });
-    },
-  ),
 
-  CheckboxListTile(
-    value: _desinfection,
-    title: const Text("Désinfection"),
-    onChanged: (value) {
+      if (bergerie == null) return;
+
+      final liste = await _moutonRepository
+          .getMoutonsByBergerie(bergerie.id);
+
+      if (!mounted) return;
+
       setState(() {
-        _desinfection = value ?? false;
+        _moutons = liste;
       });
     },
   ),
 
   const SizedBox(height: 20),
-
-  TextFormField(
-    controller: _agentController,
-    decoration: const InputDecoration(
-      labelText: "Agent",
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.badge),
-    ),
-    validator: (value) {
-      if (value == null || value.trim().isEmpty) {
-        return "Veuillez renseigner l'agent";
-      }
-      return null;
+  InterventionMoutonsSection(
+    moutons: _moutons,
+    moutonsSelectionnes: _moutonsSelectionnes,
+    onSelectionChanged: (selection) {
+      setState(() {
+        _moutonsSelectionnes = selection;
+      });
     },
   ),
 
+  const SizedBox(height: 20),
+  InterventionPlanningSection(
+    dateController: _dateController,
+    heureDebutController: _heureDebutController,
+    heureFinController: _heureFinController,
+    agentController: _agentController,
+    vehiculeController: _vehiculeController,
+    onChoisirDate: _selectionnerDate,
+    onChoisirHeureDebut: _selectionnerHeureDebut,
+    onChoisirHeureFin: _selectionnerHeureFin,
+  ),
+  const SizedBox(height: 16),
+  InterventionPrestationsSection(
+    lavage: _lavage,
+    nettoyageBergerie: _nettoyageBergerie,
+    desinfection: _desinfection,
+
+    vermifugation: false,
+    produitVermifuge: "",
+    prochaineVermifugation: null,
+
+    onLavageChanged: (value) {
+      setState(() {
+        _lavage = value;
+      });
+    },
+
+    onNettoyageChanged: (value) {
+      setState(() {
+        _nettoyageBergerie = value;
+      });
+    },
+
+    onDesinfectionChanged: (value) {
+      setState(() {
+        _desinfection = value;
+      });
+    },
+
+    onVermifugationChanged: (_) {},
+
+    onChoisirDate: () {},
+
+    produitController: TextEditingController(),
+  ),
   const SizedBox(height: 16),
 
-  TextFormField(
-    controller: _vehiculeController,
-    decoration: const InputDecoration(
-      labelText: "Véhicule",
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.local_shipping),
-    ),
+  InterventionTraitementSection(
+    traitementEnCours: _traitementEnCours,
+    maladieController: _maladieController,
+    recommandationsController:
+    _recommandationsController,
+    finTraitement: _finTraitement,
+    onTraitementChanged: (value) {
+      setState(() {
+        _traitementEnCours = value;
+      });
+    },
+    onChoisirDate: _selectionnerFinTraitement,
   ),
 
   const SizedBox(height: 16),
