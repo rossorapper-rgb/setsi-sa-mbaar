@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../../../core/session/current_user_service.dart';
+import '../../auth/services/auth_service.dart';
+import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 
 class FirebaseMoutonRepository {
@@ -39,28 +41,58 @@ class FirebaseMoutonRepository {
 
   /// Tous les moutons actifs
   Future<List<MoutonModel>> getMoutons() async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('actif', isEqualTo: true)
-        .get();
+    if (AuthService.instance.isAdmin ||
+        AuthService.instance.isResponsable) {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('actif', isEqualTo: true)
+          .get();
 
-    final moutons = snapshot.docs
-        .map(
-          (doc) => MoutonModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
-        .toList();
+      final moutons = snapshot.docs
+          .map(
+            (doc) => MoutonModel.fromMap({
+          ...doc.data(),
+          'id': doc.id,
+        }),
+      )
+          .toList();
 
-    moutons.sort(
+      moutons.sort(
+            (a, b) =>
+            a.nom.toLowerCase().compareTo(
+              b.nom.toLowerCase(),
+            ),
+      );
+
+      return moutons;
+    }
+
+    final utilisateur = CurrentUserService.instance.currentUser;
+
+    if (utilisateur == null) {
+      return [];
+    }
+
+    final bergeries =
+    await FirebaseBergerieRepository().getAllBergeries();
+
+    final List<MoutonModel> resultat = [];
+
+    for (final bergerie in bergeries) {
+      final moutons =
+      await getMoutonsByBergerie(bergerie.id);
+
+      resultat.addAll(moutons);
+    }
+
+    resultat.sort(
           (a, b) =>
           a.nom.toLowerCase().compareTo(
             b.nom.toLowerCase(),
           ),
     );
 
-    return moutons;
+    return resultat;
   }
 
   /// Un mouton par son id
