@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../../../core/session/current_user_service.dart';
+import '../../auth/services/auth_service.dart';
+import '../../clients/repositories/firebase_client_repository.dart';
 import '../../../core/services/code_generator_service.dart';
 import '../models/intervention_model.dart';
 
@@ -138,23 +140,43 @@ doc.data()!,
 //====================================================
 
 Future<List<InterventionModel>> getToutesLesInterventions() async {
-final snapshot = await _collection.get();
+  if (AuthService.instance.isAdmin ||
+      AuthService.instance.isResponsable) {
+    final snapshot = await _collection.get();
 
-final liste = snapshot.docs
-.map(
-(doc) => InterventionModel.fromMap(
-doc.data(),
-),
-)
-.toList();
+    final liste = snapshot.docs
+        .map(
+          (doc) => InterventionModel.fromMap(
+        doc.data(),
+      ),
+    )
+        .toList();
 
-liste.sort(
-(a, b) => b.dateIntervention.compareTo(
-a.dateIntervention,
-),
-);
+    liste.sort(
+          (a, b) => b.dateIntervention.compareTo(
+        a.dateIntervention,
+      ),
+    );
 
-return liste;
+    return liste;
+  }
+
+  final utilisateur = CurrentUserService.instance.currentUser;
+
+  if (utilisateur == null) {
+    return [];
+  }
+
+  final clients =
+  await FirebaseClientRepository().getClients();
+
+  if (clients.isEmpty) {
+    return [];
+  }
+
+  final client = clients.first;
+
+  return getInterventionsDuClient(client.id);
 }
 
 //====================================================
