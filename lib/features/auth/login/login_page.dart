@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/session/current_user_service.dart';
+import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -41,10 +44,33 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      final credential =
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
+      final uid = credential.user!.uid;
+
+      final utilisateur =
+      await FirebaseUtilisateurRepository()
+          .getUtilisateurById(uid);
+
+      if (utilisateur == null) {
+        throw FirebaseException(
+          plugin: 'cloud_firestore',
+          message: 'Profil utilisateur introuvable.',
+        );
+      }
+
+      CurrentUserService.instance.setCurrentUser(utilisateur);
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({
+        'derniereConnexion': Timestamp.now(),
+      });
 
       if (!mounted) return;
 

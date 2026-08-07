@@ -19,6 +19,10 @@ class DashboardDrawer extends StatelessWidget {
       title: "Clients",
     ),
     _DrawerItem(
+      icon: Icons.manage_accounts_rounded,
+      title: "Utilisateurs",
+    ),
+    _DrawerItem(
       icon: Icons.home_work_rounded,
       title: "Bergeries",
     ),
@@ -189,21 +193,34 @@ class DashboardDrawer extends StatelessWidget {
         break;
 
       case 2:
-        context.go('/bergeries');
+        context.go('/utilisateurs');
         break;
 
       case 3:
-        context.go('/interventions');
+        context.go('/bergeries');
         break;
 
       case 4:
-        context.go('/allo-veto');
+        context.go('/interventions');
         break;
 
       case 5:
+        context.go('/allo-veto');
+        break;
+
       case 6:
+        context.go('/abonnements');
+        break;
+
       case 7:
+        context.go('/finances');
+        break;
+
       case 8:
+        context.go('/rapports-financiers');
+        break;
+
+      case 9:
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/client_model.dart';
 import '../providers/client_provider.dart';
-
+import 'package:go_router/go_router.dart';
 class AddClientPage extends ConsumerStatefulWidget {
   const AddClientPage({super.key});
 
@@ -124,10 +124,14 @@ _enregistrement = false;
 @override
 Widget build(BuildContext context) {
 return Scaffold(
-appBar: AppBar(
-title: const Text("Nouveau client"),
-centerTitle: true,
-),
+  appBar: AppBar(
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => context.go('/clients'),
+    ),
+    title: const Text("Nouveau client"),
+    centerTitle: true,
+  ),
 body: Form(
 key: _formKey,
 child: ListView(

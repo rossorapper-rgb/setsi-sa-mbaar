@@ -10,13 +10,21 @@ environment:
 dependencies:
     flutter:
         sdk: flutter
-    firebase_storage: ^13.0.0
-    image_picker: ^1.2.0
+
     flutter_localizations:
         sdk: flutter
 
     cupertino_icons: ^1.0.8
-    url_launcher: ^6.3.2
+
+    # PDF
+    pdf: ^3.11.3
+    printing: ^5.14.2
+    path_provider: ^2.1.5
+
+    # Médias
+    image_picker: ^1.2.0
+    firebase_storage: ^13.0.0
+
     # Firebase
     firebase_core: ^4.0.0
     firebase_auth: ^6.0.0
@@ -31,6 +39,7 @@ dependencies:
     # Utilitaires
     intl: ^0.20.2
     uuid: ^4.5.1
+    url_launcher: ^6.3.2
 
     # Graphiques
     fl_chart: ^1.0.0
@@ -40,7 +49,6 @@ dev_dependencies:
         sdk: flutter
 
     flutter_lints: ^6.0.0
-
     flutter_launcher_icons: ^0.14.4
 
 flutter:
