@@ -114,7 +114,11 @@ class DashboardDrawer extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      onTap: () => _onItemSelected(context, index),
+                      onTap: () {
+                        Navigator.pop(context);
+
+                        context.go(item.route);
+                      },
                     ),
                   );
                 },
@@ -146,55 +150,7 @@ class DashboardDrawer extends StatelessWidget {
     );
   }
 
-  void _onItemSelected(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go('/dashboard/admin');
-        break;
 
-      case 1:
-        context.go('/clients');
-        break;
-
-      case 2:
-        context.go('/utilisateurs');
-        break;
-
-      case 3:
-        context.go('/bergeries');
-        break;
-
-      case 4:
-        context.go('/interventions');
-        break;
-
-      case 5:
-        context.go('/allo-veto');
-        break;
-
-      case 6:
-        context.go('/abonnements');
-        break;
-
-      case 7:
-        context.go('/finances');
-        break;
-
-      case 8:
-        context.go('/rapports-financiers');
-        break;
-
-      case 9:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Ce module sera disponible prochainement.",
-            ),
-          ),
-        );
-        break;
-    }
-  }
 }
 
 class _DrawerItem {
