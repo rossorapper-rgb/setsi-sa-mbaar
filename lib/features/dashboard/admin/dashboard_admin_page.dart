@@ -30,14 +30,14 @@ class DashboardAdminPage extends StatelessWidget {
 
       drawer: isDesktop
           ? null
-          : const DashboardDrawer(selectedIndex: 0),
+          : DashboardDrawer(selectedIndex: 0),
 
       body: SafeArea(
         child: Row(
           children: [
 
             if (isDesktop)
-              const SizedBox(
+              SizedBox(
                 width: 260,
                 child: DashboardDrawer(selectedIndex: 0),
               ),

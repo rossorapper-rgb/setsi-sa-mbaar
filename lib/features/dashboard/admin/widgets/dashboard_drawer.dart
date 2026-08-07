@@ -1,58 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../services/drawer_menu_service.dart';
+import '../models/drawer_menu_item.dart';
 class DashboardDrawer extends StatelessWidget {
-  const DashboardDrawer({
+  DashboardDrawer({
     super.key,
     required this.selectedIndex,
   });
 
   final int selectedIndex;
 
-  static const List<_DrawerItem> _items = [
-    _DrawerItem(
-      icon: Icons.dashboard_rounded,
-      title: "Tableau de bord",
-    ),
-    _DrawerItem(
-      icon: Icons.people_alt_rounded,
-      title: "Clients",
-    ),
-    _DrawerItem(
-      icon: Icons.manage_accounts_rounded,
-      title: "Utilisateurs",
-    ),
-    _DrawerItem(
-      icon: Icons.home_work_rounded,
-      title: "Bergeries",
-    ),
-
-    _DrawerItem(
-      icon: Icons.cleaning_services_rounded,
-      title: "Interventions",
-    ),
-    _DrawerItem(
-      icon: Icons.local_hospital_rounded,
-      title: "Allo Véto",
-    ),
-    _DrawerItem(
-      icon: Icons.workspace_premium_rounded,
-      title: "Abonnements",
-    ),
-    _DrawerItem(
-      icon: Icons.payments_rounded,
-      title: "Paiements",
-    ),
-    _DrawerItem(
-      icon: Icons.bar_chart_rounded,
-      title: "Rapports",
-    ),
-    _DrawerItem(
-      icon: Icons.settings_rounded,
-      title: "Paramètres",
-    ),
-  ];
-
+  final List<DrawerMenuItem> _items =
+      DrawerMenuService.instance.menus;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
