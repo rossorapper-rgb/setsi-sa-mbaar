@@ -1,10 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../../core/session/current_user_service.dart';
-import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
+import '../services/auth_service.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -44,33 +43,10 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final credential =
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await AuthService.instance.login(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
-      final uid = credential.user!.uid;
-
-      final utilisateur =
-      await FirebaseUtilisateurRepository()
-          .getUtilisateurById(uid);
-
-      if (utilisateur == null) {
-        throw FirebaseException(
-          plugin: 'cloud_firestore',
-          message: 'Profil utilisateur introuvable.',
-        );
-      }
-
-      CurrentUserService.instance.setCurrentUser(utilisateur);
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .update({
-        'derniereConnexion': Timestamp.now(),
-      });
 
       if (!mounted) return;
 
@@ -82,24 +58,43 @@ class _LoginPageState extends State<LoginPage> {
         case 'user-not-found':
           message = "Utilisateur introuvable.";
           break;
+
         case 'wrong-password':
           message = "Mot de passe incorrect.";
           break;
+
         case 'invalid-email':
           message = "Adresse email invalide.";
           break;
+
         case 'invalid-credential':
           message = "Email ou mot de passe incorrect.";
           break;
+
+        case 'profil-introuvable':
+          message =
+          "Votre compte existe mais aucun profil n'a été trouvé.";
+          break;
+
         default:
           message = e.message ?? "Erreur de connexion.";
       }
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -108,7 +103,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,7 +201,10 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: _isLoading ? null : () async {
+                      FocusScope.of(context).unfocus();
+                      await _login();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0B6E4F),
                       foregroundColor: Colors.white,
