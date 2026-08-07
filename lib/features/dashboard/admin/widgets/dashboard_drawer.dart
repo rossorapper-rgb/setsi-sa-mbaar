@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/drawer_menu_service.dart';
+import '../services/drawer_menu_service.dart';
 import '../models/drawer_menu_item.dart';
 class DashboardDrawer extends StatelessWidget {
   DashboardDrawer({
@@ -16,6 +17,8 @@ class DashboardDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+
+    final menus = DrawerMenuService.instance.menus;
 
     return Drawer(
       elevation: 0,
@@ -77,10 +80,12 @@ class DashboardDrawer extends StatelessWidget {
                   horizontal: 12,
                   vertical: 4,
                 ),
-                itemCount: _items.length,
+                itemCount: menus.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 4),
                 itemBuilder: (context, index) {
-                  final item = _items[index];
+                  final menus = DrawerMenuService.instance.menus;
+
+                  final item = menus[index];
                   final selected = selectedIndex == index;
 
                   return AnimatedContainer(
