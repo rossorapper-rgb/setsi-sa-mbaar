@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../../../core/session/current_user_service.dart';
+import '../../auth/services/auth_service.dart';
+import '../../clients/repositories/firebase_client_repository.dart';
 import '../models/bergerie_model.dart';
 import 'bergerie_repository.dart';
 
@@ -34,16 +36,36 @@ class FirebaseBergerieRepository implements BergerieRepository {
 
   @override
   Future<List<BergerieModel>> getAllBergeries() async {
-    final snapshot = await _firestore.collection(_collection).get();
+    if (AuthService.instance.isAdmin ||
+        AuthService.instance.isResponsable) {
+      final snapshot =
+      await _firestore.collection(_collection).get();
 
-    return snapshot.docs
-        .map(
-          (doc) => BergerieModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
-        .toList();
+      return snapshot.docs
+          .map(
+            (doc) => BergerieModel.fromMap({
+          ...doc.data(),
+          'id': doc.id,
+        }),
+      )
+          .toList();
+    }
+
+    final utilisateur = CurrentUserService.instance.currentUser;
+
+    if (utilisateur == null) {
+      return [];
+    }
+
+    final client =
+    await FirebaseClientRepository().getClients();
+
+    final clientCourant = client.firstWhere(
+          (c) => c.telephone == utilisateur.telephone,
+      orElse: () => throw Exception('Client introuvable'),
+    );
+
+    return getBergeriesByClient(clientCourant.id);
   }
 
   @override
