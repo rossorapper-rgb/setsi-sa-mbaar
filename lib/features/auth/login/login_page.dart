@@ -2,7 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../services/auth_service.dart';
+import '../../../core/session/current_user_service.dart';
+import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,9 +44,62 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await AuthService.instance.login(
+      final credential =
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
+      );
+
+      final firebaseUser = credential.user;
+
+      if (firebaseUser == null) {
+        throw Exception(
+          "Impossible de récupérer l'utilisateur connecté.",
+        );
+      }
+
+      final utilisateurRepository =
+      FirebaseUtilisateurRepository();
+
+      final utilisateur =
+      await utilisateurRepository.getCurrentUtilisateur(
+        firebaseUser.uid,
+      );
+
+      if (utilisateur == null) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Votre profil utilisateur SET'SI est introuvable.",
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      if (!utilisateur.actif) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Votre compte SET'SI est désactivé.",
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      CurrentUserService.instance.setCurrentUser(
+        utilisateur,
       );
 
       if (!mounted) return;
@@ -71,9 +125,8 @@ class _LoginPageState extends State<LoginPage> {
           message = "Email ou mot de passe incorrect.";
           break;
 
-        case 'profil-introuvable':
-          message =
-          "Votre compte existe mais aucun profil n'a été trouvé.";
+        case 'user-disabled':
+          message = "Ce compte utilisateur est désactivé.";
           break;
 
         default:
@@ -92,7 +145,9 @@ class _LoginPageState extends State<LoginPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(
+            "Erreur : ${e.toString()}",
+          ),
         ),
       );
     } finally {
@@ -103,6 +158,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +167,9 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 420),
+            constraints: const BoxConstraints(
+              maxWidth: 420,
+            ),
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -162,7 +220,9 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: "Adresse email",
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -176,7 +236,9 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: "Mot de passe",
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -185,7 +247,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscurePassword = !_obscurePassword;
+                          _obscurePassword =
+                          !_obscurePassword;
                         });
                       },
                     ),
@@ -201,22 +264,23 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : () async {
-                      FocusScope.of(context).unfocus();
-                      await _login();
-                    },
+                    onPressed:
+                    _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0B6E4F),
+                      backgroundColor:
+                      const Color(0xFF0B6E4F),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius:
+                        BorderRadius.circular(14),
                       ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(
+                      child:
+                      CircularProgressIndicator(
                         strokeWidth: 2.5,
                         color: Colors.white,
                       ),
@@ -225,7 +289,8 @@ class _LoginPageState extends State<LoginPage> {
                       "SE CONNECTER",
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                        FontWeight.bold,
                       ),
                     ),
                   ),
@@ -235,7 +300,9 @@ class _LoginPageState extends State<LoginPage> {
 
                 TextButton(
                   onPressed: () {},
-                  child: const Text("Mot de passe oublié ?"),
+                  child: const Text(
+                    "Mot de passe oublié ?",
+                  ),
                 ),
               ],
             ),

@@ -1,123 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:setsi_sa_mbaar/core/theme/app_colors.dart';
 import 'package:setsi_sa_mbaar/core/widgets/stat_card.dart';
 import 'package:setsi_sa_mbaar/providers/dashboard_provider.dart';
-import 'package:go_router/go_router.dart';
 
 class DashboardStats extends ConsumerWidget {
   const DashboardStats({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dashboard = ref.watch(dashboardProvider);
+    final dashboardAsync = ref.watch(dashboardProvider);
 
-    final width = MediaQuery.of(context).size.width;
-
-    final int crossAxisCount;
-
-    if (width >= 1600) {
-      crossAxisCount = 4;
-    } else if (width >= 1200) {
-      crossAxisCount = 3;
-    } else if (width >= 700) {
-      crossAxisCount = 2;
-    } else {
-      crossAxisCount = 1;
-    }
-
-    final cards = <_DashboardStatData>[
-      _DashboardStatData(
-        title: "Clients",
-        value: dashboard.clients.toString(),
-        subtitle: "Clients enregistrés",
-        evolution: "+12%",
-        icon: Icons.people_alt_rounded,
-        color: AppColors.info,
+    return dashboardAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(30),
+          child: CircularProgressIndicator(),
+        ),
       ),
-      _DashboardStatData(
-        title: "Moutons",
-        value: dashboard.moutons.toString(),
-        subtitle: "Dans le système",
-        evolution: "+8%",
-        icon: Icons.pets_rounded,
-        color: AppColors.success,
+      error: (error, stackTrace) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Impossible de charger les statistiques.",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      "Erreur : ${error.toString()}",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.red.shade700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  ref.invalidate(dashboardProvider);
+                },
+                icon: const Icon(Icons.refresh),
+                tooltip: "Réessayer",
+              ),
+            ],
+          ),
+        ),
       ),
-      _DashboardStatData(
-        title: "Bergeries",
-        value: dashboard.bergeries.toString(),
-        subtitle: "Bergeries enregistrées",
-        evolution: "+6%",
-        icon: Icons.home_rounded,
-        color: Colors.brown,
-      ),
-      _DashboardStatData(
-        title: "Gestations",
-        value: dashboard.gestations.toString(),
-        subtitle: "En cours",
-        evolution: "+4%",
-        icon: Icons.favorite_rounded,
-        color: Colors.pink,
-      ),
-      _DashboardStatData(
-        title: "Interventions",
-        value: dashboard.interventions.toString(),
-        subtitle: "Ce mois",
-        evolution: "+5%",
-        icon: Icons.home_repair_service_rounded,
-        color: AppColors.warning,
-      ),
-      _DashboardStatData(
-        title: "Revenus",
-        value: dashboard.revenusFormat,
-        subtitle: "Ce mois",
-        evolution: "+18%",
-        icon: Icons.payments_rounded,
-        color: AppColors.danger,
-      ),
-    ];
+      data: (dashboard) {
+        final width = MediaQuery.of(context).size.width;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: cards.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-        childAspectRatio: width < 700 ? 1.75 : 1.25,
-      ),
-      itemBuilder: (context, index) {
-        final card = cards[index];
+        final int crossAxisCount;
 
-        return StatCard(
-          title: card.title,
-          value: card.value,
-          subtitle: card.subtitle,
-          evolution: card.evolution,
-          icon: card.icon,
-          color: card.color,
-          onTap: () {
-            switch (card.title) {
-              case "Clients":
-                context.go('/clients');
-                break;
+        if (width >= 1600) {
+          crossAxisCount = 4;
+        } else if (width >= 1200) {
+          crossAxisCount = 3;
+        } else if (width >= 700) {
+          crossAxisCount = 2;
+        } else {
+          crossAxisCount = 1;
+        }
 
-              case "Bergeries":
-              case "Moutons":
-              case "Gestations":
-                context.go('/bergeries');
-                break;
+        final cards = <_DashboardStatData>[
+          _DashboardStatData(
+            title: "Clients",
+            value: dashboard.clients.toString(),
+            subtitle: "Clients enregistrés",
+            evolution: "",
+            icon: Icons.people_alt_rounded,
+            color: AppColors.info,
+            route: "/clients",
+          ),
+          _DashboardStatData(
+            title: "Moutons",
+            value: dashboard.moutons.toString(),
+            subtitle: "Dans le système",
+            evolution: "",
+            icon: Icons.pets_rounded,
+            color: AppColors.success,
+            route: "/bergeries",
+          ),
+          _DashboardStatData(
+            title: "Bergeries",
+            value: dashboard.bergeries.toString(),
+            subtitle: "Bergeries enregistrées",
+            evolution: "",
+            icon: Icons.home_rounded,
+            color: Colors.brown,
+            route: "/bergeries",
+          ),
+          _DashboardStatData(
+            title: "Gestations",
+            value: dashboard.gestations.toString(),
+            subtitle: "En cours",
+            evolution: "",
+            icon: Icons.favorite_rounded,
+            color: Colors.pink,
+            route: "/gestations",
+          ),
+          _DashboardStatData(
+            title: "Interventions",
+            value: dashboard.interventions.toString(),
+            subtitle: "Interventions",
+            evolution: "",
+            icon: Icons.home_repair_service_rounded,
+            color: AppColors.warning,
+            route: "/interventions",
+          ),
+          _DashboardStatData(
+            title: "Revenus",
+            value: dashboard.revenusFormat,
+            subtitle: "Paiements encaissés",
+            evolution: "",
+            icon: Icons.payments_rounded,
+            color: AppColors.danger,
+            route: "/finances",
+          ),
+        ];
 
-              case "Interventions":
-                context.go('/interventions');
-                break;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cards.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
+            childAspectRatio: width < 700 ? 1.75 : 1.25,
+          ),
+          itemBuilder: (context, index) {
+            final card = cards[index];
 
-              case "Revenus":
-              // TODO: Navigation vers Finances
-                break;
-            }
+            return StatCard(
+              title: card.title,
+              value: card.value,
+              subtitle: card.subtitle,
+              evolution: card.evolution,
+              icon: card.icon,
+              color: card.color,
+              onTap: () {
+                if (card.route == null) return;
+
+                context.go(card.route!);
+              },
+            );
           },
         );
       },
@@ -132,6 +177,7 @@ class _DashboardStatData {
   final String evolution;
   final IconData icon;
   final Color color;
+  final String? route;
 
   const _DashboardStatData({
     required this.title,
@@ -140,5 +186,6 @@ class _DashboardStatData {
     required this.evolution,
     required this.icon,
     required this.color,
+    this.route,
   });
 }
