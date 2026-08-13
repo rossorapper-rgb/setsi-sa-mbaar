@@ -217,19 +217,17 @@ class DashboardQuickActions extends ConsumerWidget {
             context.go('/interventions');
           },
         ),
-        // --------------------------------------------------------
-        // ALLO VETO
-        // --------------------------------------------------------
-
         _QuickAction(
           title: "Allô Veto",
-          subtitle: "Contacter un vétérinaire",
+          subtitle:
+          "Contacter un vétérinaire",
           icon: Icons.medical_services_rounded,
           color: Colors.red,
           onTap: () {
             context.go('/allo-veto');
           },
         ),
+
       ];
     }
 
@@ -282,19 +280,17 @@ class DashboardQuickActions extends ConsumerWidget {
             context.go('/interventions');
           },
         ),
-        // --------------------------------------------------------
-        // ALLO VETO
-        // --------------------------------------------------------
-
         _QuickAction(
           title: "Allô Veto",
-          subtitle: "Contacter un vétérinaire",
+          subtitle:
+          "Contacter un vétérinaire",
           icon: Icons.medical_services_rounded,
           color: Colors.red,
           onTap: () {
             context.go('/allo-veto');
           },
         ),
+
       ];
     }
 

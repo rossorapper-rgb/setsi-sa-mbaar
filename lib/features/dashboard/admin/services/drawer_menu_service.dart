@@ -14,12 +14,69 @@ class DrawerMenuService {
     final role = CurrentUserService.instance.role;
 
     final items = <DrawerMenuItem>[
+      // ==========================================================
+      // TABLEAU DE BORD
+      // ==========================================================
+
       DrawerMenuItem(
         icon: Icons.dashboard_rounded,
         title: "Tableau de bord",
         route: "/dashboard/admin",
         roles: UserRole.values,
       ),
+
+      // ==========================================================
+      // CLIENT
+      // ==========================================================
+
+      DrawerMenuItem(
+        icon: Icons.pets_rounded,
+        title: "Mes moutons",
+        route: "/moutons",
+        roles: const [
+          UserRole.client,
+        ],
+      ),
+
+      DrawerMenuItem(
+        icon: Icons.favorite_rounded,
+        title: "Mes gestations",
+        route: "/gestations",
+        roles: const [
+          UserRole.client,
+        ],
+      ),
+
+      // ==========================================================
+      // CLIENT + ADMIN + RESPONSABLE + TECHNICIEN
+      // ==========================================================
+
+      DrawerMenuItem(
+        icon: Icons.cleaning_services_rounded,
+        title: "Interventions",
+        route: "/interventions",
+        roles: const [
+          UserRole.admin,
+          UserRole.responsable,
+          UserRole.technicien,
+          UserRole.client,
+        ],
+      ),
+
+      // ==========================================================
+      // ALLÔ VETO — TOUS LES RÔLES
+      // ==========================================================
+
+      DrawerMenuItem(
+        icon: Icons.medical_services_rounded,
+        title: "Allô Veto",
+        route: "/allo-veto",
+        roles: UserRole.values,
+      ),
+
+      // ==========================================================
+      // ADMIN + RESPONSABLE
+      // ==========================================================
 
       DrawerMenuItem(
         icon: Icons.people_alt_rounded,
@@ -31,6 +88,10 @@ class DrawerMenuService {
         ],
       ),
 
+      // ==========================================================
+      // ADMIN
+      // ==========================================================
+
       DrawerMenuItem(
         icon: Icons.manage_accounts_rounded,
         title: "Utilisateurs",
@@ -40,6 +101,10 @@ class DrawerMenuService {
         ],
       ),
 
+      // ==========================================================
+      // ADMIN + RESPONSABLE + TECHNICIEN
+      // ==========================================================
+
       DrawerMenuItem(
         icon: Icons.home_work_rounded,
         title: "Bergeries",
@@ -47,26 +112,13 @@ class DrawerMenuService {
         roles: const [
           UserRole.admin,
           UserRole.responsable,
-        ],
-      ),
-
-      DrawerMenuItem(
-        icon: Icons.cleaning_services_rounded,
-        title: "Interventions",
-        route: "/interventions",
-        roles: const [
-          UserRole.admin,
-          UserRole.responsable,
           UserRole.technicien,
         ],
       ),
 
-      DrawerMenuItem(
-        icon: Icons.medical_services_rounded,
-        title: "Allô Veto",
-        route: "/allo-veto",
-        roles: UserRole.values,
-      ),
+      // ==========================================================
+      // ADMIN
+      // ==========================================================
 
       DrawerMenuItem(
         icon: Icons.workspace_premium_rounded,
