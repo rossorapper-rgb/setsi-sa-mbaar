@@ -14,21 +14,12 @@ class DrawerMenuService {
     final role = CurrentUserService.instance.role;
 
     final items = <DrawerMenuItem>[
-      // ========================================================
-      // TABLEAU DE BORD
-      // ========================================================
-
       DrawerMenuItem(
         icon: Icons.dashboard_rounded,
         title: "Tableau de bord",
         route: "/dashboard/admin",
         roles: UserRole.values,
       ),
-
-      // ========================================================
-      // CLIENTS
-      // ADMIN + RESPONSABLE
-      // ========================================================
 
       DrawerMenuItem(
         icon: Icons.people_alt_rounded,
@@ -40,11 +31,6 @@ class DrawerMenuService {
         ],
       ),
 
-      // ========================================================
-      // UTILISATEURS
-      // ADMIN
-      // ========================================================
-
       DrawerMenuItem(
         icon: Icons.manage_accounts_rounded,
         title: "Utilisateurs",
@@ -54,11 +40,6 @@ class DrawerMenuService {
         ],
       ),
 
-      // ========================================================
-      // BERGERIES
-      // ADMIN + RESPONSABLE + TECHNICIEN
-      // ========================================================
-
       DrawerMenuItem(
         icon: Icons.home_work_rounded,
         title: "Bergeries",
@@ -66,15 +47,8 @@ class DrawerMenuService {
         roles: const [
           UserRole.admin,
           UserRole.responsable,
-          UserRole.technicien,
         ],
       ),
-
-      // ========================================================
-      // INTERVENTIONS
-      // ADMIN + RESPONSABLE + TECHNICIEN
-      // CLIENT = MES INTERVENTIONS
-      // ========================================================
 
       DrawerMenuItem(
         icon: Icons.cleaning_services_rounded,
@@ -88,46 +62,11 @@ class DrawerMenuService {
       ),
 
       DrawerMenuItem(
-        icon: Icons.cleaning_services_rounded,
-        title: "Mes interventions",
-        route: "/interventions",
-        roles: const [
-          UserRole.client,
-        ],
+        icon: Icons.medical_services_rounded,
+        title: "Allô Veto",
+        route: "/allo-veto",
+        roles: UserRole.values,
       ),
-
-      // ========================================================
-      // MOUTONS
-      // CLIENT
-      // ========================================================
-
-      DrawerMenuItem(
-        icon: Icons.pets_rounded,
-        title: "Mes moutons",
-        route: "/moutons",
-        roles: const [
-          UserRole.client,
-        ],
-      ),
-
-      // ========================================================
-      // GESTATIONS
-      // CLIENT
-      // ========================================================
-
-      DrawerMenuItem(
-        icon: Icons.pregnant_woman_rounded,
-        title: "Mes gestations",
-        route: "/gestations",
-        roles: const [
-          UserRole.client,
-        ],
-      ),
-
-      // ========================================================
-      // ABONNEMENTS
-      // ADMIN
-      // ========================================================
 
       DrawerMenuItem(
         icon: Icons.workspace_premium_rounded,
@@ -138,11 +77,6 @@ class DrawerMenuService {
         ],
       ),
 
-      // ========================================================
-      // PAIEMENTS
-      // ADMIN
-      // ========================================================
-
       DrawerMenuItem(
         icon: Icons.payments_rounded,
         title: "Paiements",
@@ -151,11 +85,6 @@ class DrawerMenuService {
           UserRole.admin,
         ],
       ),
-
-      // ========================================================
-      // RAPPORTS
-      // ADMIN + RESPONSABLE
-      // ========================================================
 
       DrawerMenuItem(
         icon: Icons.bar_chart_rounded,
@@ -166,11 +95,6 @@ class DrawerMenuService {
           UserRole.responsable,
         ],
       ),
-
-      // ========================================================
-      // PARAMÈTRES
-      // ADMIN
-      // ========================================================
 
       DrawerMenuItem(
         icon: Icons.settings_rounded,
@@ -186,8 +110,6 @@ class DrawerMenuService {
       return [];
     }
 
-    return items
-        .where((item) => item.isAllowed(role))
-        .toList();
+    return items.where((item) => item.isAllowed(role)).toList();
   }
 }

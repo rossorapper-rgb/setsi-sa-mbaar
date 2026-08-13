@@ -125,7 +125,7 @@ class DashboardQuickActions extends ConsumerWidget {
 
       if (resultat == true && context.mounted) {
         ref.invalidate(dashboardProvider);
-          ref.invalidate(moutonsProvider);
+        ref.invalidate(moutonsProvider);
       }
     } catch (e) {
       if (!context.mounted) return;
@@ -217,6 +217,19 @@ class DashboardQuickActions extends ConsumerWidget {
             context.go('/interventions');
           },
         ),
+        // --------------------------------------------------------
+        // ALLO VETO
+        // --------------------------------------------------------
+
+        _QuickAction(
+          title: "Allô Veto",
+          subtitle: "Contacter un vétérinaire",
+          icon: Icons.medical_services_rounded,
+          color: Colors.red,
+          onTap: () {
+            context.go('/allo-veto');
+          },
+        ),
       ];
     }
 
@@ -267,6 +280,19 @@ class DashboardQuickActions extends ConsumerWidget {
           color: Colors.orange,
           onTap: () {
             context.go('/interventions');
+          },
+        ),
+        // --------------------------------------------------------
+        // ALLO VETO
+        // --------------------------------------------------------
+
+        _QuickAction(
+          title: "Allô Veto",
+          subtitle: "Contacter un vétérinaire",
+          icon: Icons.medical_services_rounded,
+          color: Colors.red,
+          onTap: () {
+            context.go('/allo-veto');
           },
         ),
       ];
