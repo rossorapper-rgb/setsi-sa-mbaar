@@ -3,8 +3,10 @@ import 'package:uuid/uuid.dart';
 
 import '../../moutons/models/mouton_model.dart';
 import '../../moutons/repository/firebase_mouton_repository.dart';
+import '../../moutons/pages/add_mouton_page.dart';
 import '../models/gestation_model.dart';
 import '../../bergeries/models/bergerie_model.dart';
+import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../repositories/firebase_gestation_repository.dart';
 import '../widgets/femelle_info_card.dart';
 import '../widgets/belier_info_card.dart';
@@ -55,9 +57,35 @@ class _AddGestationPageState extends State<AddGestationPage> {
   bool _loading = true;
   bool _saving = false;
 
+  bool get _gestationEstTerminee {
+    final gestation = widget.gestation;
+    if (gestation == null) return false;
+
+    return gestation.statut.toLowerCase() == 'terminée' ||
+        gestation.dateMiseBas != null ||
+        !gestation.active;
+  }
+
   @override
   void initState() {
     super.initState();
+
+    if (_gestationEstTerminee) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Cette gestation est terminée et ne peut plus être modifiée.",
+            ),
+          ),
+        );
+
+        Navigator.pop(context);
+      });
+      return;
+    }
 
     if (widget.gestation != null) {
       _dateSaillie = widget.gestation!.dateSaillie;
@@ -112,6 +140,100 @@ class _AddGestationPageState extends State<AddGestationPage> {
       setState(() {
         _brebisSelectionnee = null;
       });
+    }
+  }
+
+  Future<void> _ajouterFemelle() async {
+    BergerieModel? bergerie = widget.bergerie;
+
+    if (bergerie == null) {
+      try {
+        final repository = FirebaseBergerieRepository();
+        final bergeries = await repository.getAllBergeries();
+
+        if (!mounted) return;
+
+        if (bergeries.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Aucune bergerie n'est disponible. "
+                    "Veuillez d'abord créer une bergerie.",
+              ),
+            ),
+          );
+          return;
+        }
+
+        if (bergeries.length == 1) {
+          bergerie = bergeries.first;
+        } else {
+          bergerie = await showDialog<BergerieModel>(
+            context: context,
+            builder: (dialogContext) {
+              return AlertDialog(
+                title: const Text("Choisir la bergerie"),
+                content: SizedBox(
+                  width: 420,
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: bergeries.length,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemBuilder: (_, index) {
+                      final item = bergeries[index];
+
+                      return ListTile(
+                        leading: const CircleAvatar(
+                          child: Icon(Icons.home_work),
+                        ),
+                        title: Text(item.nom),
+                        subtitle: Text(
+                          item.adresse.isEmpty
+                              ? "Bergerie"
+                              : item.adresse,
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                        ),
+                        onTap: () {
+                          Navigator.pop(dialogContext, item);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+
+          if (bergerie == null) return;
+        }
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Impossible de charger les bergeries : $e",
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    final resultat = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddMoutonPage(
+          bergerie: bergerie!,
+        ),
+      ),
+    );
+
+    if (resultat == true && mounted) {
+      await _charger();
     }
   }
 
@@ -184,6 +306,19 @@ class _AddGestationPageState extends State<AddGestationPage> {
   }
 
   Future<void> _enregistrer() async {
+    if (_gestationEstTerminee) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Cette gestation est terminée et ne peut plus être modifiée.",
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -513,6 +648,17 @@ class _AddGestationPageState extends State<AddGestationPage> {
                 }
                 return null;
               },
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _loading ? null : _ajouterFemelle,
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text("Ajouter une femelle"),
+              ),
             ),
 
             const SizedBox(height: 16),

@@ -218,6 +218,10 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) {
+                    FocusScope.of(context).nextFocus();
+                  },
                   decoration: InputDecoration(
                     labelText: "Adresse email",
                     prefixIcon: const Icon(
@@ -234,6 +238,12 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: passwordController,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!_isLoading) {
+                      _login();
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: "Mot de passe",
                     prefixIcon: const Icon(
@@ -247,8 +257,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscurePassword =
-                          !_obscurePassword;
+                          _obscurePassword = !_obscurePassword;
                         });
                       },
                     ),

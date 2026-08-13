@@ -14,8 +14,7 @@ class FirebaseClientRepository {
   static const String _collection = 'clients';
 
   CollectionReference<Map<String, dynamic>>
-  get _clients =>
-      _firestore.collection(_collection);
+  get _clients => _firestore.collection(_collection);
 
   Future<List<ClientModel>> getClients() async {
     final session = CurrentUserService.instance;
@@ -71,27 +70,93 @@ class FirebaseClientRepository {
     );
   }
 
+  // ==========================================================
+  // AJOUTER UN CLIENT
+  // ==========================================================
+
   Future<void> addClient(
       ClientModel client,
       ) async {
+    final telephone = client.telephone.trim();
+
+    if (telephone.isEmpty) {
+      throw Exception(
+        "Le numéro de téléphone est obligatoire.",
+      );
+    }
+
+    // Vérification d'un éventuel doublon.
+    final snapshot = await _clients
+        .where(
+      'telephone',
+      isEqualTo: telephone,
+    )
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      throw Exception(
+        "Un client existe déjà avec ce numéro de téléphone.",
+      );
+    }
+
     await _clients
         .doc(client.id)
         .set(client.toMap());
   }
 
+  // ==========================================================
+  // MODIFIER UN CLIENT
+  // ==========================================================
+
   Future<void> updateClient(
       ClientModel client,
       ) async {
+    final telephone = client.telephone.trim();
+
+    if (telephone.isEmpty) {
+      throw Exception(
+        "Le numéro de téléphone est obligatoire.",
+      );
+    }
+
+    // On vérifie que le numéro n'est pas déjà utilisé
+    // par un autre client.
+    final snapshot = await _clients
+        .where(
+      'telephone',
+      isEqualTo: telephone,
+    )
+        .get();
+
+    final doublon = snapshot.docs.any(
+          (doc) => doc.id != client.id,
+    );
+
+    if (doublon) {
+      throw Exception(
+        "Un autre client utilise déjà ce numéro de téléphone.",
+      );
+    }
+
     await _clients
         .doc(client.id)
         .update(client.toMap());
   }
+
+  // ==========================================================
+  // SUPPRIMER UN CLIENT
+  // ==========================================================
 
   Future<void> deleteClient(
       String id,
       ) async {
     await _clients.doc(id).delete();
   }
+
+  // ==========================================================
+  // FLUX TEMPS RÉEL
+  // ==========================================================
 
   Stream<List<ClientModel>> watchClients() {
     return _clients.snapshots().map(
@@ -106,6 +171,10 @@ class FirebaseClientRepository {
     );
   }
 
+  // ==========================================================
+  // VÉRIFIER UN CLIENT PAR ID
+  // ==========================================================
+
   Future<bool> clientExiste(
       String id,
       ) async {
@@ -114,11 +183,19 @@ class FirebaseClientRepository {
     return doc.exists;
   }
 
+  // ==========================================================
+  // NOMBRE TOTAL DE CLIENTS
+  // ==========================================================
+
   Future<int> getNombreClients() async {
     final snapshot = await _clients.get();
 
     return snapshot.size;
   }
+
+  // ==========================================================
+  // RECHERCHE
+  // ==========================================================
 
   Future<List<ClientModel>> rechercherClients(
       String recherche,

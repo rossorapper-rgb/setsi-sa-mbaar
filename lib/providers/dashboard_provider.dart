@@ -61,6 +61,10 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
   final paiementRepository = FirebasePaiementRepository();
   final gestationRepository = FirebaseGestationRepository();
 
+  // ==========================================================
+  // ESPACE ADMIN / RESPONSABLE
+  // ==========================================================
+
   final bool gestionComplete =
       auth.isAdmin || auth.isResponsable;
 
@@ -84,10 +88,12 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
     );
   }
 
-  // ------------------------------------------------------
+  // ==========================================================
   // ESPACE CLIENT
-  // ------------------------------------------------------
+  // ==========================================================
 
+  // FirebaseClientRepository.getClients() filtre déjà
+  // automatiquement sur le téléphone du Client connecté.
   final clients = await clientRepository.getClients();
 
   if (clients.isEmpty) {
@@ -101,13 +107,23 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
     );
   }
 
+  // Il ne doit normalement y avoir qu'un seul client
+  // correspondant à l'utilisateur connecté.
   final client = clients.first;
+
+  // ----------------------------------------------------------
+  // BERGERIES DU CLIENT
+  // ----------------------------------------------------------
 
   final bergeries =
   await bergerieRepository.getBergeriesByClient(client.id);
 
   int nombreMoutons = 0;
   int nombreGestations = 0;
+
+  // ----------------------------------------------------------
+  // MOUTONS + GESTATIONS DU CLIENT
+  // ----------------------------------------------------------
 
   for (final bergerie in bergeries) {
     final moutons =
@@ -124,15 +140,23 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
 
     nombreGestations += gestations
         .where(
-          (gestation) => gestation.statut == 'Gestante',
+          (gestation) => gestation.statut == 'En cours',
     )
         .length;
   }
+
+  // ----------------------------------------------------------
+  // INTERVENTIONS DU CLIENT
+  // ----------------------------------------------------------
 
   final interventions =
   await interventionRepository.getInterventionsDuClient(
     client.id,
   );
+
+  // ----------------------------------------------------------
+  // PAIEMENTS DU CLIENT
+  // ----------------------------------------------------------
 
   final paiements =
   await paiementRepository.getPaiementsDuClient(
@@ -146,6 +170,10 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
         (total, paiement) =>
     total + paiement.montantPaye,
   );
+
+  // ----------------------------------------------------------
+  // RÉSULTAT DU DASHBOARD CLIENT
+  // ----------------------------------------------------------
 
   return DashboardState(
     clients: 1,

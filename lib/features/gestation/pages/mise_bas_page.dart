@@ -22,16 +22,37 @@ class _MiseBasPageState extends State<MiseBasPage> {
   late DateTime _dateMiseBas;
 
   final _totalCtrl = TextEditingController(text: "1");
-  final _malesCtrl = TextEditingController(text: "0");
-  final _femellesCtrl = TextEditingController(text: "0");
-  final _mortNesCtrl = TextEditingController(text: "0");
   final _obsCtrl = TextEditingController();
 
   bool _saving = false;
 
+  bool get _miseBasDejaEnregistree {
+    return widget.gestation.statut.toLowerCase() == 'terminée' ||
+        widget.gestation.dateMiseBas != null ||
+        !widget.gestation.active;
+  }
+
   @override
   void initState() {
     super.initState();
+
+    if (_miseBasDejaEnregistree) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "La mise bas de cette gestation a déjà été enregistrée.",
+            ),
+          ),
+        );
+
+        Navigator.pop(context);
+      });
+      return;
+    }
+
     _dateMiseBas = DateTime.now();
     _obsCtrl.text = widget.gestation.observations;
   }
@@ -39,31 +60,67 @@ class _MiseBasPageState extends State<MiseBasPage> {
   @override
   void dispose() {
     _totalCtrl.dispose();
-    _malesCtrl.dispose();
-    _femellesCtrl.dispose();
-    _mortNesCtrl.dispose();
     _obsCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
+    if (_miseBasDejaEnregistree) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "La mise bas de cette gestation a déjà été enregistrée.",
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
+
+    final nombreAgneaux = int.tryParse(_totalCtrl.text.trim());
+    if (nombreAgneaux == null || nombreAgneaux <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Le nombre total d'agneaux doit être supérieur à zéro.",
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() => _saving = true);
 
-    await _repository.enregistrerMiseBas(
-      gestationId: widget.gestation.id,
-      dateMiseBas: _dateMiseBas,
-      nombreAgneaux: int.parse(_totalCtrl.text),
-      nombreMales: int.parse(_malesCtrl.text),
-      nombreFemelles: int.parse(_femellesCtrl.text),
-      nombreMortNes: int.parse(_mortNesCtrl.text),
-      observations: _obsCtrl.text.trim(),
-    );
+    try {
+      await _repository.enregistrerMiseBas(
+        gestationId: widget.gestation.id,
+        dateMiseBas: _dateMiseBas,
+        nombreAgneaux: nombreAgneaux,
+        nombreMales: 0,
+        nombreFemelles: 0,
+        nombreMortNes: 0,
+        observations: _obsCtrl.text.trim(),
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    Navigator.pop(context, true);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Impossible d'enregistrer la mise bas : $e"),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   Future<void> _pickDate() async {
@@ -110,9 +167,6 @@ class _MiseBasPageState extends State<MiseBasPage> {
               onTap: _pickDate,
             ),
             _numberField('Nombre total d\'agneaux', _totalCtrl),
-            _numberField('Nombre de mâles', _malesCtrl),
-            _numberField('Nombre de femelles', _femellesCtrl),
-            _numberField('Nombre de mort-nés', _mortNesCtrl),
             TextFormField(
               controller: _obsCtrl,
               decoration: const InputDecoration(labelText: 'Observations'),

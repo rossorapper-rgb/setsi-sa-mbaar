@@ -27,7 +27,7 @@ class GestationDashboard extends StatelessWidget {
     if (gestations.isEmpty) {
       return Card(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Center(
             child: Text(
               "Aucune gestation enregistrée.",
@@ -44,41 +44,18 @@ class GestationDashboard extends StatelessWidget {
             leading: const CircleAvatar(
               child: Icon(Icons.pets),
             ),
-            title: Text(g.nomFemelle),
+            title: InkWell(
+              onTap: () => onOuvrirFiche(g),
+              child: Text(
+                g.nomFemelle,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             subtitle: Text(
               "Saillie : "
                   "${g.dateSaillie.day}/${g.dateSaillie.month}/${g.dateSaillie.year}",
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'fiche':
-                    onOuvrirFiche(g);
-                    break;
-
-                  case 'modifier':
-                    onModifier(g);
-                    break;
-
-                  case 'misebas':
-                    onMiseBas(g);
-                    break;
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: "fiche",
-                  child: Text("Voir la fiche"),
-                ),
-                PopupMenuItem(
-                  value: "modifier",
-                  child: Text("Modifier"),
-                ),
-                PopupMenuItem(
-                  value: "misebas",
-                  child: Text("Enregistrer la mise bas"),
-                ),
-              ],
             ),
           );
         }).toList(),

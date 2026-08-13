@@ -7,18 +7,22 @@ import '../../../core/widgets/app_date_field.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/responsive_page.dart';
+import '../../../core/session/current_user_service.dart';
 
+import '../../clients/repositories/firebase_client_repository.dart';
 import '../../bergeries/models/bergerie_model.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 
 class AddMoutonPage extends StatefulWidget {
-  final BergerieModel bergerie;
+  /// Bergerie facultative : un client peut enregistrer un mouton
+  /// avant d'avoir créé sa première bergerie.
+  final BergerieModel? bergerie;
   final MoutonModel? mouton;
 
   const AddMoutonPage({
     super.key,
-    required this.bergerie,
+    this.bergerie,
     this.mouton,
   });
 
@@ -407,6 +411,41 @@ onPressed: _loading
 ),
 );
 }
+Future<String> _resoudreClientId() async {
+  // En modification, conserver le propriétaire déjà enregistré.
+  if (widget.mouton != null &&
+      widget.mouton!.clientId.trim().isNotEmpty) {
+    return widget.mouton!.clientId;
+  }
+
+  // Si une bergerie est fournie, son client est le propriétaire.
+  if (widget.bergerie != null &&
+      widget.bergerie!.clientId.trim().isNotEmpty) {
+    return widget.bergerie!.clientId;
+  }
+
+  // Sinon, retrouver la fiche client du compte connecté.
+  final utilisateur =
+      CurrentUserService.instance.currentUser;
+
+  if (utilisateur == null) {
+    throw Exception(
+      "Utilisateur non connecté.",
+    );
+  }
+
+  final clients =
+      await FirebaseClientRepository().getClients();
+
+  if (clients.isEmpty) {
+    throw Exception(
+      "Fiche client introuvable pour ce compte.",
+    );
+  }
+
+  return clients.first.id;
+}
+
 Future<void> _enregistrer() async {
   if (_nomController.text.trim().isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -439,7 +478,9 @@ Future<void> _enregistrer() async {
   try {
     final mouton = MoutonModel(
       id: widget.mouton?.id ?? _uuid.v4(),
-      bergerieId: widget.bergerie.id,
+      clientId: await _resoudreClientId(),
+      bergerieId: widget.bergerie?.id ?? "",
+
       nom: _nomController.text.trim(),
       numeroIdentification:
       _numeroController.text.trim(),

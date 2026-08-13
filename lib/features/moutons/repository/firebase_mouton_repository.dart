@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../clients/repositories/firebase_client_repository.dart';
 import '../../auth/services/auth_service.dart';
 import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
@@ -73,20 +74,52 @@ class FirebaseMoutonRepository {
       return [];
     }
 
-    final bergeries =
-    await FirebaseBergerieRepository().getAllBergeries();
+    // Le client est le propriétaire principal du mouton.
+    // La bergerie est facultative.
+    final clients = await FirebaseClientRepository().getClients();
 
-    final List<MoutonModel> resultat = [];
+    if (clients.isEmpty) {
+      return [];
+    }
+
+    final clientId = clients.first.id;
+
+    final snapshot = await _firestore
+        .collection(_collection)
+        .where('clientId', isEqualTo: clientId)
+        .where('actif', isEqualTo: true)
+        .get();
+
+    final resultat = snapshot.docs
+        .map(
+          (doc) => MoutonModel.fromMap({
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
+        .toList();
+
+    // Compatibilité avec les anciens moutons enregistrés avant clientId.
+    final bergeries =
+        await FirebaseBergerieRepository().getAllBergeries();
+
+    final idsExistants = resultat.map((m) => m.id).toSet();
 
     for (final bergerie in bergeries) {
       final moutons =
-      await getMoutonsByBergerie(bergerie.id);
+          await getMoutonsByBergerie(bergerie.id);
 
-      resultat.addAll(moutons);
+      for (final mouton in moutons) {
+        if (mouton.clientId.isEmpty &&
+            !idsExistants.contains(mouton.id)) {
+          resultat.add(mouton);
+          idsExistants.add(mouton.id);
+        }
+      }
     }
 
     resultat.sort(
-          (a, b) =>
+      (a, b) =>
           a.nom.toLowerCase().compareTo(
             b.nom.toLowerCase(),
           ),
@@ -139,6 +172,49 @@ class FirebaseMoutonRepository {
     );
 
     return moutons;
+  }
+
+  /// Tous les moutons d'un client.
+  /// La bergerie n'est pas obligatoire.
+  Future<List<MoutonModel>> getMoutonsByClient(
+      String clientId,
+      ) async {
+    final snapshot = await _firestore
+        .collection(_collection)
+        .where('clientId', isEqualTo: clientId)
+        .where('actif', isEqualTo: true)
+        .get();
+
+    final moutons = snapshot.docs
+        .map(
+          (doc) => MoutonModel.fromMap({
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
+        .toList();
+
+    moutons.sort(
+      (a, b) =>
+          a.nom.toLowerCase().compareTo(
+            b.nom.toLowerCase(),
+          ),
+    );
+
+    return moutons;
+  }
+
+  /// Moutons du client qui ne sont rattachés à aucune bergerie.
+  Future<List<MoutonModel>> getMoutonsSansBergerie(
+      String clientId,
+      ) async {
+    final moutons = await getMoutonsByClient(clientId);
+
+    return moutons
+        .where(
+          (mouton) => mouton.bergerieId.trim().isEmpty,
+        )
+        .toList();
   }
 
   /// Nombre de moutons d'une bergerie

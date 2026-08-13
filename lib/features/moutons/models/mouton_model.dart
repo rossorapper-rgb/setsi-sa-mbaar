@@ -1,5 +1,6 @@
 class MoutonModel {
 final String id;
+final String clientId;
 final String bergerieId;
 
 final String nom;
@@ -22,6 +23,7 @@ final DateTime dateCreation;
 
 const MoutonModel({
 required this.id,
+this.clientId = '',
 required this.bergerieId,
 required this.nom,
 required this.numeroIdentification,
@@ -37,6 +39,7 @@ required this.dateCreation,
 
 MoutonModel copyWith({
 String? id,
+String? clientId,
 String? bergerieId,
 String? nom,
 String? numeroIdentification,
@@ -51,6 +54,7 @@ DateTime? dateCreation,
 }) {
 return MoutonModel(
 id: id ?? this.id,
+clientId: clientId ?? this.clientId,
 bergerieId:
 bergerieId ??
 this.bergerieId,
@@ -124,6 +128,7 @@ return annees == 1
 Map<String, dynamic> toMap() {
   return {
     'id': id,
+    'clientId': clientId,
     'bergerieId': bergerieId,
     'nom': nom,
     'numeroIdentification':
@@ -148,6 +153,7 @@ factory MoutonModel.fromMap(
     ) {
   return MoutonModel(
     id: map['id'] ?? '',
+    clientId: map['clientId'] ?? '',
     bergerieId:
     map['bergerieId'] ?? '',
     nom: map['nom'] ?? '',

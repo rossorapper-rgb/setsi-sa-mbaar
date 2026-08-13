@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:setsi_sa_mbaar/core/session/current_user_service.dart';
 import 'package:setsi_sa_mbaar/core/theme/app_colors.dart';
 import 'package:setsi_sa_mbaar/core/widgets/stat_card.dart';
+import 'package:setsi_sa_mbaar/features/utilisateurs/models/user_role.dart';
 import 'package:setsi_sa_mbaar/providers/dashboard_provider.dart';
 
 class DashboardStats extends ConsumerWidget {
@@ -40,16 +42,22 @@ class DashboardStats extends ConsumerWidget {
                   children: [
                     Text(
                       "Impossible de charger les statistiques.",
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SelectableText(
                       "Erreur : ${error.toString()}",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.red.shade700,
-                          ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                        color: Colors.red.shade700,
+                      ),
                     ),
                   ],
                 ),
@@ -80,72 +88,129 @@ class DashboardStats extends ConsumerWidget {
           crossAxisCount = 1;
         }
 
-        final cards = <_DashboardStatData>[
-          _DashboardStatData(
-            title: "Clients",
-            value: dashboard.clients.toString(),
-            subtitle: "Clients enregistrés",
-            evolution: "",
-            icon: Icons.people_alt_rounded,
-            color: AppColors.info,
-            route: "/clients",
-          ),
-          _DashboardStatData(
-            title: "Moutons",
-            value: dashboard.moutons.toString(),
-            subtitle: "Dans le système",
-            evolution: "",
-            icon: Icons.pets_rounded,
-            color: AppColors.success,
-            route: "/bergeries",
-          ),
-          _DashboardStatData(
-            title: "Bergeries",
-            value: dashboard.bergeries.toString(),
-            subtitle: "Bergeries enregistrées",
-            evolution: "",
-            icon: Icons.home_rounded,
-            color: Colors.brown,
-            route: "/bergeries",
-          ),
-          _DashboardStatData(
-            title: "Gestations",
-            value: dashboard.gestations.toString(),
-            subtitle: "En cours",
-            evolution: "",
-            icon: Icons.favorite_rounded,
-            color: Colors.pink,
-            route: "/gestations",
-          ),
-          _DashboardStatData(
-            title: "Interventions",
-            value: dashboard.interventions.toString(),
-            subtitle: "Interventions",
-            evolution: "",
-            icon: Icons.home_repair_service_rounded,
-            color: AppColors.warning,
-            route: "/interventions",
-          ),
-          _DashboardStatData(
-            title: "Revenus",
-            value: dashboard.revenusFormat,
-            subtitle: "Paiements encaissés",
-            evolution: "",
-            icon: Icons.payments_rounded,
-            color: AppColors.danger,
-            route: "/finances",
-          ),
-        ];
+        final role = CurrentUserService.instance.role;
+
+        // ======================================================
+        // DASHBOARD CLIENT
+        // ======================================================
+
+        final List<_DashboardStatData> cards;
+
+        if (role == UserRole.client) {
+          cards = [
+            _DashboardStatData(
+              title: "Mes moutons",
+              value: dashboard.moutons.toString(),
+              subtitle: "Mes moutons enregistrés",
+              evolution: "",
+              icon: Icons.pets_rounded,
+              color: AppColors.success,
+              route: "/bergeries",
+            ),
+            _DashboardStatData(
+              title: "Mes gestations",
+              value: dashboard.gestations.toString(),
+              subtitle: "Gestations en cours",
+              evolution: "",
+              icon: Icons.favorite_rounded,
+              color: Colors.pink,
+              route: "/gestations",
+            ),
+            _DashboardStatData(
+              title: "Mes interventions",
+              value: dashboard.interventions.toString(),
+              subtitle: "Mes interventions",
+              evolution: "",
+              icon: Icons.home_repair_service_rounded,
+              color: AppColors.warning,
+              route: "/interventions",
+            ),
+            _DashboardStatData(
+              title: "Mes paiements",
+              value: dashboard.revenusFormat,
+              subtitle: "Paiements enregistrés",
+              evolution: "",
+              icon: Icons.payments_rounded,
+              color: AppColors.danger,
+              route: "/paiements",
+            ),
+          ];
+        }
+
+        // ======================================================
+        // DASHBOARD ADMIN / RESPONSABLE / TECHNICIEN
+        // ======================================================
+
+        else {
+          cards = [
+            _DashboardStatData(
+              title: "Clients",
+              value: dashboard.clients.toString(),
+              subtitle: "Clients enregistrés",
+              evolution: "",
+              icon: Icons.people_alt_rounded,
+              color: AppColors.info,
+              route: "/clients",
+            ),
+            _DashboardStatData(
+              title: "Moutons",
+              value: dashboard.moutons.toString(),
+              subtitle: "Dans le système",
+              evolution: "",
+              icon: Icons.pets_rounded,
+              color: AppColors.success,
+              route: "/bergeries",
+            ),
+            _DashboardStatData(
+              title: "Bergeries",
+              value: dashboard.bergeries.toString(),
+              subtitle: "Bergeries enregistrées",
+              evolution: "",
+              icon: Icons.home_rounded,
+              color: Colors.brown,
+              route: "/bergeries",
+            ),
+            _DashboardStatData(
+              title: "Gestations",
+              value: dashboard.gestations.toString(),
+              subtitle: "En cours",
+              evolution: "",
+              icon: Icons.favorite_rounded,
+              color: Colors.pink,
+              route: "/gestations",
+            ),
+            _DashboardStatData(
+              title: "Interventions",
+              value: dashboard.interventions.toString(),
+              subtitle: "Interventions",
+              evolution: "",
+              icon: Icons.home_repair_service_rounded,
+              color: AppColors.warning,
+              route: "/interventions",
+            ),
+            _DashboardStatData(
+              title: "Revenus",
+              value: dashboard.revenusFormat,
+              subtitle: "Paiements encaissés",
+              evolution: "",
+              icon: Icons.payments_rounded,
+              color: AppColors.danger,
+              route: "/finances",
+            ),
+          ];
+        }
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: cards.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate:
+          SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
-            childAspectRatio: width < 700 ? 1.75 : 1.25,
+            childAspectRatio:
+            width < 700 ? 1.75 : 1.25,
           ),
           itemBuilder: (context, index) {
             final card = cards[index];

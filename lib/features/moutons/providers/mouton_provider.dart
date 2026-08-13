@@ -94,3 +94,28 @@ FutureProvider.family<
     );
   },
 );
+
+/// Tous les moutons du client connecté.
+/// La liste ne dépend pas de l'existence d'une bergerie.
+final moutonsClientProvider =
+    FutureProvider<List<MoutonModel>>(
+  (ref) async {
+    final repository = ref.watch(
+      moutonRepositoryProvider,
+    );
+
+    return repository.getMoutons();
+  },
+);
+
+/// Toutes les femelles du client connecté.
+final brebisClientProvider =
+    FutureProvider<List<MoutonModel>>(
+  (ref) async {
+    final repository = ref.watch(
+      moutonRepositoryProvider,
+    );
+
+    return repository.getBrebis();
+  },
+);

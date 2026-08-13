@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/session/current_user_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../utilisateurs/models/user_role.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -11,8 +13,28 @@ class DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool mobile = MediaQuery.of(context).size.width < 900;
 
+    final currentUser = CurrentUserService.instance.currentUser;
+
+    final String nomComplet =
+    currentUser?.nomComplet.isNotEmpty == true
+        ? currentUser!.nomComplet
+        : "Utilisateur";
+
+    final UserRole? userRole =
+        CurrentUserService.instance.role;
+
+    final String role = _getRoleLabel(userRole);
+
     final String date =
-    DateFormat("EEEE dd MMMM yyyy", "fr_FR").format(DateTime.now());
+    DateFormat(
+      "EEEE dd MMMM yyyy",
+      "fr_FR",
+    ).format(DateTime.now());
+
+    final String initiale =
+    nomComplet.trim().isNotEmpty
+        ? nomComplet.trim().substring(0, 1).toUpperCase()
+        : "U";
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -21,17 +43,15 @@ class DashboardHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: Colors.black.withValues(alpha: .05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           //---------------------------------------------------------
           // Ligne supérieure
           //---------------------------------------------------------
@@ -42,16 +62,13 @@ class DashboardHeader extends StatelessWidget {
             spacing: 20,
             runSpacing: 20,
             children: [
-
               SizedBox(
                 width: mobile ? 320 : 450,
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     Text(
-                      "Bonjour, Administrateur 👋",
+                      "Bonjour, $nomComplet 👋",
                       style: AppTextStyles.heading.copyWith(
                         fontSize: 28,
                       ),
@@ -79,10 +96,8 @@ class DashboardHeader extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
                   Stack(
                     children: [
-
                       Container(
                         width: 48,
                         height: 48,
@@ -112,41 +127,44 @@ class DashboardHeader extends StatelessWidget {
 
                   const SizedBox(width: 20),
 
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 24,
                     backgroundColor: AppColors.primary,
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
+                    child: Text(
+                      initiale,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
 
                   const SizedBox(width: 12),
 
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       Text(
-                        "Administrateur",
-                        style: TextStyle(
+                        nomComplet,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
 
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
 
                       Text(
-                        "En ligne",
-                        style: TextStyle(
+                        role,
+                        style: const TextStyle(
                           color: Colors.green,
                           fontSize: 12,
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
 
@@ -162,12 +180,9 @@ class DashboardHeader extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xffF7F8FC),
-
                 hintText:
                 "Rechercher un client, un mouton, une intervention...",
-
                 prefixIcon: const Icon(Icons.search),
-
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -178,5 +193,24 @@ class DashboardHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getRoleLabel(UserRole? role) {
+    switch (role) {
+      case UserRole.admin:
+        return "Administrateur";
+
+      case UserRole.responsable:
+        return "Responsable";
+
+      case UserRole.technicien:
+        return "Technicien";
+
+      case UserRole.client:
+        return "Client";
+
+      case null:
+        return "Utilisateur";
+    }
   }
 }

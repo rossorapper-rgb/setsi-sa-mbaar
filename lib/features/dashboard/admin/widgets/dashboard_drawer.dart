@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../services/drawer_menu_service.dart';
-import '../services/drawer_menu_service.dart';
+
 import '../models/drawer_menu_item.dart';
+import '../services/drawer_menu_service.dart';
+
 class DashboardDrawer extends StatelessWidget {
   DashboardDrawer({
     super.key,
@@ -11,13 +12,10 @@ class DashboardDrawer extends StatelessWidget {
 
   final int selectedIndex;
 
-  final List<DrawerMenuItem> _items =
-      DrawerMenuService.instance.menus;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     final menus = DrawerMenuService.instance.menus;
 
     return Drawer(
@@ -81,25 +79,24 @@ class DashboardDrawer extends StatelessWidget {
                   vertical: 4,
                 ),
                 itemCount: menus.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                separatorBuilder: (_, __) =>
+                const SizedBox(height: 4),
                 itemBuilder: (context, index) {
-                  final menus = DrawerMenuService.instance.menus;
+                  final DrawerMenuItem item = menus[index];
+                  final bool selected = selectedIndex == index;
 
-                  final item = menus[index];
-                  final selected = selectedIndex == index;
-
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? primary.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                  return Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
                     child: ListTile(
+                      selected: selected,
+                      selectedTileColor:
+                      primary.withValues(alpha: 0.12),
                       leading: Icon(
                         item.icon,
-                        color: selected ? primary : Colors.grey.shade700,
+                        color: selected
+                            ? primary
+                            : Colors.grey.shade700,
                       ),
                       title: Text(
                         item.title,
@@ -110,13 +107,10 @@ class DashboardDrawer extends StatelessWidget {
                           color: selected ? primary : null,
                         ),
                       ),
-                      selected: selected,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                       onTap: () {
-                        Navigator.pop(context);
-
                         context.go(item.route);
                       },
                     ),
@@ -127,21 +121,27 @@ class DashboardDrawer extends StatelessWidget {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: ListTile(
-                leading: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red,
-                ),
-                title: const Text(
-                  "Déconnexion",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
                   ),
+                  title: const Text(
+                    "Déconnexion",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  onTap: () {
+                    context.go('/login');
+                  },
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                onTap: () => context.go('/login'),
               ),
             ),
           ],
@@ -149,16 +149,4 @@ class DashboardDrawer extends StatelessWidget {
       ),
     );
   }
-
-
-}
-
-class _DrawerItem {
-  final IconData icon;
-  final String title;
-
-  const _DrawerItem({
-    required this.icon,
-    required this.title,
-  });
 }

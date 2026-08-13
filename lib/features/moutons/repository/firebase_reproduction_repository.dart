@@ -293,6 +293,8 @@ agneaux.add(
 MoutonModel(
 id:
 _moutonCollection.doc().id,
+clientId:
+mere.clientId,
 bergerieId:
 mere.bergerieId,
 nom: "Agneau ${i + 1}",
