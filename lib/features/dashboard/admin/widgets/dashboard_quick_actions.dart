@@ -3,14 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/session/current_user_service.dart';
-
 import '../../../utilisateurs/models/user_role.dart';
-
 import '../../../gestation/pages/add_gestation_page.dart';
-
 import '../../../bergeries/models/bergerie_model.dart';
 import '../../../bergeries/repository/firebase_bergerie_repository.dart';
-
 import '../../../moutons/pages/add_mouton_page.dart';
 import '../../../moutons/providers/mouton_provider.dart';
 import '../../../../providers/dashboard_provider.dart';
@@ -19,66 +15,22 @@ class DashboardQuickActions extends ConsumerWidget {
   const DashboardQuickActions({super.key});
 
   Future<void> _ajouterMouton(BuildContext context, WidgetRef ref) async {
-    final session = CurrentUserService.instance;
-    final utilisateur = session.currentUser;
-
-    if (utilisateur == null) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Utilisateur non connecté."),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    final utilisateur = CurrentUserService.instance.currentUser;
+    if (utilisateur == null) return;
 
     try {
-      final bergerieRepository = FirebaseBergerieRepository();
-
-      final bergeries = await bergerieRepository.getBergeriesByClient(
-        utilisateur.id,
-      );
+      final bergeries = await FirebaseBergerieRepository()
+          .getBergeriesByClient(utilisateur.id);
 
       if (!context.mounted) return;
 
-      if (bergeries.isEmpty) {
-        final resultat = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const AddMoutonPage(),
-          ),
-        );
-
-        if (resultat == true && context.mounted) {
-          ref.invalidate(dashboardProvider);
-          ref.invalidate(moutonsProvider);
-        }
-
-        return;
-      }
-
+      BergerieModel? bergerie;
       if (bergeries.length == 1) {
-        final resultat = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AddMoutonPage(
-              bergerie: bergeries.first,
-            ),
-          ),
-        );
-
-        if (resultat == true && context.mounted) {
-          ref.invalidate(dashboardProvider);
-          ref.invalidate(moutonsProvider);
-        }
-        return;
-      }
-
-      final bergerie = await showDialog<BergerieModel>(
-        context: context,
-        builder: (dialogContext) {
-          return AlertDialog(
+        bergerie = bergeries.first;
+      } else if (bergeries.length > 1) {
+        bergerie = await showDialog<BergerieModel>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
             title: const Text("Choisir la bergerie"),
             content: SizedBox(
               width: 420,
@@ -96,30 +48,19 @@ class DashboardQuickActions extends ConsumerWidget {
                     subtitle: Text(
                       item.adresse.isEmpty ? "Bergerie" : item.adresse,
                     ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                    ),
-                    onTap: () {
-                      Navigator.pop(dialogContext, item);
-                    },
+                    onTap: () => Navigator.pop(dialogContext, item),
                   );
                 },
               ),
             ),
-          );
-        },
-      );
-
-      if (bergerie == null) return;
-      if (!context.mounted) return;
+          ),
+        );
+      }
 
       final resultat = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (_) => AddMoutonPage(
-            bergerie: bergerie,
-          ),
+          builder: (_) => AddMoutonPage(bergerie: bergerie),
         ),
       );
 
@@ -130,296 +71,133 @@ class DashboardQuickActions extends ConsumerWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Impossible d'ouvrir l'ajout du mouton : $e",
-          ),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Impossible d'ouvrir l'ajout : $e")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final width =
-        MediaQuery.of(context).size.width;
+    final role = CurrentUserService.instance.role;
+    final isClient = role == UserRole.client;
 
-    final int crossAxisCount;
-
-    if (width >= 1200) {
-      crossAxisCount = 4;
-    } else if (width >= 700) {
-      crossAxisCount = 2;
-    } else {
-      crossAxisCount = 1;
-    }
-
-    final role =
-        CurrentUserService.instance.role;
-
-    final List<_QuickAction> actions;
-
-    // ==========================================================
-    // ESPACE CLIENT
-    // ==========================================================
-
-    if (role == UserRole.client) {
-      actions = [
-        // --------------------------------------------------------
-        // AJOUTER UN MOUTON
-        // --------------------------------------------------------
-
-        _QuickAction(
-          title: "Ajouter un mouton",
-          subtitle:
-          "Enregistrer un nouveau mouton",
-          icon: Icons.pets_rounded,
-          color: Colors.green,
-          onTap: () {
+    final actions = <_QuickAction>[
+      _QuickAction(
+        title: isClient ? "Ajouter un mouton" : "Nouveau mouton",
+        icon: Icons.pets_rounded,
+        color: Colors.blue,
+        onTap: () {
+          if (isClient) {
             _ajouterMouton(context, ref);
-          },
-        ),
-
-        // --------------------------------------------------------
-        // NOUVELLE GESTATION
-        // --------------------------------------------------------
-
-        _QuickAction(
-          title: "Nouvelle gestation",
-          subtitle:
-          "Enregistrer une gestation",
-          icon: Icons.favorite_rounded,
-          color: Colors.pink,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                const AddGestationPage(),
-              ),
-            );
-          },
-        ),
-
-        // --------------------------------------------------------
-        // MES INTERVENTIONS
-        // --------------------------------------------------------
-
-        _QuickAction(
-          title: "Mes interventions",
-          subtitle:
-          "Consulter mes interventions",
-          icon:
-          Icons.medical_services_rounded,
-          color: Colors.orange,
-          onTap: () {
-            context.go('/interventions');
-          },
-        ),
-        _QuickAction(
-          title: "Allô Veto",
-          subtitle:
-          "Contacter un vétérinaire",
-          icon: Icons.medical_services_rounded,
-          color: Colors.red,
-          onTap: () {
-            context.go('/allo-veto');
-          },
-        ),
-
-      ];
-    }
-
-    // ==========================================================
-    // ESPACE ADMIN / RESPONSABLE / TECHNICIEN
-    // ==========================================================
-
-    else {
-      actions = [
-        _QuickAction(
-          title: "Nouveau client",
-          subtitle: "Créer un client",
-          icon:
-          Icons.person_add_alt_1_rounded,
-          color: Colors.blue,
-          onTap: () {
-            context.go('/clients/add');
-          },
-        ),
-
-        _QuickAction(
-          title: "Nouveau mouton",
-          subtitle: "Ajouter un mouton",
-          icon: Icons.pets_rounded,
-          color: Colors.green,
-          onTap: () {
+          } else {
             context.go('/bergeries');
-          },
-        ),
-
-        _QuickAction(
-          title: "Nouvelle gestation",
-          subtitle:
-          "Enregistrer une saillie",
-          icon: Icons.favorite_rounded,
-          color: Colors.pink,
-          onTap: () {
-            context.go('/gestations');
-          },
-        ),
-
-        _QuickAction(
-          title: "Intervention",
-          subtitle:
-          "Créer une intervention",
-          icon:
-          Icons.medical_services_rounded,
-          color: Colors.orange,
-          onTap: () {
-            context.go('/interventions');
-          },
-        ),
-        _QuickAction(
-          title: "Allô Veto",
-          subtitle:
-          "Contacter un vétérinaire",
-          icon: Icons.medical_services_rounded,
-          color: Colors.red,
-          onTap: () {
-            context.go('/allo-veto');
-          },
-        ),
-
-      ];
-    }
+          }
+        },
+      ),
+      _QuickAction(
+        title: isClient ? "Nouvelle gestation" : "Nouvelle gestation",
+        icon: Icons.favorite_rounded,
+        color: Colors.orange,
+        onTap: () => context.go('/gestations'),
+      ),
+      _QuickAction(
+        title: isClient ? "Enregistrer un soin" : "Intervention",
+        icon: Icons.medical_services_rounded,
+        color: Colors.blue,
+        onTap: () => context.go('/interventions'),
+      ),
+      _QuickAction(
+        title: "Ajouter une alimentation",
+        icon: Icons.grass_rounded,
+        color: Colors.orange,
+        onTap: () => context.go('/interventions'),
+      ),
+      _QuickAction(
+        title: "Enregistrer une activité",
+        icon: Icons.assignment_rounded,
+        color: Colors.blue,
+        onTap: () => context.go('/interventions'),
+      ),
+      _QuickAction(
+        title: "Voir mes rapports",
+        icon: Icons.bar_chart_rounded,
+        color: Colors.orange,
+        onTap: () => context.go('/rapports-financiers'),
+      ),
+    ];
 
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           "Actions rapides",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final columns = width >= 1050 ? 3 : width >= 520 ? 2 : 1;
 
-        const SizedBox(height: 20),
-
-        GridView.builder(
-          shrinkWrap: true,
-          physics:
-          const NeverScrollableScrollPhysics(),
-          itemCount: actions.length,
-          gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount:
-            crossAxisCount,
-            crossAxisSpacing: 18,
-            mainAxisSpacing: 18,
-            childAspectRatio: 2.3,
-          ),
-          itemBuilder: (_, index) {
-            final action = actions[index];
-
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius:
-                BorderRadius.circular(18),
-                onTap: action.onTap,
-                child: Ink(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                    BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black
-                            .withValues(alpha: .05),
-                        blurRadius: 15,
-                        offset:
-                        const Offset(0, 6),
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: actions.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: columns == 1 ? 3.8 : 2.25,
+              ),
+              itemBuilder: (_, index) {
+                final action = actions[index];
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: action.onTap,
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: .05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding:
-                    const EdgeInsets.all(18),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration:
-                          BoxDecoration(
-                            color: action.color
-                                .withValues(
-                              alpha: .12,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: action.color.withValues(alpha: .12),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            borderRadius:
-                            BorderRadius
-                                .circular(16),
+                            child: Icon(action.icon, color: action.color, size: 23),
                           ),
-                          child: Icon(
-                            action.icon,
-                            color: action.color,
-                            size: 30,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              action.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                        ),
-
-                        const SizedBox(
-                          width: 16,
-                        ),
-
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment:
-                            MainAxisAlignment
-                                .center,
-                            crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
-                            children: [
-                              Text(
-                                action.title,
-                                style:
-                                const TextStyle(
-                                  fontWeight:
-                                  FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-
-                              const SizedBox(
-                                height: 4,
-                              ),
-
-                              Text(
-                                action.subtitle,
-                                style: TextStyle(
-                                  color: Colors
-                                      .grey
-                                      .shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Icon(
-                          Icons
-                              .arrow_forward_ios_rounded,
-                          color: action.color,
-                          size: 18,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),
@@ -430,14 +208,12 @@ class DashboardQuickActions extends ConsumerWidget {
 
 class _QuickAction {
   final String title;
-  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _QuickAction({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
