@@ -53,6 +53,13 @@ service cloud.firestore {
           || currentUser().data.role == 'technicien');
     }
 
+    function canManageGestation() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien');
+    }
+
     function belongsToMouton(moutonId) {
       return signedIn()
         && currentUser().data.actif == true
@@ -96,6 +103,25 @@ service cloud.firestore {
 
       allow delete: if isAdmin()
         || (canUpdateMouton()
+          && belongsToBergerie(resource.data.bergerieId));
+    }
+
+    // Gestations : isolation stricte par bergerie.
+    match /gestations/{gestationId} {
+      allow read: if isAdmin()
+        || belongsToBergerie(resource.data.bergerieId);
+
+      allow create: if isAdmin()
+        || (canManageGestation()
+          && belongsToBergerie(request.resource.data.bergerieId));
+
+      allow update: if isAdmin()
+        || (canManageGestation()
+          && belongsToBergerie(resource.data.bergerieId)
+          && request.resource.data.bergerieId == resource.data.bergerieId);
+
+      allow delete: if isAdmin()
+        || (canManageGestation()
           && belongsToBergerie(resource.data.bergerieId));
     }
 
