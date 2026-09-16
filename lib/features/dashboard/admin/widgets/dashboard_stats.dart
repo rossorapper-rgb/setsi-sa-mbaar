@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:setsi_sa_mbaar/core/session/current_user_service.dart';
@@ -125,21 +124,19 @@ class DashboardStats extends ConsumerWidget {
             final width = constraints.maxWidth;
             final int crossAxisCount;
 
-            if (width >= 1250) {
+            if (width >= 1100) {
               crossAxisCount = 4;
-            } else if (width >= 780) {
-              crossAxisCount = 3;
-            } else if (width >= 520) {
+            } else if (width >= 650) {
               crossAxisCount = 2;
             } else {
               crossAxisCount = 1;
             }
 
             final aspectRatio = crossAxisCount == 1
-                ? 2.15
+                ? 2.4
                 : crossAxisCount == 2
-                    ? 1.75
-                    : 1.45;
+                    ? 2.0
+                    : 1.55;
 
             return GridView.builder(
               shrinkWrap: true,
