@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/session/current_user_service.dart';
 import '../../../utilisateurs/models/user_role.dart';
-import '../../../gestation/pages/add_gestation_page.dart';
 import '../../../bergeries/models/bergerie_model.dart';
 import '../../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../../../moutons/pages/add_mouton_page.dart';
@@ -41,9 +40,7 @@ class DashboardQuickActions extends ConsumerWidget {
                 itemBuilder: (_, index) {
                   final item = bergeries[index];
                   return ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.home_work),
-                    ),
+                    leading: const CircleAvatar(child: Icon(Icons.home_work)),
                     title: Text(item.nom),
                     subtitle: Text(
                       item.adresse.isEmpty ? "Bergerie" : item.adresse,
@@ -59,9 +56,7 @@ class DashboardQuickActions extends ConsumerWidget {
 
       final resultat = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(
-          builder: (_) => AddMoutonPage(bergerie: bergerie),
-        ),
+        MaterialPageRoute(builder: (_) => AddMoutonPage(bergerie: bergerie)),
       );
 
       if (resultat == true && context.mounted) {
@@ -86,13 +81,9 @@ class DashboardQuickActions extends ConsumerWidget {
         title: isClient ? "Ajouter un mouton" : "Nouveau mouton",
         icon: Icons.pets_rounded,
         color: Colors.blue,
-        onTap: () {
-          if (isClient) {
-            _ajouterMouton(context, ref);
-          } else {
-            context.go('/bergeries');
-          }
-        },
+        onTap: () => isClient
+            ? _ajouterMouton(context, ref)
+            : context.go('/bergeries'),
       ),
       _QuickAction(
         title: "Nouvelle gestation",
@@ -138,12 +129,11 @@ class DashboardQuickActions extends ConsumerWidget {
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final columns = width >= 1050 ? 3 : width >= 520 ? 2 : 1;
-
-            final aspectRatio = columns == 1
-                ? 4.2
+            final mainAxisExtent = columns == 1
+                ? 64.0
                 : columns == 2
-                    ? 1.65
-                    : 1.25;
+                    ? 82.0
+                    : 82.0;
 
             return GridView.builder(
               shrinkWrap: true,
@@ -153,7 +143,7 @@ class DashboardQuickActions extends ConsumerWidget {
                 crossAxisCount: columns,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: aspectRatio,
+                mainAxisExtent: mainAxisExtent,
               ),
               itemBuilder: (_, index) {
                 final action = actions[index];
@@ -175,14 +165,14 @@ class DashboardQuickActions extends ConsumerWidget {
                         ],
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                        horizontal: 10,
+                        vertical: 8,
                       ),
                       child: Row(
                         children: [
                           Container(
-                            width: 42,
-                            height: 42,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: action.color.withValues(alpha: .12),
                               borderRadius: BorderRadius.circular(12),
@@ -190,10 +180,10 @@ class DashboardQuickActions extends ConsumerWidget {
                             child: Icon(
                               action.icon,
                               color: action.color,
-                              size: 23,
+                              size: 22,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               action.title,
@@ -201,7 +191,7 @@ class DashboardQuickActions extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                             ),
                           ),
