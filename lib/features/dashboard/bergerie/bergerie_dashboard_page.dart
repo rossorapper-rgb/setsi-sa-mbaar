@@ -105,7 +105,11 @@ class BergerieDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            Container(height: 3, margin: const EdgeInsets.symmetric(horizontal: 16), color: orange),
+            Container(
+              height: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              color: orange,
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: ListView(
@@ -135,7 +139,10 @@ class BergerieDrawer extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded, color: Colors.white),
-              title: const Text('Déconnexion', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              title: const Text(
+                'Déconnexion',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
               onTap: () => context.go('/login'),
             ),
           ],
@@ -146,14 +153,30 @@ class BergerieDrawer extends StatelessWidget {
 
   Widget _section(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-        child: Text(text, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800)),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       );
 
-  Widget _menu(BuildContext context, IconData icon, String text, String route, [bool selected = false]) {
+  Widget _menu(
+    BuildContext context,
+    IconData icon,
+    String text,
+    String route, [
+    bool selected = false,
+  ]) {
     return ListTile(
       dense: true,
       leading: Icon(icon, color: Colors.white, size: 21),
-      title: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      title: Text(
+        text,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      ),
       tileColor: selected ? config.couleurSecondaire : Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
       onTap: () => context.go(route),
@@ -190,7 +213,9 @@ class _DashboardContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [primary, Color.lerp(primary, Colors.white, .18)!]),
+              gradient: LinearGradient(
+                colors: [primary, Color.lerp(primary, Colors.white, .18)!],
+              ),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -199,34 +224,81 @@ class _DashboardContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Bonjour, $nomUtilisateur 👋', style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w800)),
+                      Text(
+                        'Bonjour, $nomUtilisateur 👋',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                       const SizedBox(height: 5),
-                      const Text('Voici la situation de votre élevage aujourd’hui.', style: TextStyle(color: Colors.white70)),
+                      const Text(
+                        'Voici la situation de votre élevage aujourd’hui.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
                       if (config.slogan != null) ...[
                         const SizedBox(height: 7),
-                        Text(config.slogan!, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                        Text(
+                          config.slogan!,
+                          style: const TextStyle(color: Colors.white60, fontSize: 12),
+                        ),
                       ],
                     ],
                   ),
                 ),
-                const CircleAvatar(radius: 25, backgroundColor: Colors.white, child: Icon(Icons.person_rounded, color: Colors.blue)),
+                const CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person_rounded, color: Colors.blue),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: compact ? 2 : 4,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: compact ? 1.45 : 1.75,
-            children: [
-              _Stat(icon: Icons.pets_rounded, title: 'Moutons', value: '0', note: 'Votre troupeau', color: primary),
-              _Stat(icon: Icons.favorite_rounded, title: 'Gestations', value: '0', note: 'En cours', color: orange),
-              _Stat(icon: Icons.health_and_safety_rounded, title: 'À surveiller', value: '0', note: 'Aucune alerte', color: primary),
-              _Stat(icon: Icons.grass_rounded, title: 'Alimentation', value: 'OK', note: 'Stocks à vérifier', color: orange),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = width >= 1150
+                  ? 4
+                  : width >= 760
+                      ? 2
+                      : 1;
+
+              final height = columns == 4
+                  ? 118.0
+                  : columns == 2
+                      ? 112.0
+                      : 100.0;
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 4,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: height,
+                ),
+                itemBuilder: (_, index) {
+                  final stats = [
+                    _StatData(Icons.pets_rounded, 'Moutons', '0', 'Votre troupeau', primary),
+                    _StatData(Icons.favorite_rounded, 'Gestations', '0', 'En cours', orange),
+                    _StatData(Icons.health_and_safety_rounded, 'À surveiller', '0', 'Aucune alerte', primary),
+                    _StatData(Icons.grass_rounded, 'Alimentation', 'OK', 'Stocks à vérifier', orange),
+                  ];
+                  final stat = stats[index];
+                  return _Stat(
+                    icon: stat.icon,
+                    title: stat.title,
+                    value: stat.value,
+                    note: stat.note,
+                    color: stat.color,
+                  );
+                },
+              );
+            },
           ),
           const SizedBox(height: 16),
           if (compact) ...[
@@ -249,7 +321,12 @@ class _DashboardContent extends StatelessWidget {
               children: [
                 Icon(Icons.history_rounded, color: primary),
                 const SizedBox(width: 10),
-                const Expanded(child: Text('Vos dernières activités apparaîtront ici. Commencez par enregistrer votre premier mouton.', style: TextStyle(fontWeight: FontWeight.w600))),
+                const Expanded(
+                  child: Text(
+                    'Vos dernières activités apparaîtront ici. Commencez par enregistrer votre premier mouton.',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
               ],
             ),
           ),
@@ -259,8 +336,24 @@ class _DashboardContent extends StatelessWidget {
   }
 }
 
+class _StatData {
+  const _StatData(this.icon, this.title, this.value, this.note, this.color);
+  final IconData icon;
+  final String title;
+  final String value;
+  final String note;
+  final Color color;
+}
+
 class _Stat extends StatelessWidget {
-  const _Stat({required this.icon, required this.title, required this.value, required this.note, required this.color});
+  const _Stat({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.note,
+    required this.color,
+  });
+
   final IconData icon;
   final String title;
   final String value;
@@ -269,13 +362,47 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: color.withValues(alpha: .12))),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: color.withValues(alpha: .12)),
+        ),
         child: Row(
           children: [
-            CircleAvatar(radius: 24, backgroundColor: color.withValues(alpha: .10), child: Icon(icon, color: color)),
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: color.withValues(alpha: .10),
+              child: Icon(icon, color: color),
+            ),
             const SizedBox(width: 9),
-            Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.w700)), Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)), Text(note, style: const TextStyle(fontSize: 10, color: Colors.black54))])),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color),
+                  ),
+                  Text(
+                    note,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -288,10 +415,12 @@ class _Alerts extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Panel(
         title: '🔔 Alertes & priorités',
-        child: Column(children: [
-          _Row(icon: Icons.check_circle_rounded, color: Colors.green, text: 'Aucune alerte urgente'),
-          _Row(icon: Icons.info_rounded, color: primary, text: 'Les rappels importants apparaîtront ici'),
-        ]),
+        child: Column(
+          children: [
+            _Row(icon: Icons.check_circle_rounded, color: Colors.green, text: 'Aucune alerte urgente'),
+            _Row(icon: Icons.info_rounded, color: primary, text: 'Les rappels importants apparaîtront ici'),
+          ],
+        ),
       );
 }
 
@@ -303,23 +432,50 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Panel(
         title: '⚡ Actions rapides',
-        child: GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.35,
-          children: [
-            _Action(icon: Icons.pets_rounded, text: 'Ajouter un mouton', color: primary, route: '/moutons'),
-            _Action(icon: Icons.favorite_rounded, text: 'Enregistrer une saillie', color: orange, route: '/gestations'),
-            _Action(icon: Icons.medical_services_rounded, text: 'Enregistrer un soin', color: primary, route: '/allo-veto'),
-            _Action(icon: Icons.grass_rounded, text: 'Ajouter alimentation', color: orange),
-            _Action(icon: Icons.assignment_rounded, text: 'Enregistrer activité', color: primary, route: '/interventions'),
-            _Action(icon: Icons.bar_chart_rounded, text: 'Voir mes rapports', color: orange, route: '/rapports-financiers'),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 500 ? 3 : 2;
+            final height = columns == 3 ? 78.0 : 72.0;
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 6,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                mainAxisExtent: height,
+              ),
+              itemBuilder: (_, index) {
+                final actions = [
+                  _ActionData(Icons.pets_rounded, 'Ajouter un mouton', primary, '/moutons'),
+                  _ActionData(Icons.favorite_rounded, 'Enregistrer une saillie', orange, '/gestations'),
+                  _ActionData(Icons.medical_services_rounded, 'Enregistrer un soin', primary, '/allo-veto'),
+                  _ActionData(Icons.grass_rounded, 'Ajouter alimentation', orange, null),
+                  _ActionData(Icons.assignment_rounded, 'Enregistrer activité', primary, '/interventions'),
+                  _ActionData(Icons.bar_chart_rounded, 'Voir mes rapports', orange, '/rapports-financiers'),
+                ];
+                final action = actions[index];
+                return _Action(
+                  icon: action.icon,
+                  text: action.text,
+                  color: action.color,
+                  route: action.route,
+                );
+              },
+            );
+          },
         ),
       );
+}
+
+class _ActionData {
+  const _ActionData(this.icon, this.text, this.color, this.route);
+  final IconData icon;
+  final String text;
+  final Color color;
+  final String? route;
 }
 
 class _Action extends StatelessWidget {
@@ -332,11 +488,31 @@ class _Action extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
         borderRadius: BorderRadius.circular(13),
-        onTap: route == null ? () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cette fonction sera disponible prochainement.'))) : () => context.go(route!),
+        onTap: route == null
+            ? () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Cette fonction sera disponible prochainement.')),
+                )
+            : () => context.go(route!),
         child: Container(
           padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(color: color.withValues(alpha: .07), borderRadius: BorderRadius.circular(13)),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: color, size: 23), const SizedBox(height: 5), Text(text, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700))]),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .07),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 23),
+              const SizedBox(height: 5),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
         ),
       );
 }
@@ -351,8 +527,17 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(color: color.withValues(alpha: .06), borderRadius: BorderRadius.circular(11)),
-        child: Row(children: [Icon(icon, color: color, size: 21), const SizedBox(width: 9), Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)))]),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .06),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 21),
+            const SizedBox(width: 9),
+            Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+          ],
+        ),
       );
 }
 
@@ -364,7 +549,20 @@ class _Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 3))]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), const SizedBox(height: 12), child]),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 3)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
       );
 }
