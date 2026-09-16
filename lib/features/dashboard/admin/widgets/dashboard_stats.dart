@@ -88,7 +88,7 @@ class DashboardStats extends ConsumerWidget {
             _DashboardStatData(
               title: "Moutons",
               value: dashboard.moutons.toString(),
-              subtitle: "Dans l'élevage",
+              subtitle: "Votre troupeau",
               icon: Icons.pets_rounded,
               color: AppColors.info,
               route: "/bergeries",
@@ -104,7 +104,7 @@ class DashboardStats extends ConsumerWidget {
             _DashboardStatData(
               title: "À surveiller",
               value: "0",
-              subtitle: "Animaux à vérifier",
+              subtitle: "Aucune alerte",
               icon: Icons.medical_services_rounded,
               color: AppColors.warning,
               route: "/interventions",
@@ -135,13 +135,12 @@ class DashboardStats extends ConsumerWidget {
               crossAxisCount = 1;
             }
 
-            // Les cartes contiennent 3 lignes de texte + icône.
-            // On leur donne suffisamment de hauteur sur toutes les tailles.
-            final aspectRatio = switch (crossAxisCount) {
-              1 => 2.60,
-              2 => 1.25,
-              3 => 1.10,
-              _ => 1.15,
+            // Hauteur explicite pour éviter tout débordement vertical.
+            final mainAxisExtent = switch (crossAxisCount) {
+              1 => 92.0,
+              2 => 112.0,
+              3 => 112.0,
+              _ => 112.0,
             };
 
             return GridView.builder(
@@ -152,7 +151,7 @@ class DashboardStats extends ConsumerWidget {
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: aspectRatio,
+                mainAxisExtent: mainAxisExtent,
               ),
               itemBuilder: (context, index) {
                 final card = cards[index];
