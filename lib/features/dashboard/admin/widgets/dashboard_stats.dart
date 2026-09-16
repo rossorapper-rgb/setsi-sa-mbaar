@@ -135,13 +135,14 @@ class DashboardStats extends ConsumerWidget {
               crossAxisCount = 1;
             }
 
-            final aspectRatio = crossAxisCount == 1
-                ? 2.15
-                : crossAxisCount == 2
-                    ? 1.65
-                    : crossAxisCount == 3
-                        ? 1.45
-                        : 1.55;
+            // Les cartes contiennent 3 lignes de texte + icône.
+            // On leur donne suffisamment de hauteur sur toutes les tailles.
+            final aspectRatio = switch (crossAxisCount) {
+              1 => 2.60,
+              2 => 1.25,
+              3 => 1.10,
+              _ => 1.15,
+            };
 
             return GridView.builder(
               shrinkWrap: true,
