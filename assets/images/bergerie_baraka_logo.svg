@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="891" height="887" viewBox="0 0 891 887"><image href="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAO3A4EDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhIlEUMnGBkaEJScYGRobHB0fAHI0Ni8fLzFQkQ8QAAABwAAABwAAABwAAAABJRU5ErkJggg==" width="891" height="887" preserveAspectRatio="xMidYMid meet"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <style>
+      .blue{fill:#1597B7}.orange{fill:#F59A00}.txt{font-family:Arial,Helvetica,sans-serif;font-weight:800;fill:#1597B7}.line{stroke:#1597B7;stroke-width:14;fill:none}.star{fill:#1597B7}
+    </style>
+  </defs>
+  <circle cx="300" cy="300" r="282" fill="white" stroke="#1597B7" stroke-width="14"/>
+  <g transform="translate(0,-18)">
+    <path class="blue" d="M145 135h72v100c25-25 58-39 95-39 72 0 130 55 130 123 0 71-59 127-133 127-44 0-78-16-104-46v42h-60V135zm151 216c33 0 59-22 59-53s-26-53-59-53c-34 0-60 22-60 53s26 53 60 53z"/>
+    <path class="orange" d="M330 136h70v75c19-10 41-15 65-15 66 0 120 51 120 114 0 70-56 126-129 126-45 0-82-17-106-48 19-22 31-50 31-80 0-31-10-59-28-81h-23v-91zm82 174c0 31 25 53 58 53 32 0 58-22 58-53s-26-53-58-53c-33 0-58 22-58 53z"/>
+  </g>
+  <text x="300" y="425" text-anchor="middle" class="txt" font-size="42">BERGERIE BARAKA</text>
+  <line x1="105" y1="465" x2="245" y2="465" class="line"/>
+  <line x1="355" y1="465" x2="495" y2="465" class="line"/>
+  <line x1="105" y1="485" x2="245" y2="485" class="line"/>
+  <line x1="355" y1="485" x2="495" y2="485" class="line"/>
+  <g transform="translate(300 475)">
+    <polygon class="star" points="0,-18 5,-5 19,-5 8,4 12,18 0,10 -12,18 -8,4 -19,-5 -5,-5"/>
+    <polygon class="star" transform="translate(-30 0)" points="0,-18 5,-5 19,-5 8,4 12,18 0,10 -12,18 -8,4 -19,-5 -5,-5"/>
+    <polygon class="star" transform="translate(30 0)" points="0,-18 5,-5 19,-5 8,4 12,18 0,10 -12,18 -8,4 -19,-5 -5,-5"/>
+  </g>
+</svg>
