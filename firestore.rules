@@ -3,67 +3,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Utilisateur connecté.
     function signedIn() {
       return request.auth != null;
     }
 
-    // Profil Firestore de l'utilisateur connecté.
     function currentUser() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Administrateur central SET'S I SA MBAAR.
     function isAdmin() {
       return signedIn()
         && currentUser().data.role == 'admin'
         && currentUser().data.actif == true;
     }
 
-    // Utilisateur actif appartenant à la bergerie concernée.
     function belongsToBergerie(bergerieId) {
       return signedIn()
         && currentUser().data.actif == true
         && currentUser().data.bergerieId == bergerieId;
     }
 
-    // ------------------------------------------------------------
-    // PROFILS UTILISATEURS
-    // ------------------------------------------------------------
-    // Un utilisateur peut lire son propre profil afin de terminer
-    // la connexion. L'admin central peut gérer tous les profils.
+    function canCreateMouton() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien'
+          || currentUser().data.role == 'client');
+    }
+
+    function canUpdateMouton() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien');
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
       allow create, update, delete: if isAdmin();
     }
 
-    // ------------------------------------------------------------
-    // CONFIGURATION PERSONNALISÉE DES BERGERIES
-    // ------------------------------------------------------------
-    // Lecture par l'admin ou par un utilisateur de la bergerie.
-    // Écriture/suppression réservées à l'admin central pour cette phase.
     match /bergerie_config/{bergerieId} {
       allow read: if isAdmin() || belongsToBergerie(bergerieId);
       allow create, update, delete: if isAdmin();
     }
 
-    // ------------------------------------------------------------
-    // BERGERIES
-    // ------------------------------------------------------------
-    // L'admin peut consulter toutes les bergeries.
-    // Un responsable/technicien ne peut consulter que sa bergerie.
     match /bergeries/{bergerieId} {
       allow read: if isAdmin() || belongsToBergerie(bergerieId);
       allow create, update, delete: if isAdmin();
     }
 
-    // ------------------------------------------------------------
-    // PHASE DE MIGRATION
-    // ------------------------------------------------------------
-    // Les autres collections restent accessibles uniquement à
-    // l'admin tant que leurs repositories ne sont pas tous migrés
-    // vers le filtrage strict par bergerieId.
-    // Aucun accès anonyme ou public n'est autorisé.
+    // Moutons : isolation stricte par bergerie.
+    match /moutons/{moutonId} {
+      allow read: if isAdmin()
+        || belongsToBergerie(resource.data.bergerieId);
+
+      allow create: if isAdmin()
+        || (canCreateMouton()
+          && belongsToBergerie(request.resource.data.bergerieId));
+
+      allow update: if isAdmin()
+        || (canUpdateMouton()
+          && belongsToBergerie(resource.data.bergerieId)
+          && request.resource.data.bergerieId == resource.data.bergerieId);
+
+      allow delete: if isAdmin()
+        || (canUpdateMouton()
+          && belongsToBergerie(resource.data.bergerieId));
+    }
+
+    // Phase de migration : les autres collections restent accessibles
+    // uniquement à l'admin jusqu'à leur migration par bergerie.
     match /{document=**} {
       allow read, write: if isAdmin();
     }
