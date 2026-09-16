@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/session/current_user_service.dart';
 import '../models/gestation_model.dart';
 
 class FirebaseGestationRepository {
@@ -13,10 +14,23 @@ class FirebaseGestationRepository {
   CollectionReference<Map<String, dynamic>> get _gestations =>
       _firestore.collection(_collection);
 
+  String? get _bergerieIdSession {
+    final id = CurrentUserService.instance.bergerieId?.trim();
+    return (id == null || id.isEmpty) ? null : id;
+  }
+
+  bool get _isAdmin => CurrentUserService.instance.isAdmin;
+
   Future<List<GestationModel>> getGestations() async {
-    final snapshot = await _gestations
-        .orderBy('dateCreation', descending: true)
-        .get();
+    Query<Map<String, dynamic>> query = _gestations;
+
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return [];
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    final snapshot = await query.orderBy('dateCreation', descending: true).get();
 
     return snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
@@ -24,14 +38,19 @@ class FirebaseGestationRepository {
   }
 
   Stream<List<GestationModel>> watchGestations() {
-    return _gestations
-        .orderBy('dateCreation', descending: true)
-        .snapshots()
-        .map(
+    Query<Map<String, dynamic>> query = _gestations;
+
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return Stream.value([]);
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    return query.orderBy('dateCreation', descending: true).snapshots().map(
           (snapshot) => snapshot.docs
-          .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-          .toList(),
-    );
+              .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<GestationModel?> getGestationById(String id) async {
@@ -41,15 +60,27 @@ class FirebaseGestationRepository {
       return null;
     }
 
-    return GestationModel.fromMap(doc.data()!, doc.id);
+    final gestation = GestationModel.fromMap(doc.data()!, doc.id);
+
+    if (!_isAdmin && gestation.bergerieId != _bergerieIdSession) {
+      return null;
+    }
+
+    return gestation;
   }
 
   Future<GestationModel?> getGestationActiveByBrebis(String brebisId) async {
-    final snapshot = await _gestations
+    Query<Map<String, dynamic>> query = _gestations
         .where('brebisId', isEqualTo: brebisId)
-        .where('statut', isEqualTo: _statutGestante)
-        .limit(1)
-        .get();
+        .where('statut', isEqualTo: _statutGestante);
+
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return null;
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    final snapshot = await query.limit(1).get();
 
     if (snapshot.docs.isEmpty) {
       return null;
@@ -72,10 +103,18 @@ class FirebaseGestationRepository {
   }
 
   Future<List<GestationModel>> getGestationsByMouton(String brebisId) async {
-    final snapshot = await _gestations
-        .where('brebisId', isEqualTo: brebisId)
-        .orderBy('dateCreation', descending: true)
-        .get();
+    Query<Map<String, dynamic>> query = _gestations.where(
+      'brebisId',
+      isEqualTo: brebisId,
+    );
+
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return [];
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    final snapshot = await query.orderBy('dateCreation', descending: true).get();
 
     return snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
@@ -83,10 +122,18 @@ class FirebaseGestationRepository {
   }
 
   Future<List<GestationModel>> getGestationsEnCours() async {
-    final snapshot = await _gestations
-        .where('statut', isEqualTo: _statutGestante)
-        .orderBy('dateCreation', descending: true)
-        .get();
+    Query<Map<String, dynamic>> query = _gestations.where(
+      'statut',
+      isEqualTo: _statutGestante,
+    );
+
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return [];
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    final snapshot = await query.orderBy('dateCreation', descending: true).get();
 
     return snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
@@ -94,8 +141,12 @@ class FirebaseGestationRepository {
   }
 
   Future<List<GestationModel>> getGestationsParBergerie(
-      String bergerieId,
-      ) async {
+    String bergerieId,
+  ) async {
+    if (!_isAdmin && _bergerieIdSession != bergerieId) {
+      return [];
+    }
+
     try {
       final snapshot = await _gestations
           .where('bergerieId', isEqualTo: bergerieId)
@@ -115,23 +166,27 @@ class FirebaseGestationRepository {
   }
 
   Future<int> getNombreGestations() async {
-    final snapshot = await _gestations.get();
-    return snapshot.size;
+    if (!_isAdmin && _bergerieIdSession == null) return 0;
+    return (await getGestations()).length;
   }
 
   Future<int> getNombreGestationsEnCours() async {
-    final snapshot = await _gestations
-        .where('statut', isEqualTo: _statutGestante)
-        .get();
-
-    return snapshot.size;
+    return (await getGestationsEnCours()).length;
   }
 
   Future<int> getNombreGestationsTerminees() async {
-    final snapshot = await _gestations
-        .where('statut', isEqualTo: 'Terminée')
-        .get();
+    Query<Map<String, dynamic>> query = _gestations.where(
+      'statut',
+      isEqualTo: 'Terminée',
+    );
 
+    if (!_isAdmin) {
+      final bergerieId = _bergerieIdSession;
+      if (bergerieId == null) return 0;
+      query = query.where('bergerieId', isEqualTo: bergerieId);
+    }
+
+    final snapshot = await query.get();
     return snapshot.size;
   }
 
@@ -231,7 +286,7 @@ class FirebaseGestationRepository {
     return liste
         .where(
           (g) => g.joursRestants >= 0 && g.joursRestants <= 15,
-    )
+        )
         .length;
   }
 }
