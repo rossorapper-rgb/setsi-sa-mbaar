@@ -23,6 +23,14 @@ service cloud.firestore {
         && currentUser().data.bergerieId == bergerieId;
     }
 
+    function belongsToClient(clientId) {
+      return signedIn()
+        && currentUser().data.actif == true
+        && currentUser().data.bergerieId != null
+        && currentUser().data.bergerieId != ''
+        && get(/databases/$(database)/documents/bergeries/$(currentUser().data.bergerieId)).data.clientId == clientId;
+    }
+
     function canCreateMouton() {
       return signedIn()
         && currentUser().data.actif == true
@@ -50,6 +58,11 @@ service cloud.firestore {
 
     match /bergeries/{bergerieId} {
       allow read: if isAdmin() || belongsToBergerie(bergerieId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read: if isAdmin() || belongsToClient(clientId);
       allow create, update, delete: if isAdmin();
     }
 
