@@ -139,6 +139,12 @@ class DashboardQuickActions extends ConsumerWidget {
             final width = constraints.maxWidth;
             final columns = width >= 1050 ? 3 : width >= 520 ? 2 : 1;
 
+            final aspectRatio = columns == 1
+                ? 4.2
+                : columns == 2
+                    ? 1.65
+                    : 1.25;
+
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -147,7 +153,7 @@ class DashboardQuickActions extends ConsumerWidget {
                 crossAxisCount: columns,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: columns == 1 ? 4.2 : 2.55,
+                childAspectRatio: aspectRatio,
               ),
               itemBuilder: (_, index) {
                 final action = actions[index];
