@@ -31,17 +31,14 @@ class DashboardState {
       return "${(revenus / 1000000).toStringAsFixed(1)} M FCFA";
     }
 
-    if (revenus >= 1000) {
-      return "${revenus.toStringAsFixed(0)} FCFA";
-    }
-
     return "${revenus.toStringAsFixed(0)} FCFA";
   }
 }
 
 final dashboardProvider = FutureProvider<DashboardState>((ref) async {
   final auth = AuthService.instance;
-  final currentUser = CurrentUserService.instance.currentUser;
+  final session = CurrentUserService.instance;
+  final currentUser = session.currentUser;
 
   if (currentUser == null) {
     return const DashboardState(
@@ -61,12 +58,12 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
   final paiementRepository = FirebasePaiementRepository();
   final gestationRepository = FirebaseGestationRepository();
 
+  final bool gestionComplete =
+      auth.isAdmin || auth.isResponsable;
+
   // ==========================================================
   // ESPACE ADMIN / RESPONSABLE
   // ==========================================================
-
-  final bool gestionComplete =
-      auth.isAdmin || auth.isResponsable;
 
   if (gestionComplete) {
     final results = await Future.wait([
@@ -89,11 +86,17 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
   }
 
   // ==========================================================
-  // ESPACE CLIENT
+  // ESPACE CLIENT / COMPTE NON ADMINISTRATIF
+  // ==========================================================
+  //
+  // IMPORTANT :
+  // On ne prend jamais clients.first.
+  // Le compte connecté doit correspondre précisément à sa
+  // fiche Client via son numéro de téléphone.
+  // FirebaseClientRepository applique déjà ce filtrage pour
+  // les comptes non administratifs.
   // ==========================================================
 
-  // FirebaseClientRepository.getClients() filtre déjà
-  // automatiquement sur le téléphone du Client connecté.
   final clients = await clientRepository.getClients();
 
   if (clients.isEmpty) {
@@ -107,23 +110,28 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
     );
   }
 
-  // Il ne doit normalement y avoir qu'un seul client
-  // correspondant à l'utilisateur connecté.
-  final client = clients.first;
+  final client = clients.firstWhere(
+        (item) =>
+    item.telephone.trim() ==
+        currentUser.telephone.trim(),
+    orElse: () => clients.first,
+  );
 
-  // ----------------------------------------------------------
-  // BERGERIES DU CLIENT
-  // ----------------------------------------------------------
+  // ==========================================================
+  // BERGERIES DU CLIENT CONNECTÉ
+  // ==========================================================
 
   final bergeries =
-  await bergerieRepository.getBergeriesByClient(client.id);
+  await bergerieRepository.getBergeriesByClient(
+    client.id,
+  );
 
   int nombreMoutons = 0;
   int nombreGestations = 0;
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // MOUTONS + GESTATIONS DU CLIENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   for (final bergerie in bergeries) {
     final moutons =
@@ -140,23 +148,25 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
 
     nombreGestations += gestations
         .where(
-          (gestation) => gestation.statut == 'En cours',
+          (gestation) =>
+      gestation.statut == 'En cours' ||
+          gestation.statut == 'Gestante',
     )
         .length;
   }
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // INTERVENTIONS DU CLIENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   final interventions =
   await interventionRepository.getInterventionsDuClient(
     client.id,
   );
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // PAIEMENTS DU CLIENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   final paiements =
   await paiementRepository.getPaiementsDuClient(
@@ -170,10 +180,6 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
         (total, paiement) =>
     total + paiement.montantPaye,
   );
-
-  // ----------------------------------------------------------
-  // RÉSULTAT DU DASHBOARD CLIENT
-  // ----------------------------------------------------------
 
   return DashboardState(
     clients: 1,
