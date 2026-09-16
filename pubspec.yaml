@@ -23,7 +23,9 @@ dependencies:
 
     # Médias
     image_picker: ^1.2.0
-    firebase_storage: ^13.0.0
+
+    # Réseau
+    http: ^1.6.0
 
     # Firebase
     firebase_core: ^4.0.0
