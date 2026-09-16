@@ -30,11 +30,16 @@ class FirebaseGestationRepository {
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
 
-    final snapshot = await query.orderBy('dateCreation', descending: true).get();
+    // Pas de orderBy Firestore avec le filtre bergerieId : cela évite
+    // d'exiger un index composite pour le chargement de la page.
+    final snapshot = await query.get();
 
-    return snapshot.docs
+    final result = snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
         .toList();
+
+    result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    return result;
   }
 
   Stream<List<GestationModel>> watchGestations() {
@@ -46,11 +51,15 @@ class FirebaseGestationRepository {
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
 
-    return query.orderBy('dateCreation', descending: true).snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+    return query.snapshots().map(
+          (snapshot) {
+        final result = snapshot.docs
+            .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
+            .toList();
+        result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+        return result;
+      },
+    );
   }
 
   Future<GestationModel?> getGestationById(String id) async {
@@ -114,11 +123,13 @@ class FirebaseGestationRepository {
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
 
-    final snapshot = await query.orderBy('dateCreation', descending: true).get();
+    final snapshot = await query.get();
 
-    return snapshot.docs
+    final result = snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
         .toList();
+    result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    return result;
   }
 
   Future<List<GestationModel>> getGestationsEnCours() async {
@@ -133,11 +144,13 @@ class FirebaseGestationRepository {
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
 
-    final snapshot = await query.orderBy('dateCreation', descending: true).get();
+    final snapshot = await query.get();
 
-    return snapshot.docs
+    final result = snapshot.docs
         .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
         .toList();
+    result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    return result;
   }
 
   Future<List<GestationModel>> getGestationsParBergerie(
@@ -152,9 +165,11 @@ class FirebaseGestationRepository {
           .where('bergerieId', isEqualTo: bergerieId)
           .get();
 
-      return snapshot.docs
+      final result = snapshot.docs
           .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
           .toList();
+      result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+      return result;
     } catch (e) {
       print(e);
       return [];
