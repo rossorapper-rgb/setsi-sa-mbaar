@@ -32,80 +32,101 @@ class _StatCardState extends State<StatCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => hovered = true),
-      onExit: (_) => setState(() => hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        transform: hovered
-            ? (Matrix4.identity()..translate(0.0, -3.0))
-            : Matrix4.identity(),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: widget.onTap,
-            child: AppCard(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: widget.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      widget.icon,
-                      color: widget.color,
-                      size: 26,
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 250;
+        final iconSize = compact ? 22.0 : 26.0;
+        final iconBox = compact ? 42.0 : 48.0;
+        final valueSize = compact ? 24.0 : 30.0;
+
+        return MouseRegion(
+          onEnter: (_) => setState(() => hovered = true),
+          onExit: (_) => setState(() => hovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            transform: hovered
+                ? (Matrix4.identity()..translate(0.0, -3.0))
+                : Matrix4.identity(),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: widget.onTap,
+                child: AppCard(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 10 : 14,
+                    vertical: compact ? 9 : 12,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.cardTitle,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: iconBox,
+                        height: iconBox,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: widget.color.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.icon,
+                            color: widget.color,
+                            size: iconSize,
+                          ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.value,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.cardValue,
+                      ),
+                      SizedBox(width: compact ? 7 : 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              maxLines: compact ? 2 : 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.cardTitle.copyWith(
+                                fontSize: compact ? 13 : 14,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              widget.value,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.cardValue.copyWith(
+                                fontSize: valueSize,
+                                color: widget.color,
+                              ),
+                            ),
+                            Text(
+                              widget.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.small.copyWith(
+                                fontSize: compact ? 10 : 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.small,
+                      ),
+                      if (widget.onTap != null && !compact) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: widget.color,
+                          size: 20,
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (widget.onTap != null) ...[
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: widget.color,
-                      size: 22,
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
