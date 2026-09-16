@@ -46,6 +46,20 @@ service cloud.firestore {
           || currentUser().data.role == 'technicien');
     }
 
+    function canManageReproduction() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien');
+    }
+
+    function belongsToMouton(moutonId) {
+      return signedIn()
+        && currentUser().data.actif == true
+        && exists(/databases/$(database)/documents/moutons/$(moutonId))
+        && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId;
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
       allow create, update, delete: if isAdmin();
@@ -83,6 +97,45 @@ service cloud.firestore {
       allow delete: if isAdmin()
         || (canUpdateMouton()
           && belongsToBergerie(resource.data.bergerieId));
+    }
+
+    // Reproductions : l'app ne stocke pas directement bergerieId.
+    // L'appartenance est donc vérifiée via le mouton concerné.
+    match /reproductions/{reproductionId} {
+      allow read: if isAdmin()
+        || belongsToMouton(resource.data.moutonId);
+
+      allow create: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(request.resource.data.moutonId));
+
+      allow update: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(resource.data.moutonId)
+          && request.resource.data.moutonId == resource.data.moutonId);
+
+      allow delete: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(resource.data.moutonId));
+    }
+
+    // Mises bas : l'appartenance est vérifiée via le mouton concerné.
+    match /mises_bas/{miseBasId} {
+      allow read: if isAdmin()
+        || belongsToMouton(resource.data.moutonId);
+
+      allow create: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(request.resource.data.moutonId));
+
+      allow update: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(resource.data.moutonId)
+          && request.resource.data.moutonId == resource.data.moutonId);
+
+      allow delete: if isAdmin()
+        || (canManageReproduction()
+          && belongsToMouton(resource.data.moutonId));
     }
 
     // Phase de migration : les autres collections restent accessibles
