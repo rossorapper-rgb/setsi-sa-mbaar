@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:setsi_sa_mbaar/core/session/current_user_service.dart';
@@ -110,10 +111,10 @@ class DashboardStats extends ConsumerWidget {
             ),
             _DashboardStatData(
               title: "Alimentation",
-              value: "Normale",
-              subtitle: "Stocks suffisants",
+              value: "OK",
+              subtitle: "Stocks à vérifier",
               icon: Icons.grass_rounded,
-              color: AppColors.success,
+              color: Colors.orange,
               route: "/interventions",
             ),
           ];
@@ -124,19 +125,23 @@ class DashboardStats extends ConsumerWidget {
             final width = constraints.maxWidth;
             final int crossAxisCount;
 
-            if (width >= 1100) {
+            if (width >= 1250) {
               crossAxisCount = 4;
-            } else if (width >= 650) {
+            } else if (width >= 780) {
+              crossAxisCount = 3;
+            } else if (width >= 520) {
               crossAxisCount = 2;
             } else {
               crossAxisCount = 1;
             }
 
             final aspectRatio = crossAxisCount == 1
-                ? 2.4
+                ? 2.15
                 : crossAxisCount == 2
-                    ? 2.0
-                    : 1.55;
+                    ? 1.65
+                    : crossAxisCount == 3
+                        ? 1.45
+                        : 1.55;
 
             return GridView.builder(
               shrinkWrap: true,
