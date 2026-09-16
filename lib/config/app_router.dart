@@ -10,6 +10,7 @@ import '../features/clients/pages/clients_page.dart';
 import '../features/clients/pages/add_client_page.dart';
 import '../features/bergeries/pages/bergeries_page.dart';
 import '../features/moutons/pages/mes_moutons_page.dart';
+import '../features/moutons/pages/add_mouton_page.dart';
 import '../features/interventions/pages/interventions_page.dart';
 import '../features/gestation/pages/gestations_page.dart';
 import '../features/allo_veto/pages/allo_veto_page.dart';
@@ -23,9 +24,6 @@ import '../features/utilisateurs/pages/utilisateurs_page.dart';
 import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
 import '../features/utilisateurs/repository/firebase_utilisateur_repository.dart';
-import '../features/moutons/pages/choisir_bergerie_page.dart';
-import '../features/bergeries/models/bergerie_model.dart';
-import '../features/moutons/pages/add_mouton_page.dart';
 
 String? _adminOnlyRedirect() {
   final currentUser = CurrentUserService.instance.currentUser;
@@ -50,7 +48,9 @@ String? _adminResponsableTechnicienRedirect() {
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
-  if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien) {
+  if (role != UserRole.admin &&
+      role != UserRole.responsable &&
+      role != UserRole.technicien) {
     return '/dashboard/bergerie';
   }
   return null;
@@ -65,11 +65,35 @@ String? _clientOnlyRedirect() {
   return null;
 }
 
+String? _moutonsRedirect() {
+  final currentUser = CurrentUserService.instance.currentUser;
+  if (currentUser == null) return '/login';
+
+  final role = CurrentUserService.instance.role;
+  if (role != UserRole.admin &&
+      role != UserRole.responsable &&
+      role != UserRole.technicien &&
+      role != UserRole.client) {
+    return '/dashboard/bergerie';
+  }
+
+  if (role != UserRole.admin &&
+      (currentUser.bergerieId == null ||
+          currentUser.bergerieId!.trim().isEmpty)) {
+    return '/dashboard/bergerie';
+  }
+
+  return null;
+}
+
 String? _interventionRedirect() {
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
-  if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) {
+  if (role != UserRole.admin &&
+      role != UserRole.responsable &&
+      role != UserRole.technicien &&
+      role != UserRole.client) {
     return '/dashboard/bergerie';
   }
   return null;
@@ -106,25 +130,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const BergeriesPage(),
     ),
     GoRoute(
-      path: '/moutons/choisir-bergerie',
-      redirect: (context, state) => _clientOnlyRedirect(),
-      builder: (context, state) => const ChoisirBergeriePage(),
-    ),
-    GoRoute(
       path: '/moutons',
-      redirect: (context, state) => _clientOnlyRedirect(),
+      redirect: (context, state) => _moutonsRedirect(),
       builder: (context, state) => const MesMoutonsPage(),
     ),
     GoRoute(
       path: '/moutons/add',
-      redirect: (context, state) => _clientOnlyRedirect(),
-      builder: (context, state) {
-        final extra = state.extra;
-        if (extra is! BergerieModel) {
-          return const Scaffold(body: Center(child: Text('Bergerie non sélectionnée.')));
-        }
-        return AddMoutonPage(bergerie: extra);
-      },
+      redirect: (context, state) => _moutonsRedirect(),
+      builder: (context, state) => const AddMoutonPage(),
     ),
     GoRoute(
       path: '/interventions',
@@ -136,7 +149,10 @@ final GoRouter appRouter = GoRouter(
       redirect: (context, state) => _clientOnlyRedirect(),
       builder: (context, state) => const GestationsPage(),
     ),
-    GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
+    GoRoute(
+      path: '/allo-veto',
+      builder: (context, state) => const AlloVetoPage(),
+    ),
     GoRoute(
       path: '/abonnements',
       redirect: (context, state) => _adminOnlyRedirect(),
@@ -183,7 +199,9 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id'];
         if (id == null || id.isEmpty) {
-          return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+          return const Scaffold(
+            body: Center(child: Text('Utilisateur introuvable.')),
+          );
         }
         return UtilisateurDetailsPage(utilisateurId: id);
       },
@@ -194,20 +212,28 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id'];
         if (id == null || id.isEmpty) {
-          return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+          return const Scaffold(
+            body: Center(child: Text('Utilisateur introuvable.')),
+          );
         }
         return FutureBuilder(
           future: FirebaseUtilisateurRepository().getUtilisateurById(id),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
             }
             if (snapshot.hasError) {
-              return Scaffold(body: Center(child: Text('Erreur : ${snapshot.error}')));
+              return Scaffold(
+                body: Center(child: Text('Erreur : ${snapshot.error}')),
+              );
             }
             final utilisateur = snapshot.data;
             if (utilisateur == null) {
-              return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+              return const Scaffold(
+                body: Center(child: Text('Utilisateur introuvable.')),
+              );
             }
             return AddUtilisateurPage(utilisateur: utilisateur);
           },
