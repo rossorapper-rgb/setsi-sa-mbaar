@@ -8,15 +8,18 @@ import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/responsive_page.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../bergeries/models/bergerie_model.dart';
 import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 
 class AddMoutonPage extends StatefulWidget {
+  final BergerieModel? bergerie;
   final MoutonModel? mouton;
 
   const AddMoutonPage({
     super.key,
+    this.bergerie,
     this.mouton,
   });
 
@@ -27,8 +30,7 @@ class AddMoutonPage extends StatefulWidget {
 class _AddMoutonPageState extends State<AddMoutonPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FirebaseMoutonRepository _repository = FirebaseMoutonRepository();
-  final FirebaseBergerieRepository _bergerieRepository =
-      FirebaseBergerieRepository();
+  final FirebaseBergerieRepository _bergerieRepository = FirebaseBergerieRepository();
   final Uuid _uuid = const Uuid();
 
   final TextEditingController _nomController = TextEditingController();
@@ -58,7 +60,6 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
   @override
   void initState() {
     super.initState();
-
     if (widget.mouton != null) {
       _chargerMouton();
     } else {
@@ -95,15 +96,13 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
   int? get _ageEnMois {
     if (_dateNaissance == null) return null;
     final now = DateTime.now();
-    return ((now.year - _dateNaissance!.year) * 12) +
-        (now.month - _dateNaissance!.month);
+    return ((now.year - _dateNaissance!.year) * 12) + (now.month - _dateNaissance!.month);
   }
 
   String get _texteAge {
     final age = _ageEnMois;
     if (age == null) return 'Non renseigné';
     if (age < 12) return '$age mois';
-
     final ans = age ~/ 12;
     final mois = age % 12;
     if (mois == 0) return '$ans an${ans > 1 ? 's' : ''}';
@@ -117,17 +116,24 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       firstDate: DateTime(2015),
       lastDate: DateTime.now(),
     );
-
     if (date == null) return;
     setState(() => _dateNaissance = date);
   }
 
   Future<String> _resoudreBergerieId() async {
     final utilisateur = CurrentUserService.instance.currentUser;
-    final bergerieId = utilisateur?.bergerieId?.trim() ?? '';
+    final compteBergerieId = utilisateur?.bergerieId?.trim() ?? '';
+    final bergerieFournieId = widget.bergerie?.id.trim() ?? '';
+    final bergerieId = compteBergerieId.isNotEmpty ? compteBergerieId : bergerieFournieId;
 
     if (bergerieId.isEmpty) {
       throw Exception('Aucune bergerie n’est associée à ce compte.');
+    }
+
+    if (compteBergerieId.isNotEmpty &&
+        bergerieFournieId.isNotEmpty &&
+        compteBergerieId != bergerieFournieId) {
+      throw Exception('La bergerie sélectionnée ne correspond pas à votre compte.');
     }
 
     if (widget.mouton != null &&
@@ -136,10 +142,8 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       throw Exception('Ce mouton n’appartient pas à votre bergerie.');
     }
 
-    // Vérifie que la bergerie existe réellement.
     final bergeries = await _bergerieRepository.getAllBergeries();
-    final existe = bergeries.any((bergerie) => bergerie.id == bergerieId);
-
+    final existe = bergeries.any((item) => item.id == bergerieId);
     if (!existe) {
       throw Exception('Bergerie introuvable pour ce compte.');
     }
@@ -152,14 +156,20 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       return widget.mouton!.clientId;
     }
 
-    final bergeries = await _bergerieRepository.getAllBergeries();
-    final bergerie = bergeries.where((item) => item.id == bergerieId);
+    if (widget.bergerie != null &&
+        widget.bergerie!.id == bergerieId &&
+        widget.bergerie!.clientId.trim().isNotEmpty) {
+      return widget.bergerie!.clientId;
+    }
 
-    if (bergerie.isEmpty || bergerie.first.clientId.trim().isEmpty) {
+    final bergeries = await _bergerieRepository.getAllBergeries();
+    final correspondante = bergeries.where((item) => item.id == bergerieId);
+
+    if (correspondante.isEmpty || correspondante.first.clientId.trim().isEmpty) {
       throw Exception('Client propriétaire de la bergerie introuvable.');
     }
 
-    return bergerie.first.clientId;
+    return correspondante.first.clientId;
   }
 
   Future<void> _enregistrer() async {
@@ -172,9 +182,7 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
 
     if (_numeroController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Veuillez saisir le numéro d'identification."),
-        ),
+        const SnackBar(content: Text("Veuillez saisir le numéro d'identification.")),
       );
       return;
     }
@@ -210,22 +218,17 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       }
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green,
-          content: Text(
-            widget.mouton == null
-                ? 'Le mouton a été ajouté avec succès.'
-                : 'Le mouton a été mis à jour avec succès.',
-          ),
+          content: Text(widget.mouton == null
+              ? 'Le mouton a été ajouté avec succès.'
+              : 'Le mouton a été mis à jour avec succès.'),
         ),
       );
-
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
@@ -251,22 +254,11 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Identification',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Identification', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-                  AppTextField(
-                    controller: _nomController,
-                    label: 'Nom du mouton',
-                    icon: Icons.pets,
-                  ),
+                  AppTextField(controller: _nomController, label: 'Nom du mouton', icon: Icons.pets),
                   const SizedBox(height: 18),
-                  AppTextField(
-                    controller: _numeroController,
-                    label: "Numéro d'identification",
-                    icon: Icons.qr_code,
-                  ),
+                  AppTextField(controller: _numeroController, label: "Numéro d'identification", icon: Icons.qr_code),
                 ],
               ),
             ),
@@ -275,71 +267,30 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Caractéristiques',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Caractéristiques', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-                  AppDropdown<String>(
-                    label: 'Race',
-                    value: _race,
-                    icon: Icons.category,
-                    items: races,
-                    onChanged: (value) {
-                      if (value != null) setState(() => _race = value);
-                    },
-                  ),
+                  AppDropdown<String>(label: 'Race', value: _race, icon: Icons.category, items: races, onChanged: (value) { if (value != null) setState(() => _race = value); }),
                   const SizedBox(height: 18),
-                  AppDropdown<String>(
-                    label: 'Sexe',
-                    value: _sexe,
-                    icon: Icons.male,
-                    items: sexes,
-                    onChanged: (value) {
-                      if (value != null) setState(() => _sexe = value);
-                    },
-                  ),
+                  AppDropdown<String>(label: 'Sexe', value: _sexe, icon: Icons.male, items: sexes, onChanged: (value) { if (value != null) setState(() => _sexe = value); }),
                   const SizedBox(height: 18),
-                  AppTextField(
-                    controller: _poidsController,
-                    label: 'Poids (Kg)',
-                    icon: Icons.monitor_weight_outlined,
-                  ),
+                  AppTextField(controller: _poidsController, label: 'Poids (Kg)', icon: Icons.monitor_weight_outlined),
                   const SizedBox(height: 18),
-                  AppTextField(
-                    controller: _couleurController,
-                    label: 'Couleur',
-                    icon: Icons.palette,
-                  ),
+                  AppTextField(controller: _couleurController, label: 'Couleur', icon: Icons.palette),
                   const SizedBox(height: 18),
-                  AppDateField(
-                    label: 'Date de naissance',
-                    value: _dateNaissance,
-                    onTap: _choisirDate,
-                  ),
+                  AppDateField(label: 'Date de naissance', value: _dateNaissance, onTap: _choisirDate),
                   const SizedBox(height: 20),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(
-                            alpha: 0.05,
-                          ),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.cake,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        Icon(Icons.cake, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Âge : $_texteAge',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
+                        Expanded(child: Text('Âge : $_texteAge', style: const TextStyle(fontWeight: FontWeight.w600))),
                       ],
                     ),
                   ),
