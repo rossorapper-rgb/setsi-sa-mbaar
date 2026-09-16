@@ -49,15 +49,12 @@ class FirebaseBergerieRepository implements BergerieRepository {
     final currentUser =
         CurrentUserService.instance;
 
-    // Administrateur, Responsable et Technicien
-    // peuvent accéder aux bergeries.
-    if (currentUser.isAdmin ||
-        currentUser.isResponsable ||
-        currentUser.isTechnicien) {
+    // L'administrateur central peut consulter toutes les bergeries.
+    if (currentUser.isAdmin) {
       final snapshot =
-      await _firestore
-          .collection(_collection)
-          .get();
+          await _firestore
+              .collection(_collection)
+              .get();
 
       return snapshot.docs
           .map(
@@ -69,8 +66,30 @@ class FirebaseBergerieRepository implements BergerieRepository {
           .toList();
     }
 
-    // Les autres profils ne doivent pas
-    // accéder à la liste générale.
+    // Un responsable ou un technicien ne consulte que sa bergerie.
+    final bergerieId = currentUser.bergerieId;
+
+    if ((currentUser.isResponsable || currentUser.isTechnicien) &&
+        bergerieId != null &&
+        bergerieId.isNotEmpty) {
+      final doc = await _firestore
+          .collection(_collection)
+          .doc(bergerieId)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        return [];
+      }
+
+      return [
+        BergerieModel.fromMap({
+          ...doc.data()!,
+          'id': doc.id,
+        }),
+      ];
+    }
+
+    // Les autres profils ne doivent pas accéder à la liste générale.
     return [];
   }
 
