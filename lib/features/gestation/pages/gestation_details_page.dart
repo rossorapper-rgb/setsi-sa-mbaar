@@ -18,8 +18,7 @@ class GestationDetailsPage extends StatefulWidget {
       _GestationDetailsPageState();
 }
 
-class _GestationDetailsPageState
-    extends State<GestationDetailsPage> {
+class _GestationDetailsPageState extends State<GestationDetailsPage> {
   final FirebaseGestationRepository _repository =
       FirebaseGestationRepository();
 
@@ -38,6 +37,12 @@ class _GestationDetailsPageState
     }
   }
 
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
   Widget _info(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -45,15 +50,19 @@ class _GestationDetailsPageState
         children: [
           Expanded(
             flex: 2,
-            child: Text(title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           Expanded(flex: 3, child: Text(value)),
         ],
       ),
     );
   }
+
+  bool get _miseBasEffectuee =>
+      _gestation.dateMiseBas != null || _gestation.terminee;
 
   @override
   Widget build(BuildContext context) {
@@ -88,39 +97,71 @@ class _GestationDetailsPageState
                 child: Column(
                   children: [
                     _info('Statut', _gestation.statut),
+                    _info('Date saillie', _formatDate(_gestation.dateSaillie)),
                     _info(
-                        'Date saillie',
-                        '${_gestation.dateSaillie.day}/${_gestation.dateSaillie.month}/${_gestation.dateSaillie.year}'),
-                    _info(
-                        'Mise bas prévue',
-                        '${_gestation.dateProbableMiseBas.day}/${_gestation.dateProbableMiseBas.month}/${_gestation.dateProbableMiseBas.year}'),
-                    _info('Jours écoulés',
-                        '${_gestation.joursGestation}'),
-                    _info('Jours restants',
-                        '${_gestation.joursRestants}'),
+                      'Mise bas prévue',
+                      _formatDate(_gestation.dateProbableMiseBas),
+                    ),
+                    if (!_miseBasEffectuee) ...[
+                      _info('Jours écoulés', '${_gestation.joursGestation}'),
+                      _info('Jours restants', '${_gestation.joursRestants}'),
+                    ],
                     if (_gestation.observations.isNotEmpty)
-                      _info('Observations',
-                          _gestation.observations),
+                      _info('Observations', _gestation.observations),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.pets),
-              label: const Text('Enregistrer la mise bas'),
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MiseBasPage(
-                      gestation: _gestation,
-                    ),
+            if (_gestation.dateMiseBas != null) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Résultat de la mise bas',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _info(
+                        'Date de mise bas',
+                        _formatDate(_gestation.dateMiseBas!),
+                      ),
+                      _info(
+                        'Nombre d\'agneaux',
+                        '${_gestation.nombreAgneaux}',
+                      ),
+                      _info('Mâles', '${_gestation.nombreMales}'),
+                      _info('Femelles', '${_gestation.nombreFemelles}'),
+                      _info('Mort-nés', '${_gestation.nombreMortNes}'),
+                    ],
                   ),
-                );
-                _refresh();
-              },
-            ),
+                ),
+              ),
+            ],
+            if (!_miseBasEffectuee) ...[
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.pets),
+                label: const Text('Enregistrer la mise bas'),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MiseBasPage(
+                        gestation: _gestation,
+                      ),
+                    ),
+                  );
+                  _refresh();
+                },
+              ),
+            ],
           ],
         ),
       ),
