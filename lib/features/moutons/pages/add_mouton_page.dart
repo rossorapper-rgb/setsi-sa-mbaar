@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/widgets/app_action_button.dart';
@@ -31,6 +35,8 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FirebaseMoutonRepository _repository = FirebaseMoutonRepository();
   final FirebaseBergerieRepository _bergerieRepository = FirebaseBergerieRepository();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImagePicker _imagePicker = ImagePicker();
   final Uuid _uuid = const Uuid();
 
   final TextEditingController _nomController = TextEditingController();
@@ -42,6 +48,10 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
   String _race = 'Ladoum';
   String _sexe = 'Mâle';
   bool _loading = false;
+  XFile? _photoSelectionnee;
+  Uint8List? _photoBytes;
+  String _photoUrl = '';
+  bool _chargementPhoto = false;
 
   static const List<DropdownMenuItem<String>> races = [
     DropdownMenuItem(value: 'Ladoum', child: Text('Ladoum')),
@@ -85,6 +95,7 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
     _race = mouton.race;
     _sexe = mouton.sexe;
     _dateNaissance = mouton.dateNaissance;
+    _photoUrl = mouton.photoUrl;
   }
 
   String _genererNumeroIdentification() {
@@ -118,6 +129,167 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
     );
     if (date == null) return;
     setState(() => _dateNaissance = date);
+  }
+
+  Future<void> _choisirPhoto(ImageSource source) async {
+    try {
+      setState(() => _chargementPhoto = true);
+
+      final photo = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+        maxWidth: 1400,
+        maxHeight: 1400,
+      );
+
+      if (photo == null) return;
+
+      final bytes = await photo.readAsBytes();
+
+      if (!mounted) return;
+      setState(() {
+        _photoSelectionnee = photo;
+        _photoBytes = bytes;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Impossible de sélectionner la photo : $e'),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _chargementPhoto = false);
+    }
+  }
+
+  Future<void> _afficherChoixPhoto() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Prendre une photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _choisirPhoto(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choisir une photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _choisirPhoto(ImageSource.gallery);
+                },
+              ),
+              if (_photoBytes != null || _photoUrl.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text('Retirer la photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _photoSelectionnee = null;
+                      _photoBytes = null;
+                      _photoUrl = '';
+                    });
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPhotoPreview() {
+    if (_photoBytes != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.memory(
+          _photoBytes!,
+          width: double.infinity,
+          height: 240,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    if (_photoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          _photoUrl,
+          width: double.infinity,
+          height: 240,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPhotoPlaceholder(),
+        ),
+      );
+    }
+
+    return _buildPhotoPlaceholder();
+  }
+
+  Widget _buildPhotoPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 240,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.camera_alt_outlined,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.65),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Aucune photo',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Ajoutez une photo du mouton',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _televerserPhoto(String bergerieId, String moutonId) async {
+    if (_photoSelectionnee == null || _photoBytes == null) {
+      return _photoUrl.isEmpty ? null : _photoUrl;
+    }
+
+    final extension = _photoSelectionnee!.name.toLowerCase().endsWith('.png')
+        ? 'png'
+        : 'jpg';
+
+    final reference = _storage.ref().child(
+      'moutons/$bergerieId/$moutonId.$extension',
+    );
+
+    final metadata = SettableMetadata(
+      contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
+    );
+
+    await reference.putData(_photoBytes!, metadata);
+    return reference.getDownloadURL();
   }
 
   Future<String> _resoudreBergerieId() async {
@@ -192,9 +364,11 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
     try {
       final bergerieId = await _resoudreBergerieId();
       final clientId = await _resoudreClientId(bergerieId);
+      final moutonId = widget.mouton?.id ?? _uuid.v4();
+      final photoUrl = await _televerserPhoto(bergerieId, moutonId);
 
       final mouton = MoutonModel(
-        id: widget.mouton?.id ?? _uuid.v4(),
+        id: moutonId,
         clientId: clientId,
         bergerieId: bergerieId,
         nom: _nomController.text.trim(),
@@ -206,7 +380,7 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
             ? 0
             : double.tryParse(_poidsController.text.replaceAll(',', '.')) ?? 0,
         couleur: _couleurController.text.trim(),
-        photoUrl: widget.mouton?.photoUrl ?? '',
+        photoUrl: photoUrl ?? '',
         actif: widget.mouton?.actif ?? true,
         dateCreation: widget.mouton?.dateCreation ?? DateTime.now(),
       );
@@ -250,6 +424,34 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Photo du mouton', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildPhotoPreview(),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _chargementPhoto ? null : _afficherChoixPhoto,
+                      icon: _chargementPhoto
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add_a_photo_outlined),
+                      label: Text(_photoBytes != null || _photoUrl.isNotEmpty
+                          ? 'Changer la photo'
+                          : 'Ajouter une photo'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             AppCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
