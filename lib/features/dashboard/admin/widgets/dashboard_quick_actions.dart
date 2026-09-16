@@ -95,7 +95,7 @@ class DashboardQuickActions extends ConsumerWidget {
         },
       ),
       _QuickAction(
-        title: isClient ? "Nouvelle gestation" : "Nouvelle gestation",
+        title: "Nouvelle gestation",
         icon: Icons.favorite_rounded,
         color: Colors.orange,
         onTap: () => context.go('/gestations'),
@@ -147,7 +147,7 @@ class DashboardQuickActions extends ConsumerWidget {
                 crossAxisCount: columns,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: columns == 1 ? 3.8 : 2.25,
+                childAspectRatio: columns == 1 ? 4.2 : 2.55,
               ),
               itemBuilder: (_, index) {
                 final action = actions[index];
@@ -168,7 +168,10 @@ class DashboardQuickActions extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -178,7 +181,11 @@ class DashboardQuickActions extends ConsumerWidget {
                               color: action.color.withValues(alpha: .12),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(action.icon, color: action.color, size: 23),
+                            child: Icon(
+                              action.icon,
+                              color: action.color,
+                              size: 23,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
