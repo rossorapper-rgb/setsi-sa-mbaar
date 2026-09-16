@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../core/widgets/app_action_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -36,8 +35,6 @@ class _AddUtilisateurPageState
   final _telephoneController = TextEditingController();
   final _motDePasseController = TextEditingController();
 
-  final Uuid _uuid = const Uuid();
-
   final FirebaseBergerieRepository _bergerieRepository =
       FirebaseBergerieRepository();
 
@@ -49,6 +46,8 @@ class _AddUtilisateurPageState
 
   bool _actif = true;
   bool _loading = false;
+
+  bool get _modeCreation => widget.utilisateur == null;
 
   @override
   void initState() {
@@ -102,7 +101,7 @@ class _AddUtilisateurPageState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.utilisateur == null
+          _modeCreation
               ? "Nouvel utilisateur"
               : "Modifier utilisateur",
         ),
@@ -137,14 +136,16 @@ class _AddUtilisateurPageState
                     icon: Icons.phone,
                   ),
 
-                  const SizedBox(height: 18),
+                  if (_modeCreation) ...[
+                    const SizedBox(height: 18),
 
-                  AppTextField(
-                    controller: _motDePasseController,
-                    label: "Mot de passe initial",
-                    icon: Icons.lock_outline,
-                    obscureText: true,
-                  ),
+                    AppTextField(
+                      controller: _motDePasseController,
+                      label: "Mot de passe initial",
+                      icon: Icons.lock_outline,
+                      obscureText: true,
+                    ),
+                  ],
 
                   const SizedBox(height: 18),
 
@@ -303,8 +304,8 @@ class _AddUtilisateurPageState
             const SizedBox(height: 30),
 
             AppActionButton(
-              label: widget.utilisateur == null
-                  ? "Enregistrer"
+              label: _modeCreation
+                  ? "Créer le compte"
                   : "Mettre à jour",
               icon: Icons.save,
               isLoading: _loading,
@@ -318,6 +319,19 @@ class _AddUtilisateurPageState
 
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_modeCreation && _motDePasseController.text.trim().length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.orange,
+          content: Text(
+            "Le mot de passe initial doit contenir au moins 6 caractères.",
+          ),
+        ),
+      );
+
       return;
     }
 
@@ -342,29 +356,43 @@ class _AddUtilisateurPageState
     try {
       final repository = ref.read(utilisateurRepositoryProvider);
 
-      final emailTechnique = repository.genererEmailTechnique(
-        _telephoneController.text.trim(),
-      );
+      final telephone = _telephoneController.text.trim();
+      final emailTechnique = repository.genererEmailTechnique(telephone);
 
-      final utilisateur = UtilisateurModel(
-        id: widget.utilisateur?.id ?? _uuid.v4(),
-        nom: _nomController.text.trim(),
-        prenom: _prenomController.text.trim(),
-        telephone: _telephoneController.text.trim(),
-        emailTechnique: emailTechnique,
-        role: _role,
-        bergerieId: _bergerieObligatoire ? _bergerieId : null,
-        actif: _actif,
-        dateCreation: widget.utilisateur?.dateCreation ?? DateTime.now(),
-        derniereConnexion: widget.utilisateur?.derniereConnexion,
-        creePar: "Administrateur",
-        photoUrl: widget.utilisateur?.photoUrl,
-        permissions: widget.utilisateur?.permissions ?? {},
-      );
+      if (_modeCreation) {
+        final utilisateur = UtilisateurModel(
+          id: '',
+          nom: _nomController.text.trim(),
+          prenom: _prenomController.text.trim(),
+          telephone: telephone,
+          emailTechnique: emailTechnique,
+          role: _role,
+          bergerieId: _bergerieObligatoire ? _bergerieId : null,
+          actif: _actif,
+          dateCreation: DateTime.now(),
+          derniereConnexion: null,
+          creePar: "Administrateur",
+          photoUrl: null,
+          permissions: {},
+        );
 
-      if (widget.utilisateur == null) {
-        await repository.addUtilisateur(utilisateur);
+        await repository.createUtilisateurAvecCompte(
+          utilisateur,
+          _motDePasseController.text.trim(),
+        );
       } else {
+        final ancienUtilisateur = widget.utilisateur!;
+
+        final utilisateur = ancienUtilisateur.copyWith(
+          nom: _nomController.text.trim(),
+          prenom: _prenomController.text.trim(),
+          telephone: telephone,
+          emailTechnique: emailTechnique,
+          role: _role,
+          bergerieId: _bergerieObligatoire ? _bergerieId : null,
+          actif: _actif,
+        );
+
         await repository.updateUtilisateur(utilisateur);
       }
 
@@ -374,8 +402,8 @@ class _AddUtilisateurPageState
         SnackBar(
           backgroundColor: Colors.green,
           content: Text(
-            widget.utilisateur == null
-                ? "Utilisateur ajouté avec succès."
+            _modeCreation
+                ? "Compte utilisateur créé avec succès."
                 : "Utilisateur mis à jour avec succès.",
           ),
         ),
