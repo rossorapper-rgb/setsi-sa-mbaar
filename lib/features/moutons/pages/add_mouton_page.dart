@@ -8,545 +8,354 @@ import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/responsive_page.dart';
 import '../../../core/session/current_user_service.dart';
-
-import '../../clients/repositories/firebase_client_repository.dart';
-import '../../bergeries/models/bergerie_model.dart';
+import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 
 class AddMoutonPage extends StatefulWidget {
-  /// Bergerie facultative : un client peut enregistrer un mouton
-  /// avant d'avoir créé sa première bergerie.
-  final BergerieModel? bergerie;
   final MoutonModel? mouton;
 
   const AddMoutonPage({
     super.key,
-    this.bergerie,
     this.mouton,
   });
 
   @override
-  State<AddMoutonPage> createState() =>
-      _AddMoutonPageState();
+  State<AddMoutonPage> createState() => _AddMoutonPageState();
 }
 
-class _AddMoutonPageState
-    extends State<AddMoutonPage> {
-final GlobalKey<FormState> _formKey =
-GlobalKey<FormState>();
-
-final FirebaseMoutonRepository
-_repository =
-FirebaseMoutonRepository();
-
-final Uuid _uuid = const Uuid();
-
-final TextEditingController
-_nomController =
-TextEditingController();
-
-final TextEditingController
-_numeroController =
-TextEditingController();
-
-final TextEditingController
-_poidsController =
-TextEditingController();
-
-final TextEditingController
-_couleurController =
-TextEditingController();
-
-DateTime? _dateNaissance;
-
-String _race = "Ladoum";
-String _sexe = "Mâle";
-
-bool _loading = false;
-
-static final List<
-DropdownMenuItem<String>> races = [
-const DropdownMenuItem(
-value: "Ladoum",
-child: Text("Ladoum"),
-),
-const DropdownMenuItem(
-value: "Bali-Bali",
-child: Text("Bali-Bali"),
-),
-const DropdownMenuItem(
-value: "Touabire",
-child: Text("Touabire"),
-),
-const DropdownMenuItem(
-value: "Waralé",
-child: Text("Waralé"),
-),
-const DropdownMenuItem(
-value: "Croisé",
-child: Text("Croisé"),
-),
-const DropdownMenuItem(
-value: "Autre",
-child: Text("Autre"),
-),
-];
-
-static final List<
-DropdownMenuItem<String>> sexes = [
-const DropdownMenuItem(
-value: "Mâle",
-child: Text("Mâle"),
-),
-const DropdownMenuItem(
-value: "Femelle",
-child: Text("Femelle"),
-),
-];
-
-@override
-void initState() {
-super.initState();
-
-if (widget.mouton != null) {
-_chargerMouton();
-} else {
-_numeroController.text =
-_genererNumeroIdentification();
-}
-}
-
-@override
-void dispose() {
-_nomController.dispose();
-_numeroController.dispose();
-_poidsController.dispose();
-_couleurController.dispose();
-super.dispose();
-}
-
-void _chargerMouton() {
-final mouton = widget.mouton!;
-
-_nomController.text = mouton.nom;
-_numeroController.text =
-mouton.numeroIdentification;
-
-_poidsController.text =
-mouton.poids.toString();
-
-_couleurController.text =
-mouton.couleur;
-
-_race = mouton.race;
-_sexe = mouton.sexe;
-
-_dateNaissance =
-mouton.dateNaissance;
-}
-
-String _genererNumeroIdentification() {
-final now = DateTime.now();
-
-final numero =
-now.millisecondsSinceEpoch
-.toString()
-.substring(7);
-
-return "MTN-${now.year}-$numero";
-}
-
-int? get _ageEnMois {
-if (_dateNaissance == null) {
-return null;
-}
-
-final now = DateTime.now();
-
-return ((now.year -
-_dateNaissance!.year) *
-12) +
-(now.month -
-_dateNaissance!.month);
-}
-
-String get _texteAge {
-final age = _ageEnMois;
-
-if (age == null) {
-return "Non renseigné";
-}
-
-if (age < 12) {
-return "$age mois";
-}
-
-final ans = age ~/ 12;
-final mois = age % 12;
-
-if (mois == 0) {
-return "$ans an${ans > 1 ? "s" : ""}";
-}
-
-return "$ans an${ans > 1 ? "s" : ""} $mois mois";
-}
-
-Future<void> _choisirDate() async {
-final date = await showDatePicker(
-context: context,
-initialDate:
-_dateNaissance ??
-DateTime.now(),
-firstDate: DateTime(2015),
-lastDate: DateTime.now(),
-);
-
-if (date == null) return;
-
-setState(() {
-_dateNaissance = date;
-});
-}
-@override
-Widget build(BuildContext context) {
-return ResponsivePage(
-title: widget.mouton == null
-? "Ajouter un mouton"
-: "Modifier le mouton",
-child: Form(
-key: _formKey,
-child: ListView(
-padding: const EdgeInsets.all(20),
-children: [
-
-AppCard(
-child: Column(
-crossAxisAlignment:
-CrossAxisAlignment.start,
-children: [
-
-const Text(
-"Identification",
-style: TextStyle(
-fontSize: 20,
-fontWeight:
-FontWeight.bold,
-),
-),
-
-const SizedBox(height: 20),
-
-AppTextField(
-controller:
-_nomController,
-label:
-"Nom du mouton",
-icon: Icons.pets,
-),
-
-const SizedBox(height: 18),
-
-AppTextField(
-controller:
-_numeroController,
-label:
-"Numéro d'identification",
-icon: Icons.qr_code,
-),
-],
-),
-),
-
-const SizedBox(height: 20),
-
-AppCard(
-child: Column(
-crossAxisAlignment:
-CrossAxisAlignment.start,
-children: [
-
-const Text(
-"Caractéristiques",
-style: TextStyle(
-fontSize: 20,
-fontWeight:
-FontWeight.bold,
-),
-),
-
-const SizedBox(height: 20),
-
-AppDropdown<String>(
-label: "Race",
-value: _race,
-icon: Icons.category,
-items: races,
-onChanged: (value) {
-if (value == null) {
-return;
-}
-
-setState(() {
-_race = value;
-});
-},
-),
-
-const SizedBox(height: 18),
-
-AppDropdown<String>(
-label: "Sexe",
-value: _sexe,
-icon: Icons.male,
-items: sexes,
-onChanged: (value) {
-if (value == null) {
-return;
-}
-
-setState(() {
-_sexe = value;
-});
-},
-),
-
-const SizedBox(height: 18),
-
-AppTextField(
-controller:
-_poidsController,
-label: "Poids (Kg)",
-icon: Icons
-.monitor_weight_outlined,
-),
-
-const SizedBox(height: 18),
-
-AppTextField(
-controller:
-_couleurController,
-label: "Couleur",
-icon: Icons.palette,
-),
-
-const SizedBox(height: 18),
-
-AppDateField(
-label:
-"Date de naissance",
-value:
-_dateNaissance,
-onTap:
-_choisirDate,
-),
-
-const SizedBox(height: 20),
-
-Container(
-width: double.infinity,
-padding:
-const EdgeInsets.all(
-16),
-decoration:
-BoxDecoration(
-color: Theme.of(
-context)
-.colorScheme
-.primary
-.withValues(
-alpha: 0.05),
-borderRadius:
-BorderRadius
-.circular(12),
-),
-child: Row(
-children: [
-
-Icon(
-Icons.cake,
-color: Theme.of(
-context)
-.colorScheme
-.primary,
-),
-
-const SizedBox(
-width: 12,
-),
-
-Expanded(
-child: Text(
-"Âge : $_texteAge",
-style:
-const TextStyle(
-fontWeight:
-FontWeight
-.w600,
-),
-),
-),
-],
-),
-),
-],
-),
-),
-
-const SizedBox(height: 30),
-
-AppActionButton(
-label: widget.mouton ==
-null
-? "Enregistrer"
-: "Mettre à jour",
-icon: Icons.save,
-isLoading: _loading,
-onPressed: _loading
-? null
-: _enregistrer,
-),
-],
-),
-),
-);
-}
-Future<String> _resoudreClientId() async {
-  // En modification, conserver le propriétaire déjà enregistré.
-  if (widget.mouton != null &&
-      widget.mouton!.clientId.trim().isNotEmpty) {
-    return widget.mouton!.clientId;
-  }
-
-  // Si une bergerie est fournie, son client est le propriétaire.
-  if (widget.bergerie != null &&
-      widget.bergerie!.clientId.trim().isNotEmpty) {
-    return widget.bergerie!.clientId;
-  }
-
-  // Sinon, retrouver la fiche client du compte connecté.
-  final utilisateur =
-      CurrentUserService.instance.currentUser;
-
-  if (utilisateur == null) {
-    throw Exception(
-      "Utilisateur non connecté.",
-    );
-  }
-
-  final clients =
-      await FirebaseClientRepository().getClients();
-
-  if (clients.isEmpty) {
-    throw Exception(
-      "Fiche client introuvable pour ce compte.",
-    );
-  }
-
-  return clients.first.id;
-}
-
-Future<void> _enregistrer() async {
-  if (_nomController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Veuillez saisir le nom du mouton.",
-        ),
-      ),
-    );
-    return;
-  }
-
-  if (_numeroController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Veuillez saisir le numéro d'identification.",
-        ),
-      ),
-    );
-    return;
-  }
-
-
-
-  setState(() {
-    _loading = true;
-  });
-
-  try {
-    final mouton = MoutonModel(
-      id: widget.mouton?.id ?? _uuid.v4(),
-      clientId: await _resoudreClientId(),
-      bergerieId: widget.bergerie?.id ?? "",
-
-      nom: _nomController.text.trim(),
-      numeroIdentification:
-      _numeroController.text.trim(),
-      race: _race,
-      sexe: _sexe,
-      dateNaissance: _dateNaissance,
-      poids: _poidsController.text.trim().isEmpty
-          ? 0
-          : double.tryParse(
-          _poidsController.text
-              .replaceAll(",", ".")) ??
-          0,
-      couleur:
-      _couleurController.text.trim(),
-      photoUrl:
-      widget.mouton?.photoUrl ?? "",
-      actif:
-      widget.mouton?.actif ?? true,
-      dateCreation:
-      widget.mouton?.dateCreation ??
-          DateTime.now(),
-    );
-
-    if (widget.mouton == null) {
-      await _repository.addMouton(
-        mouton,
-      );
+class _AddMoutonPageState extends State<AddMoutonPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final FirebaseMoutonRepository _repository = FirebaseMoutonRepository();
+  final FirebaseBergerieRepository _bergerieRepository =
+      FirebaseBergerieRepository();
+  final Uuid _uuid = const Uuid();
+
+  final TextEditingController _nomController = TextEditingController();
+  final TextEditingController _numeroController = TextEditingController();
+  final TextEditingController _poidsController = TextEditingController();
+  final TextEditingController _couleurController = TextEditingController();
+
+  DateTime? _dateNaissance;
+  String _race = 'Ladoum';
+  String _sexe = 'Mâle';
+  bool _loading = false;
+
+  static const List<DropdownMenuItem<String>> races = [
+    DropdownMenuItem(value: 'Ladoum', child: Text('Ladoum')),
+    DropdownMenuItem(value: 'Bali-Bali', child: Text('Bali-Bali')),
+    DropdownMenuItem(value: 'Touabire', child: Text('Touabire')),
+    DropdownMenuItem(value: 'Waralé', child: Text('Waralé')),
+    DropdownMenuItem(value: 'Croisé', child: Text('Croisé')),
+    DropdownMenuItem(value: 'Autre', child: Text('Autre')),
+  ];
+
+  static const List<DropdownMenuItem<String>> sexes = [
+    DropdownMenuItem(value: 'Mâle', child: Text('Mâle')),
+    DropdownMenuItem(value: 'Femelle', child: Text('Femelle')),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.mouton != null) {
+      _chargerMouton();
     } else {
-      await _repository.updateMouton(
-        mouton,
-      );
+      _numeroController.text = _genererNumeroIdentification();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nomController.dispose();
+    _numeroController.dispose();
+    _poidsController.dispose();
+    _couleurController.dispose();
+    super.dispose();
+  }
+
+  void _chargerMouton() {
+    final mouton = widget.mouton!;
+    _nomController.text = mouton.nom;
+    _numeroController.text = mouton.numeroIdentification;
+    _poidsController.text = mouton.poids.toString();
+    _couleurController.text = mouton.couleur;
+    _race = mouton.race;
+    _sexe = mouton.sexe;
+    _dateNaissance = mouton.dateNaissance;
+  }
+
+  String _genererNumeroIdentification() {
+    final now = DateTime.now();
+    final numero = now.millisecondsSinceEpoch.toString().substring(7);
+    return 'MTN-${now.year}-$numero';
+  }
+
+  int? get _ageEnMois {
+    if (_dateNaissance == null) return null;
+    final now = DateTime.now();
+    return ((now.year - _dateNaissance!.year) * 12) +
+        (now.month - _dateNaissance!.month);
+  }
+
+  String get _texteAge {
+    final age = _ageEnMois;
+    if (age == null) return 'Non renseigné';
+    if (age < 12) return '$age mois';
+
+    final ans = age ~/ 12;
+    final mois = age % 12;
+    if (mois == 0) return '$ans an${ans > 1 ? 's' : ''}';
+    return '$ans an${ans > 1 ? 's' : ''} $mois mois';
+  }
+
+  Future<void> _choisirDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _dateNaissance ?? DateTime.now(),
+      firstDate: DateTime(2015),
+      lastDate: DateTime.now(),
+    );
+
+    if (date == null) return;
+    setState(() => _dateNaissance = date);
+  }
+
+  Future<String> _resoudreBergerieId() async {
+    final utilisateur = CurrentUserService.instance.currentUser;
+    final bergerieId = utilisateur?.bergerieId?.trim() ?? '';
+
+    if (bergerieId.isEmpty) {
+      throw Exception('Aucune bergerie n’est associée à ce compte.');
     }
 
-    if (!mounted) return;
+    if (widget.mouton != null &&
+        widget.mouton!.bergerieId.trim().isNotEmpty &&
+        widget.mouton!.bergerieId.trim() != bergerieId) {
+      throw Exception('Ce mouton n’appartient pas à votre bergerie.');
+    }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.green,
-        content: Text(
-          widget.mouton == null
-              ? "Le mouton a été ajouté avec succès."
-              : "Le mouton a été mis à jour avec succès.",
-        ),
-      ),
-    );
+    // Vérifie que la bergerie existe réellement.
+    final bergeries = await _bergerieRepository.getAllBergeries();
+    final existe = bergeries.any((bergerie) => bergerie.id == bergerieId);
 
-    Navigator.pop(context, true);
-  } catch (e) {
-    if (!mounted) return;
+    if (!existe) {
+      throw Exception('Bergerie introuvable pour ce compte.');
+    }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.red,
-        content: Text(
-          "Une erreur est survenue : $e",
-        ),
-      ),
-    );
-  } finally {
-    if (!mounted) return;
-
-    setState(() {
-      _loading = false;
-    });
+    return bergerieId;
   }
-}
+
+  Future<String> _resoudreClientId(String bergerieId) async {
+    if (widget.mouton != null && widget.mouton!.clientId.trim().isNotEmpty) {
+      return widget.mouton!.clientId;
+    }
+
+    final bergeries = await _bergerieRepository.getAllBergeries();
+    final bergerie = bergeries.where((item) => item.id == bergerieId);
+
+    if (bergerie.isEmpty || bergerie.first.clientId.trim().isEmpty) {
+      throw Exception('Client propriétaire de la bergerie introuvable.');
+    }
+
+    return bergerie.first.clientId;
+  }
+
+  Future<void> _enregistrer() async {
+    if (_nomController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez saisir le nom du mouton.')),
+      );
+      return;
+    }
+
+    if (_numeroController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Veuillez saisir le numéro d'identification."),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final bergerieId = await _resoudreBergerieId();
+      final clientId = await _resoudreClientId(bergerieId);
+
+      final mouton = MoutonModel(
+        id: widget.mouton?.id ?? _uuid.v4(),
+        clientId: clientId,
+        bergerieId: bergerieId,
+        nom: _nomController.text.trim(),
+        numeroIdentification: _numeroController.text.trim(),
+        race: _race,
+        sexe: _sexe,
+        dateNaissance: _dateNaissance,
+        poids: _poidsController.text.trim().isEmpty
+            ? 0
+            : double.tryParse(_poidsController.text.replaceAll(',', '.')) ?? 0,
+        couleur: _couleurController.text.trim(),
+        photoUrl: widget.mouton?.photoUrl ?? '',
+        actif: widget.mouton?.actif ?? true,
+        dateCreation: widget.mouton?.dateCreation ?? DateTime.now(),
+      );
+
+      if (widget.mouton == null) {
+        await _repository.addMouton(mouton);
+      } else {
+        await _repository.updateMouton(mouton);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            widget.mouton == null
+                ? 'Le mouton a été ajouté avec succès.'
+                : 'Le mouton a été mis à jour avec succès.',
+          ),
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Une erreur est survenue : $e'),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsivePage(
+      title: widget.mouton == null ? 'Ajouter un mouton' : 'Modifier le mouton',
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Identification',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  AppTextField(
+                    controller: _nomController,
+                    label: 'Nom du mouton',
+                    icon: Icons.pets,
+                  ),
+                  const SizedBox(height: 18),
+                  AppTextField(
+                    controller: _numeroController,
+                    label: "Numéro d'identification",
+                    icon: Icons.qr_code,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Caractéristiques',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  AppDropdown<String>(
+                    label: 'Race',
+                    value: _race,
+                    icon: Icons.category,
+                    items: races,
+                    onChanged: (value) {
+                      if (value != null) setState(() => _race = value);
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                  AppDropdown<String>(
+                    label: 'Sexe',
+                    value: _sexe,
+                    icon: Icons.male,
+                    items: sexes,
+                    onChanged: (value) {
+                      if (value != null) setState(() => _sexe = value);
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                  AppTextField(
+                    controller: _poidsController,
+                    label: 'Poids (Kg)',
+                    icon: Icons.monitor_weight_outlined,
+                  ),
+                  const SizedBox(height: 18),
+                  AppTextField(
+                    controller: _couleurController,
+                    label: 'Couleur',
+                    icon: Icons.palette,
+                  ),
+                  const SizedBox(height: 18),
+                  AppDateField(
+                    label: 'Date de naissance',
+                    value: _dateNaissance,
+                    onTap: _choisirDate,
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withValues(
+                            alpha: 0.05,
+                          ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.cake,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Âge : $_texteAge',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+            AppActionButton(
+              label: widget.mouton == null ? 'Enregistrer' : 'Mettre à jour',
+              icon: Icons.save,
+              isLoading: _loading,
+              onPressed: _loading ? null : _enregistrer,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
