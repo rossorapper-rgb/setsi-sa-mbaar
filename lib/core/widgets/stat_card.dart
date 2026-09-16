@@ -39,119 +39,67 @@ class _StatCardState extends State<StatCard> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         transform: hovered
-            ? (Matrix4.identity()..translate(0.0, -4.0))
+            ? (Matrix4.identity()..translate(0.0, -3.0))
             : Matrix4.identity(),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             onTap: widget.onTap,
             child: AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.all(14),
+              child: Row(
                 children: [
-                  //--------------------------------------------------
-                  // Ligne supérieure
-                  //--------------------------------------------------
-
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: widget.color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          widget.icon,
-                          color: widget.color,
-                          size: 28,
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Text(
-                          widget.evolution,
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: widget.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: widget.color,
+                      size: 26,
+                    ),
                   ),
-
-                  const Spacer(),
-
-                  //--------------------------------------------------
-                  // Valeur principale
-                  //--------------------------------------------------
-
-                  Text(
-                    widget.value,
-                    style: AppTextStyles.cardValue,
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    widget.title,
-                    style: AppTextStyles.cardTitle,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    widget.subtitle,
-                    style: AppTextStyles.small,
-                  ),
-
-                  const Spacer(),
-
-                  //--------------------------------------------------
-                  // Pied de carte
-                  //--------------------------------------------------
-
-                  Divider(
-                    color: Colors.grey.withValues(alpha: 0.20),
-                  ),
-
-                  Row(
-                    children: [
-                      Text(
-                        "Voir les détails",
-                        style: TextStyle(
-                          color: widget.color,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.cardTitle,
                         ),
-                      ),
-
-                      const Spacer(),
-
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        transform: hovered
-                            ? (Matrix4.identity()..translate(4.0, 0.0))
-                            : Matrix4.identity(),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: widget.color,
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.cardValue,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.small,
+                        ),
+                      ],
+                    ),
                   ),
+                  if (widget.onTap != null) ...[
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: widget.color,
+                      size: 22,
+                    ),
+                  ],
                 ],
               ),
             ),
