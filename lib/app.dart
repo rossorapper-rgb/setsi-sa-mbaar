@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/app_router.dart';
-import 'core/config/bergerie_config.dart';
+import 'core/config/current_bergerie_config.dart';
 import 'core/theme/app_theme.dart';
 
 class SetsiApp extends StatelessWidget {
@@ -10,10 +10,9 @@ class SetsiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Configuration actuelle de référence.
-    // Elle sera ensuite chargée dynamiquement selon la bergerie
-    // connectée / le build personnalisé.
-    final bergerieConfig = BergerieConfig.defaut();
+    // La configuration a été chargée au démarrage de l'application
+    // selon le bergerieId de l'utilisateur connecté.
+    final bergerieConfig = CurrentBergerieConfig.instance.config;
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
