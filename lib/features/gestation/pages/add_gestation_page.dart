@@ -12,20 +12,13 @@ import '../repositories/firebase_gestation_repository.dart';
 import '../widgets/femelle_info_card.dart';
 import '../widgets/belier_info_card.dart';
 
-enum TypeBelier {
-  troupeau,
-  exterieur,
-}
+enum TypeBelier { troupeau, exterieur }
 
 class AddGestationPage extends StatefulWidget {
   final GestationModel? gestation;
   final BergerieModel? bergerie;
 
-  const AddGestationPage({
-    super.key,
-    this.gestation,
-    this.bergerie,
-  });
+  const AddGestationPage({super.key, this.gestation, this.bergerie});
 
   bool get isEdition => gestation != null;
 
@@ -45,7 +38,6 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
   List<MoutonModel> _brebis = [];
   List<MoutonModel> _beliers = [];
-
   MoutonModel? _brebisSelectionnee;
   MoutonModel? _belierSelectionne;
 
@@ -56,28 +48,22 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
   CurrentUserService get _session => CurrentUserService.instance;
 
-  /// Pour un utilisateur rattaché à une bergerie, cette valeur est
-  /// prioritaire sur toute bergerie éventuellement passée à la page.
   String? get _bergerieIdSession {
     final id = _session.bergerieId?.trim();
     return (id == null || id.isEmpty) ? null : id;
   }
 
+  String? get _bergerieIdEffectif {
+    if (!_session.isAdmin) return _bergerieIdSession;
+    return widget.bergerie?.id ?? widget.gestation?.bergerieId;
+  }
+
   bool get _gestationEstTerminee {
     final gestation = widget.gestation;
     if (gestation == null) return false;
-
     return gestation.statut.toLowerCase() == 'terminée' ||
         gestation.dateMiseBas != null ||
         !gestation.active;
-  }
-
-  String? get _bergerieIdEffectif {
-    if (!_session.isAdmin) {
-      return _bergerieIdSession;
-    }
-
-    return widget.bergerie?.id ?? widget.gestation?.bergerieId;
   }
 
   @override
@@ -143,16 +129,12 @@ class _AddGestationPageState extends State<AddGestationPage> {
         ),
       );
 
-      setState(() {
-        _brebisSelectionnee = null;
-      });
+      setState(() => _brebisSelectionnee = null);
     }
   }
 
   Future<BergerieModel?> _choisirBergeriePourAdmin() async {
-    final repository = FirebaseBergerieRepository();
-    final bergeries = await repository.getAllBergeries();
-
+    final bergeries = await FirebaseBergerieRepository().getAllBergeries();
     if (!mounted) return null;
 
     if (bergeries.isEmpty) {
@@ -170,40 +152,33 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
     return showDialog<BergerieModel>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text("Choisir la bergerie"),
-          content: SizedBox(
-            width: 420,
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: bergeries.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (_, index) {
-                final item = bergeries[index];
-                return ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.home_work),
-                  ),
-                  title: Text(item.nom),
-                  subtitle: Text(
-                    item.adresse.isEmpty ? "Bergerie" : item.adresse,
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => Navigator.pop(dialogContext, item),
-                );
-              },
-            ),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Choisir la bergerie"),
+        content: SizedBox(
+          width: 420,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: bergeries.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (_, index) {
+              final item = bergeries[index];
+              return ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.home_work)),
+                title: Text(item.nom),
+                subtitle: Text(item.adresse.isEmpty ? "Bergerie" : item.adresse),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => Navigator.pop(dialogContext, item),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   Future<void> _ajouterFemelle() async {
     BergerieModel? bergerie = widget.bergerie;
 
-    // Un responsable/technicien/client ne choisit jamais une autre bergerie.
     if (!_session.isAdmin) {
       final sessionBergerieId = _bergerieIdSession;
       if (sessionBergerieId == null) {
@@ -217,9 +192,14 @@ class _AddGestationPageState extends State<AddGestationPage> {
 
       if (bergerie == null || bergerie.id != sessionBergerieId) {
         try {
-          final bergeries = await FirebaseBergerieRepository()
-              .getAllBergeries();
-          bergerie = bergeries.where((b) => b.id == sessionBergerieId).firstOrNull;
+          final bergeries =
+              await FirebaseBergerieRepository().getAllBergeries();
+          for (final item in bergeries) {
+            if (item.id == sessionBergerieId) {
+              bergerie = item;
+              break;
+            }
+          }
         } catch (_) {
           bergerie = null;
         }
@@ -243,26 +223,20 @@ class _AddGestationPageState extends State<AddGestationPage> {
         );
         return;
       }
-
       if (bergerie == null) return;
     }
 
     final resultat = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => AddMoutonPage(bergerie: bergerie!),
-      ),
+      MaterialPageRoute(builder: (_) => AddMoutonPage(bergerie: bergerie!)),
     );
 
-    if (resultat == true && mounted) {
-      await _charger();
-    }
+    if (resultat == true && mounted) await _charger();
   }
 
   Future<void> _charger() async {
     try {
       final bergerieId = _bergerieIdEffectif;
-
       final List<MoutonModel> brebis;
       final List<MoutonModel> beliers;
 
@@ -276,12 +250,8 @@ class _AddGestationPageState extends State<AddGestationPage> {
         throw Exception("Aucune bergerie n'est associée à ce compte.");
       }
 
-      brebis.sort(
-        (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
-      );
-      beliers.sort(
-        (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
-      );
+      brebis.sort((a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()));
+      beliers.sort((a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()));
 
       if (!mounted) return;
 
@@ -329,10 +299,7 @@ class _AddGestationPageState extends State<AddGestationPage> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
-
-    if (d != null && mounted) {
-      setState(() => _dateSaillie = d);
-    }
+    if (d != null && mounted) setState(() => _dateSaillie = d);
   }
 
   Future<void> _enregistrer() async {
@@ -368,7 +335,9 @@ class _AddGestationPageState extends State<AddGestationPage> {
     if (bergerieId.isEmpty || _brebisSelectionnee!.bergerieId != bergerieId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("La femelle sélectionnée n'appartient pas à cette bergerie."),
+          content: Text(
+            "La femelle sélectionnée n'appartient pas à cette bergerie.",
+          ),
         ),
       );
       return;
@@ -378,7 +347,9 @@ class _AddGestationPageState extends State<AddGestationPage> {
         _belierSelectionne!.bergerieId != bergerieId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Le bélier sélectionné n'appartient pas à cette bergerie."),
+          content: Text(
+            "Le bélier sélectionné n'appartient pas à cette bergerie.",
+          ),
         ),
       );
       return;
@@ -394,8 +365,10 @@ class _AddGestationPageState extends State<AddGestationPage> {
       brebisId: _brebisSelectionnee!.id,
       nomFemelle: _brebisSelectionnee!.nom,
       bergerieId: bergerieId,
-      typeSaillie: _typeBelier == TypeBelier.troupeau ? "Interne" : "Externe",
-      belierId: _typeBelier == TypeBelier.troupeau ? _belierSelectionne!.id : "",
+      typeSaillie:
+          _typeBelier == TypeBelier.troupeau ? "Interne" : "Externe",
+      belierId:
+          _typeBelier == TypeBelier.troupeau ? _belierSelectionne!.id : "",
       belierNom: _typeBelier == TypeBelier.troupeau
           ? _belierSelectionne!.nom
           : _nomBelierController.text.trim(),
