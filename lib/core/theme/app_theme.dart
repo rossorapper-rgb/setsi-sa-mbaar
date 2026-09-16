@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../config/bergerie_config.dart';
 import 'app_colors.dart';
+import 'bergerie_theme.dart';
 
 class AppTheme {
   AppTheme._();
 
+  /// Thème historique de SET'S I SA MBAAR.
+  ///
+  /// Conservé pour éviter de casser les écrans existants pendant
+  /// la migration vers le système de personnalisation par bergerie.
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -43,5 +49,10 @@ class AppTheme {
         ),
       ),
     );
+  }
+
+  /// Thème construit à partir de la configuration d'une bergerie.
+  static ThemeData lightThemeForBergerie(BergerieConfig config) {
+    return BergerieTheme.lightTheme(config);
   }
 }
