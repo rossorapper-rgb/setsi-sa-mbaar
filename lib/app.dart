@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/app_router.dart';
+import 'core/config/bergerie_config.dart';
 import 'core/theme/app_theme.dart';
 
 class SetsiApp extends StatelessWidget {
@@ -9,10 +10,15 @@ class SetsiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Configuration actuelle de référence.
+    // Elle sera ensuite chargée dynamiquement selon la bergerie
+    // connectée / le build personnalisé.
+    final bergerieConfig = BergerieConfig.defaut();
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: "SET'SI SA MBAAR",
-      theme: AppTheme.lightTheme,
+      title: bergerieConfig.nomApplication,
+      theme: AppTheme.lightThemeForBergerie(bergerieConfig),
       routerConfig: appRouter,
 
       localizationsDelegates: const [
