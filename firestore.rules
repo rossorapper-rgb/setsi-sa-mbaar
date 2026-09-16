@@ -15,11 +15,12 @@ service cloud.firestore {
 
     // Administrateur central SET'S I SA MBAAR.
     function isAdmin() {
-      return signedIn() && currentUser().data.role == 'admin'
+      return signedIn()
+        && currentUser().data.role == 'admin'
         && currentUser().data.actif == true;
     }
 
-    // Utilisateur appartenant à la bergerie concernée.
+    // Utilisateur actif appartenant à la bergerie concernée.
     function belongsToBergerie(bergerieId) {
       return signedIn()
         && currentUser().data.actif == true
@@ -47,11 +48,21 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------
-    // PHASE 1 — ADMIN CENTRAL
+    // BERGERIES
+    // ------------------------------------------------------------
+    // L'admin peut consulter toutes les bergeries.
+    // Un responsable/technicien ne peut consulter que sa bergerie.
+    match /bergeries/{bergerieId} {
+      allow read: if isAdmin() || belongsToBergerie(bergerieId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // PHASE DE MIGRATION
     // ------------------------------------------------------------
     // Les autres collections restent accessibles uniquement à
-    // l'admin pendant la migration progressive vers l'isolation
-    // complète par bergerieId.
+    // l'admin tant que leurs repositories ne sont pas tous migrés
+    // vers le filtrage strict par bergerieId.
     // Aucun accès anonyme ou public n'est autorisé.
     match /{document=**} {
       allow read, write: if isAdmin();
