@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../utilisateurs/models/user_role.dart';
 import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
@@ -59,6 +60,9 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       CurrentUserService.instance.setCurrentUser(utilisateur);
+
+      await CurrentBergerieConfig.instance.load(utilisateur.bergerieId);
+
       if (!mounted) return;
 
       final role = CurrentUserService.instance.role;
@@ -97,11 +101,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 8))],
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 8))]),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -111,38 +111,17 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
                 const Text('Le premier service professionnel\nde lavage de moutons au Sénégal', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 15)),
                 const SizedBox(height: 35),
-                TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                  decoration: InputDecoration(labelText: 'Adresse email', prefixIcon: const Icon(Icons.email_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
-                ),
+                TextField(controller: emailController, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, onSubmitted: (_) => FocusScope.of(context).nextFocus(), decoration: InputDecoration(labelText: 'Adresse email', prefixIcon: const Icon(Icons.email_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
                 const SizedBox(height: 20),
                 TextField(
                   controller: passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) { if (!_isLoading) _login(); },
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
+                  decoration: InputDecoration(labelText: 'Mot de passe', prefixIcon: const Icon(Icons.lock_outline), suffixIcon: IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
                 ),
                 const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0B6E4F), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                    child: _isLoading
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                        : const Text('SE CONNECTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+                SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: _isLoading ? null : _login, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0B6E4F), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : const Text('SE CONNECTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
                 const SizedBox(height: 15),
                 TextButton(onPressed: () {}, child: const Text('Mot de passe oublié ?')),
               ],
