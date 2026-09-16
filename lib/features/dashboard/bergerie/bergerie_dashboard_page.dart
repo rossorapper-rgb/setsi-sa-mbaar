@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../gestation/repositories/firebase_gestation_repository.dart';
+import '../../moutons/repository/firebase_mouton_repository.dart';
 
 class BergerieDashboardPage extends StatelessWidget {
   const BergerieDashboardPage({super.key});
@@ -199,6 +201,28 @@ class _DashboardContent extends StatelessWidget {
   final BergerieConfig config;
   final String nomUtilisateur;
 
+  Future<List<int>> _chargerStatistiques() async {
+    final moutonRepository = FirebaseMoutonRepository();
+    final gestationRepository = FirebaseGestationRepository();
+    final sessionBergerieId = CurrentUserService.instance.bergerieId?.trim();
+
+    final moutonsFuture = sessionBergerieId != null && sessionBergerieId.isNotEmpty
+        ? moutonRepository.getMoutonsByBergerie(sessionBergerieId)
+        : moutonRepository.getMoutons();
+
+    final gestationsFuture = gestationRepository.getGestationsEnCours();
+
+    final results = await Future.wait([
+      moutonsFuture,
+      gestationsFuture,
+    ]);
+
+    final moutons = results[0] as List;
+    final gestations = results[1] as List;
+
+    return [moutons.length, gestations.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.of(context).size.width < 700;
@@ -256,45 +280,57 @@ class _DashboardContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final columns = width >= 1150
-                  ? 4
-                  : width >= 760
-                      ? 2
-                      : 1;
+          FutureBuilder<List<int>>(
+            future: _chargerStatistiques(),
+            builder: (context, snapshot) {
+              final moutonsCount = snapshot.hasData ? snapshot.data![0] : 0;
+              final gestationsCount = snapshot.hasData ? snapshot.data![1] : 0;
+              final loading = snapshot.connectionState == ConnectionState.waiting;
 
-              final height = columns == 4
-                  ? 118.0
-                  : columns == 2
-                      ? 112.0
-                      : 100.0;
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+                  final columns = width >= 1150
+                      ? 4
+                      : width >= 760
+                          ? 2
+                          : 1;
 
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 4,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  mainAxisExtent: height,
-                ),
-                itemBuilder: (_, index) {
-                  final stats = [
-                    _StatData(Icons.pets_rounded, 'Moutons', '0', 'Votre troupeau', primary),
-                    _StatData(Icons.favorite_rounded, 'Gestations', '0', 'En cours', orange),
-                    _StatData(Icons.health_and_safety_rounded, 'À surveiller', '0', 'Aucune alerte', primary),
-                    _StatData(Icons.grass_rounded, 'Alimentation', 'OK', 'Stocks à vérifier', orange),
-                  ];
-                  final stat = stats[index];
-                  return _Stat(
-                    icon: stat.icon,
-                    title: stat.title,
-                    value: stat.value,
-                    note: stat.note,
-                    color: stat.color,
+                  final height = columns == 4
+                      ? 118.0
+                      : columns == 2
+                          ? 112.0
+                          : 100.0;
+
+                  final moutonsValue = loading ? '…' : '$moutonsCount';
+                  final gestationsValue = loading ? '…' : '$gestationsCount';
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 4,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: height,
+                    ),
+                    itemBuilder: (_, index) {
+                      final stats = [
+                        _StatData(Icons.pets_rounded, 'Moutons', moutonsValue, 'Votre troupeau', primary),
+                        _StatData(Icons.favorite_rounded, 'Gestations', gestationsValue, 'En cours', orange),
+                        _StatData(Icons.health_and_safety_rounded, 'À surveiller', '0', 'Aucune alerte', primary),
+                        _StatData(Icons.grass_rounded, 'Alimentation', 'OK', 'Stocks à vérifier', orange),
+                      ];
+                      final stat = stats[index];
+                      return _Stat(
+                        icon: stat.icon,
+                        title: stat.title,
+                        value: stat.value,
+                        note: stat.note,
+                        color: stat.color,
+                      );
+                    },
                   );
                 },
               );
