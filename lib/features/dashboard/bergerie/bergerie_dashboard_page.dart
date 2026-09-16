@@ -56,14 +56,24 @@ class BergerieDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = config.couleurPrimaire;
     final orange = config.couleurSecondaire;
+    final mobile = MediaQuery.of(context).size.width < 900;
 
     return Material(
       color: primary,
       child: SafeArea(
         child: Column(
           children: [
+            if (mobile)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  tooltip: 'Fermer le menu',
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              padding: EdgeInsets.fromLTRB(16, mobile ? 0 : 16, 16, 14),
               child: Column(
                 children: [
                   Container(
