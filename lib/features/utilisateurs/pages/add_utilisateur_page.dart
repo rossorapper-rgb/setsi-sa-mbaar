@@ -39,7 +39,7 @@ class _AddUtilisateurPageState
   final Uuid _uuid = const Uuid();
 
   final FirebaseBergerieRepository _bergerieRepository =
-  FirebaseBergerieRepository();
+      FirebaseBergerieRepository();
 
   late Future<List<BergerieModel>> _futureBergeries;
 
@@ -70,23 +70,22 @@ class _AddUtilisateurPageState
   }
 
   Future<List<BergerieModel>> _chargerBergeries() async {
-    final bergeries =
-    await _bergerieRepository.getAllBergeries();
+    final bergeries = await _bergerieRepository.getAllBergeries();
 
     bergeries.removeWhere(
-          (bergerie) => !bergerie.active,
+      (bergerie) => !bergerie.active,
     );
 
     bergeries.sort(
-          (a, b) => a.nom
+      (a, b) => a.nom
           .toLowerCase()
-          .compareTo(
-        b.nom.toLowerCase(),
-      ),
+          .compareTo(b.nom.toLowerCase()),
     );
 
     return bergeries;
   }
+
+  bool get _bergerieObligatoire => _role != UserRole.admin;
 
   @override
   void dispose() {
@@ -155,12 +154,11 @@ class _AddUtilisateurPageState
                     value: _role,
                     items: UserRole.values
                         .map(
-                          (role) =>
-                          DropdownMenuItem<UserRole>(
+                          (role) => DropdownMenuItem<UserRole>(
                             value: role,
                             child: Text(role.label),
                           ),
-                    )
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value == null) return;
@@ -168,34 +166,29 @@ class _AddUtilisateurPageState
                       setState(() {
                         _role = value;
 
-                        if (_role != UserRole.client) {
+                        if (_role == UserRole.admin) {
                           _bergerieId = null;
                         }
                       });
                     },
                   ),
 
-                  if (_role == UserRole.client) ...[
+                  if (_bergerieObligatoire) ...[
                     const SizedBox(height: 18),
 
                     FutureBuilder<List<BergerieModel>>(
                       future: _futureBergeries,
-                      builder:
-                          (context, snapshot) {
+                      builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           return const Padding(
-                            padding:
-                            EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: 12),
                             child: Row(
                               children: [
                                 SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child:
-                                  CircularProgressIndicator(
+                                  child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 ),
@@ -213,117 +206,76 @@ class _AddUtilisateurPageState
                         if (snapshot.hasError) {
                           return Container(
                             width: double.infinity,
-                            padding:
-                            const EdgeInsets.all(14),
-                            decoration:
-                            BoxDecoration(
-                              color:
-                              Colors.red.shade50,
-                              borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color:
-                                Colors.red.shade200,
+                                color: Colors.red.shade200,
                               ),
                             ),
                             child: Text(
-                              "Impossible de charger les "
-                                  "bergeries : ${snapshot.error}",
+                              "Impossible de charger les bergeries : ${snapshot.error}",
                               style: TextStyle(
-                                color:
-                                Colors.red.shade800,
+                                color: Colors.red.shade800,
                               ),
                             ),
                           );
                         }
 
-                        final bergeries =
-                            snapshot.data ?? [];
+                        final bergeries = snapshot.data ?? [];
 
                         if (bergeries.isEmpty) {
                           return Container(
                             width: double.infinity,
-                            padding:
-                            const EdgeInsets.all(14),
-                            decoration:
-                            BoxDecoration(
-                              color:
-                              Colors.orange.shade50,
-                              borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors
-                                    .orange.shade200,
+                                color: Colors.orange.shade200,
                               ),
                             ),
                             child: const Text(
-                              "Aucune bergerie active n'est "
-                                  "disponible. Créez d'abord "
-                                  "la bergerie du client.",
+                              "Aucune bergerie active n'est disponible. Créez d'abord la bergerie du client.",
                             ),
                           );
                         }
 
-                        final selectedStillExists =
-                        bergeries.any(
-                              (bergerie) =>
-                          bergerie.id ==
-                              _bergerieId,
+                        final selectedStillExists = bergeries.any(
+                          (bergerie) => bergerie.id == _bergerieId,
                         );
 
-                        return DropdownButtonFormField<
-                            String>(
-                          value: selectedStillExists
-                              ? _bergerieId
-                              : null,
+                        return DropdownButtonFormField<String>(
+                          value: selectedStillExists ? _bergerieId : null,
                           isExpanded: true,
-                          decoration:
-                          InputDecoration(
-                            labelText:
-                            "Bergerie associée",
-                            prefixIcon:
-                            const Icon(
-                              Icons
-                                  .home_work_outlined,
+                          decoration: InputDecoration(
+                            labelText: "Bergerie associée",
+                            prefixIcon: const Icon(
+                              Icons.home_work_outlined,
                             ),
-                            border:
-                            OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          items: bergeries.map(
-                                (bergerie) {
-                              return DropdownMenuItem<
-                                  String>(
-                                value: bergerie.id,
-                                child: Text(
-                                  bergerie.nom,
-                                  overflow:
-                                  TextOverflow
-                                      .ellipsis,
-                                ),
-                              );
-                            },
-                          ).toList(),
+                          items: bergeries.map((bergerie) {
+                            return DropdownMenuItem<String>(
+                              value: bergerie.id,
+                              child: Text(
+                                bergerie.nom,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _bergerieId = value;
                             });
                           },
                           validator: (value) {
-                            if (_role ==
-                                UserRole.client &&
-                                (value == null ||
-                                    value.isEmpty)) {
-                              return "Veuillez associer une "
-                                  "bergerie à ce compte client.";
+                            if (_bergerieObligatoire &&
+                                (value == null || value.isEmpty)) {
+                              return "Veuillez associer une bergerie à ce compte.";
                             }
 
                             return null;
@@ -337,8 +289,7 @@ class _AddUtilisateurPageState
 
                   SwitchListTile(
                     value: _actif,
-                    title:
-                    const Text("Utilisateur actif"),
+                    title: const Text("Utilisateur actif"),
                     onChanged: (value) {
                       setState(() {
                         _actif = value;
@@ -357,8 +308,7 @@ class _AddUtilisateurPageState
                   : "Mettre à jour",
               icon: Icons.save,
               isLoading: _loading,
-              onPressed:
-              _loading ? null : _enregistrer,
+              onPressed: _loading ? null : _enregistrer,
             ),
           ],
         ),
@@ -371,15 +321,13 @@ class _AddUtilisateurPageState
       return;
     }
 
-    if (_role == UserRole.client &&
-        (_bergerieId == null ||
-            _bergerieId!.isEmpty)) {
+    if (_bergerieObligatoire &&
+        (_bergerieId == null || _bergerieId!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.orange,
           content: Text(
-            "Veuillez associer une bergerie "
-                "à ce compte client.",
+            "Veuillez associer une bergerie à ce compte.",
           ),
         ),
       );
@@ -392,65 +340,32 @@ class _AddUtilisateurPageState
     });
 
     try {
-      final repository =
-      ref.read(utilisateurRepositoryProvider);
+      final repository = ref.read(utilisateurRepositoryProvider);
 
-      final emailTechnique =
-      repository.genererEmailTechnique(
+      final emailTechnique = repository.genererEmailTechnique(
         _telephoneController.text.trim(),
       );
 
       final utilisateur = UtilisateurModel(
-        id: widget.utilisateur?.id ??
-            _uuid.v4(),
-
+        id: widget.utilisateur?.id ?? _uuid.v4(),
         nom: _nomController.text.trim(),
-
-        prenom:
-        _prenomController.text.trim(),
-
-        telephone:
-        _telephoneController.text.trim(),
-
-        emailTechnique:
-        emailTechnique,
-
+        prenom: _prenomController.text.trim(),
+        telephone: _telephoneController.text.trim(),
+        emailTechnique: emailTechnique,
         role: _role,
-
-        bergerieId:
-        _role == UserRole.client
-            ? _bergerieId
-            : null,
-
+        bergerieId: _bergerieObligatoire ? _bergerieId : null,
         actif: _actif,
-
-        dateCreation:
-        widget.utilisateur?.dateCreation ??
-            DateTime.now(),
-
-        derniereConnexion:
-        widget.utilisateur
-            ?.derniereConnexion,
-
+        dateCreation: widget.utilisateur?.dateCreation ?? DateTime.now(),
+        derniereConnexion: widget.utilisateur?.derniereConnexion,
         creePar: "Administrateur",
-
-        photoUrl:
-        widget.utilisateur?.photoUrl,
-
-        permissions:
-        widget.utilisateur
-            ?.permissions ??
-            {},
+        photoUrl: widget.utilisateur?.photoUrl,
+        permissions: widget.utilisateur?.permissions ?? {},
       );
 
       if (widget.utilisateur == null) {
-        await repository.addUtilisateur(
-          utilisateur,
-        );
+        await repository.addUtilisateur(utilisateur);
       } else {
-        await repository.updateUtilisateur(
-          utilisateur,
-        );
+        await repository.updateUtilisateur(utilisateur);
       }
 
       if (!mounted) return;
@@ -473,9 +388,7 @@ class _AddUtilisateurPageState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text(
-            "Erreur : $e",
-          ),
+          content: Text("Erreur : $e"),
         ),
       );
     } finally {
