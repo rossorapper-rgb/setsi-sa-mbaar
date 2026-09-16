@@ -28,44 +28,15 @@ class DashboardStats extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 2),
-                child: Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                ),
-              ),
+              const Icon(Icons.error_outline, color: Colors.red),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Impossible de charger les statistiques.",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SelectableText(
-                      "Erreur : ${error.toString()}",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(
-                        color: Colors.red.shade700,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  "Impossible de charger les statistiques.\nErreur : $error",
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  ref.invalidate(dashboardProvider);
-                },
+                onPressed: () => ref.invalidate(dashboardProvider),
                 icon: const Icon(Icons.refresh),
                 tooltip: "Réessayer",
               ),
@@ -74,26 +45,7 @@ class DashboardStats extends ConsumerWidget {
         ),
       ),
       data: (dashboard) {
-        final width = MediaQuery.of(context).size.width;
-
-        final int crossAxisCount;
-
-        if (width >= 1600) {
-          crossAxisCount = 4;
-        } else if (width >= 1200) {
-          crossAxisCount = 3;
-        } else if (width >= 700) {
-          crossAxisCount = 2;
-        } else {
-          crossAxisCount = 1;
-        }
-
         final role = CurrentUserService.instance.role;
-
-        // ======================================================
-        // DASHBOARD CLIENT
-        // ======================================================
-
         final List<_DashboardStatData> cards;
 
         if (role == UserRole.client) {
@@ -101,27 +53,24 @@ class DashboardStats extends ConsumerWidget {
             _DashboardStatData(
               title: "Mes moutons",
               value: dashboard.moutons.toString(),
-              subtitle: "Mes moutons enregistrés",
-              evolution: "",
+              subtitle: "Moutons enregistrés",
               icon: Icons.pets_rounded,
-              color: AppColors.success,
-              route: "/bergeries",
+              color: AppColors.info,
+              route: "/moutons",
             ),
             _DashboardStatData(
               title: "Mes gestations",
               value: dashboard.gestations.toString(),
               subtitle: "Gestations en cours",
-              evolution: "",
               icon: Icons.favorite_rounded,
-              color: Colors.pink,
+              color: Colors.orange,
               route: "/gestations",
             ),
             _DashboardStatData(
               title: "Mes interventions",
               value: dashboard.interventions.toString(),
-              subtitle: "Mes interventions",
-              evolution: "",
-              icon: Icons.home_repair_service_rounded,
+              subtitle: "Interventions",
+              icon: Icons.medical_services_rounded,
               color: AppColors.warning,
               route: "/interventions",
             ),
@@ -129,103 +78,92 @@ class DashboardStats extends ConsumerWidget {
               title: "Mes paiements",
               value: dashboard.revenusFormat,
               subtitle: "Paiements enregistrés",
-              evolution: "",
               icon: Icons.payments_rounded,
-              color: AppColors.danger,
+              color: AppColors.success,
               route: "/paiements",
             ),
           ];
-        }
-
-        // ======================================================
-        // DASHBOARD ADMIN / RESPONSABLE / TECHNICIEN
-        // ======================================================
-
-        else {
+        } else {
           cards = [
-            _DashboardStatData(
-              title: "Clients",
-              value: dashboard.clients.toString(),
-              subtitle: "Clients enregistrés",
-              evolution: "",
-              icon: Icons.people_alt_rounded,
-              color: AppColors.info,
-              route: "/clients",
-            ),
             _DashboardStatData(
               title: "Moutons",
               value: dashboard.moutons.toString(),
-              subtitle: "Dans le système",
-              evolution: "",
+              subtitle: "Dans l'élevage",
               icon: Icons.pets_rounded,
-              color: AppColors.success,
-              route: "/bergeries",
-            ),
-            _DashboardStatData(
-              title: "Bergeries",
-              value: dashboard.bergeries.toString(),
-              subtitle: "Bergeries enregistrées",
-              evolution: "",
-              icon: Icons.home_rounded,
-              color: Colors.brown,
+              color: AppColors.info,
               route: "/bergeries",
             ),
             _DashboardStatData(
               title: "Gestations",
               value: dashboard.gestations.toString(),
               subtitle: "En cours",
-              evolution: "",
               icon: Icons.favorite_rounded,
-              color: Colors.pink,
+              color: Colors.orange,
               route: "/gestations",
             ),
             _DashboardStatData(
-              title: "Interventions",
-              value: dashboard.interventions.toString(),
-              subtitle: "Interventions",
-              evolution: "",
-              icon: Icons.home_repair_service_rounded,
+              title: "À surveiller",
+              value: "0",
+              subtitle: "Animaux à vérifier",
+              icon: Icons.medical_services_rounded,
               color: AppColors.warning,
               route: "/interventions",
             ),
             _DashboardStatData(
-              title: "Revenus",
-              value: dashboard.revenusFormat,
-              subtitle: "Paiements encaissés",
-              evolution: "",
-              icon: Icons.payments_rounded,
-              color: AppColors.danger,
-              route: "/finances",
+              title: "Alimentation",
+              value: "Normale",
+              subtitle: "Stocks suffisants",
+              icon: Icons.grass_rounded,
+              color: AppColors.success,
+              route: "/interventions",
             ),
           ];
         }
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: cards.length,
-          gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-            childAspectRatio:
-            width < 700 ? 1.75 : 1.25,
-          ),
-          itemBuilder: (context, index) {
-            final card = cards[index];
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final int crossAxisCount;
 
-            return StatCard(
-              title: card.title,
-              value: card.value,
-              subtitle: card.subtitle,
-              evolution: card.evolution,
-              icon: card.icon,
-              color: card.color,
-              onTap: () {
-                if (card.route == null) return;
+            if (width >= 1250) {
+              crossAxisCount = 4;
+            } else if (width >= 780) {
+              crossAxisCount = 3;
+            } else if (width >= 520) {
+              crossAxisCount = 2;
+            } else {
+              crossAxisCount = 1;
+            }
 
-                context.go(card.route!);
+            final aspectRatio = crossAxisCount == 1
+                ? 2.15
+                : crossAxisCount == 2
+                    ? 1.75
+                    : 1.45;
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: cards.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: aspectRatio,
+              ),
+              itemBuilder: (context, index) {
+                final card = cards[index];
+                return StatCard(
+                  title: card.title,
+                  value: card.value,
+                  subtitle: card.subtitle,
+                  evolution: "",
+                  icon: card.icon,
+                  color: card.color,
+                  onTap: card.route == null
+                      ? null
+                      : () => context.go(card.route!),
+                );
               },
             );
           },
@@ -239,7 +177,6 @@ class _DashboardStatData {
   final String title;
   final String value;
   final String subtitle;
-  final String evolution;
   final IconData icon;
   final Color color;
   final String? route;
@@ -248,7 +185,6 @@ class _DashboardStatData {
     required this.title,
     required this.value,
     required this.subtitle,
-    required this.evolution,
     required this.icon,
     required this.color,
     this.route,
