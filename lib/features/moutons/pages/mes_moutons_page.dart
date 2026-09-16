@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/session/current_user_service.dart';
-import '../../bergeries/models/bergerie_model.dart';
-import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 import 'mouton_details_page.dart';
@@ -16,16 +14,13 @@ class MesMoutonsPage extends StatefulWidget {
 }
 
 class _MesMoutonsPageState extends State<MesMoutonsPage> {
-  final FirebaseBergerieRepository _bergerieRepository =
-  FirebaseBergerieRepository();
-
   final FirebaseMoutonRepository _moutonRepository =
-  FirebaseMoutonRepository();
+      FirebaseMoutonRepository();
 
   bool _loading = true;
-  List<BergerieModel> _bergeries = [];
   List<MoutonModel> _moutons = [];
   String? _erreur;
+  String _bergerieId = '';
 
   @override
   void initState() {
@@ -43,36 +38,24 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
 
     try {
       final utilisateur = CurrentUserService.instance.currentUser;
+      final bergerieId = utilisateur?.bergerieId?.trim() ?? '';
 
       if (utilisateur == null) {
-        throw Exception("Utilisateur connecté introuvable.");
+        throw Exception('Utilisateur connecté introuvable.');
       }
 
-      final bergeries = await _bergerieRepository.getAllBergeries();
-      final List<MoutonModel> moutons = [];
-
-      // Anciens moutons associés à une bergerie.
-      for (final bergerie in bergeries) {
-        final liste = await _moutonRepository.getMoutonsByBergerie(
-          bergerie.id,
-        );
-        moutons.addAll(liste);
+      if (bergerieId.isEmpty) {
+        throw Exception('Aucune bergerie n’est associée à ce compte.');
       }
 
-      // Moutons du compte, y compris ceux sans bergerie.
-      final tousLesMoutons = await _moutonRepository.getMoutons();
-      final ids = moutons.map((mouton) => mouton.id).toSet();
-
-      for (final mouton in tousLesMoutons) {
-        if (!ids.contains(mouton.id)) {
-          moutons.add(mouton);
-        }
-      }
+      final moutons = await _moutonRepository.getMoutonsByBergerie(
+        bergerieId,
+      );
 
       if (!mounted) return;
 
       setState(() {
-        _bergeries = bergeries;
+        _bergerieId = bergerieId;
         _moutons = moutons;
         _loading = false;
       });
@@ -86,32 +69,12 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
     }
   }
 
-  String _nomBergerie(String bergerieId) {
-    if (bergerieId.trim().isEmpty) {
-      return "Aucune bergerie associée";
-    }
-
-    final bergerie = _bergeries.where(
-          (element) => element.id == bergerieId,
-    );
-
-    if (bergerie.isEmpty) {
-      return "Bergerie inconnue";
-    }
-
-    return bergerie.first.nom;
-  }
-
   Color _couleurSexe(String sexe) {
-    return sexe.toLowerCase() == "femelle"
-        ? Colors.pink
-        : Colors.blue;
+    return sexe.toLowerCase() == 'femelle' ? Colors.pink : Colors.blue;
   }
 
   IconData _iconeSexe(String sexe) {
-    return sexe.toLowerCase() == "femelle"
-        ? Icons.female
-        : Icons.male;
+    return sexe.toLowerCase() == 'femelle' ? Icons.female : Icons.male;
   }
 
   Future<void> _ouvrirDetails(MoutonModel mouton) async {
@@ -129,23 +92,35 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
     }
   }
 
+  void _ajouterMouton() {
+    if (_bergerieId.isEmpty) return;
+    context.push('/moutons/add');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard/admin'),
+          onPressed: () => context.go('/dashboard/bergerie'),
         ),
-        title: const Text("Mes moutons"),
+        title: const Text('Mes moutons'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _charger,
-            tooltip: "Actualiser",
+            tooltip: 'Actualiser',
           ),
         ],
       ),
+      floatingActionButton: _loading || _erreur != null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _ajouterMouton,
+              icon: const Icon(Icons.add),
+              label: const Text('Ajouter un mouton'),
+            ),
       body: _buildBody(),
     );
   }
@@ -165,13 +140,13 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
               const Icon(Icons.error_outline, color: Colors.red, size: 60),
               const SizedBox(height: 16),
               const Text(
-                "Impossible de charger vos moutons.",
+                'Impossible de charger vos moutons.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                _erreur!,
+                _erreur!.replaceFirst('Exception: ', ''),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.red),
               ),
@@ -179,37 +154,10 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
               ElevatedButton.icon(
                 onPressed: _charger,
                 icon: const Icon(Icons.refresh),
-                label: const Text("Réessayer"),
+                label: const Text('Réessayer'),
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    if (_moutons.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _charger,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: const [
-            SizedBox(height: 140),
-            Icon(Icons.pets_outlined, size: 70, color: Colors.grey),
-            SizedBox(height: 20),
-            Center(
-              child: Text(
-                "Aucun mouton enregistré.",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 8),
-            Center(
-              child: Text(
-                "Vos moutons apparaîtront ici.",
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          ],
         ),
       );
     }
@@ -218,13 +166,16 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
       onRefresh: _charger,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
         children: [
           _buildHeader(),
           const SizedBox(height: 20),
           _buildStats(),
           const SizedBox(height: 24),
-          _buildMoutonsList(),
+          if (_moutons.isEmpty)
+            _buildEmptyState()
+          else
+            _buildMoutonsList(),
         ],
       ),
     );
@@ -235,12 +186,12 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Mes moutons",
+          'Mes moutons',
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 5),
         Text(
-          "Consultez les moutons de votre compte.",
+          'Gérez simplement les moutons de votre bergerie.',
           style: TextStyle(color: Colors.grey, fontSize: 15),
         ),
       ],
@@ -249,19 +200,19 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
 
   Widget _buildStats() {
     final femelles = _moutons
-        .where((mouton) => mouton.sexe.toLowerCase() == "femelle")
+        .where((mouton) => mouton.sexe.toLowerCase() == 'femelle')
         .length;
 
     final males = _moutons.where((mouton) {
       final sexe = mouton.sexe.toLowerCase();
-      return sexe == "male" || sexe == "mâle";
+      return sexe == 'male' || sexe == 'mâle';
     }).length;
 
     return Row(
       children: [
         Expanded(
           child: _StatCard(
-            title: "Total",
+            title: 'Total',
             value: _moutons.length.toString(),
             icon: Icons.pets,
             color: Colors.green,
@@ -270,7 +221,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _StatCard(
-            title: "Femelles",
+            title: 'Femelles',
             value: femelles.toString(),
             icon: Icons.female,
             color: Colors.pink,
@@ -279,13 +230,38 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _StatCard(
-            title: "Mâles",
+            title: 'Mâles',
             value: males.toString(),
             icon: Icons.male,
             color: Colors.blue,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: Column(
+          children: [
+            Icon(Icons.pets_outlined, size: 70, color: Colors.grey.shade500),
+            const SizedBox(height: 18),
+            const Text(
+              'Aucun mouton enregistré.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Ajoutez votre premier mouton avec le bouton +.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -315,8 +291,8 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 5),
               child: Text(
-                "${mouton.numeroIdentification}\n"
-                    "${_nomBergerie(mouton.bergerieId)}",
+                '${mouton.numeroIdentification}\n'
+                '${mouton.race}${mouton.poids > 0 ? ' • ${mouton.poids.toStringAsFixed(1)} kg' : ''}',
               ),
             ),
             isThreeLine: true,
