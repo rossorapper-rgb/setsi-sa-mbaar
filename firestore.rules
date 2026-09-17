@@ -20,7 +20,16 @@ service cloud.firestore {
     function belongsToMouton(moutonId) { return signedIn() && currentUser().data.actif == true && exists(/databases/$(database)/documents/moutons/$(moutonId)) && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId; }
 
     match /users/{userId} { allow read: if signedIn() && (request.auth.uid == userId || isAdmin()); allow create, update, delete: if isAdmin(); }
-    match /bergerie_config/{bergerieId} { allow read: if isAdmin() || belongsToBergerie(bergerieId); allow create, update, delete: if isAdmin(); }
+    match /bergerie_config/{bergerieId} {
+      allow read: if isAdmin() || belongsToBergerie(bergerieId);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        belongsToBergerie(bergerieId) &&
+        currentUser().data.role == 'responsable' &&
+        request.resource.data.bergerieId == resource.data.bergerieId &&
+        request.resource.data.active == resource.data.active
+      );
+    }
     match /bergeries/{bergerieId} { allow read: if isAdmin() || belongsToBergerie(bergerieId); allow create, update, delete: if isAdmin(); }
     match /clients/{clientId} { allow read: if isAdmin() || belongsToClient(clientId); allow create, update, delete: if isAdmin(); }
 
