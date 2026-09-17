@@ -7,10 +7,14 @@ class VeterinaireCard extends StatelessWidget {
     super.key,
     required this.veterinaire,
     this.onCall,
+    this.onEdit,
+    this.onDelete,
   });
 
   final VeterinaireModel veterinaire;
   final VoidCallback? onCall;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -18,120 +22,67 @@ class VeterinaireCard extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(16),
+        child: Row(
           children: [
-
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor:
-                  primary.withValues(alpha: 0.12),
-                  child: Icon(
-                    Icons.medical_services_rounded,
-                    color: primary,
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                Expanded(
-                  child: Text(
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: primary.withValues(alpha: 0.12),
+              child: Icon(
+                Icons.medical_services_rounded,
+                color: primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     veterinaire.nom,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                const Icon(
-                  Icons.location_on,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    veterinaire.region,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                const Icon(
-                  Icons.phone,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
+                  const SizedBox(height: 5),
+                  Text(
                     veterinaire.telephone,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 14,
-                  color: veterinaire.disponible
-                      ? Colors.green
-                      : Colors.red,
-                ),
-
-                const SizedBox(width: 8),
-
-                Text(
-                  veterinaire.disponible
-                      ? "Disponible"
-                      : "Indisponible",
-                  style: TextStyle(
-                    color: veterinaire.disponible
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 22),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: veterinaire.disponible
-                    ? onCall
-                    : null,
-                icon: const Icon(Icons.call),
-                label: const Text(
-                  "APPELER",
-                ),
+                ],
               ),
+            ),
+            IconButton(
+              tooltip: 'Appeler',
+              onPressed: onCall,
+              icon: const Icon(Icons.call_rounded),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'modifier') {
+                  onEdit?.call();
+                } else if (value == 'supprimer') {
+                  onDelete?.call();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'modifier',
+                  child: Text('Modifier'),
+                ),
+                PopupMenuItem(
+                  value: 'supprimer',
+                  child: Text('Supprimer'),
+                ),
+              ],
             ),
           ],
         ),
