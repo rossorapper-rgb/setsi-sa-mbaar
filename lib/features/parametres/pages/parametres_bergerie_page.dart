@@ -24,6 +24,7 @@ class ParametresBergeriePage extends StatelessWidget {
             subtitle: 'Nom, adresse, téléphone et responsable',
           ),
           _SectionCard(
+            onTap: () => context.go('/parametres/personnalisation'),
             icon: Icons.palette_rounded,
             title: 'Personnalisation',
             subtitle: 'Logo, couleurs et slogan de votre bergerie',
