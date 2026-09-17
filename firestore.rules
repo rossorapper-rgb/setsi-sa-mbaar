@@ -84,6 +84,14 @@ service cloud.firestore {
           || currentUser().data.role == 'client');
     }
 
+    function canManageInterventions() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien'
+          || currentUser().data.role == 'client');
+    }
+
     function belongsToMouton(moutonId) {
       return signedIn()
         && currentUser().data.actif == true
@@ -111,147 +119,124 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Carnet vétérinaire : contacts personnels de chaque bergerie.
     match /veterinaires/{veterinaireId} {
-      allow read: if isAdmin()
-        || belongsToBergerie(resource.data.bergerieId);
-
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
       allow create: if isAdmin()
         || (canManageVeterinaires()
           && belongsToBergerie(request.resource.data.bergerieId));
-
       allow update: if isAdmin()
         || (canManageVeterinaires()
           && belongsToBergerie(resource.data.bergerieId)
           && request.resource.data.bergerieId == resource.data.bergerieId);
-
       allow delete: if isAdmin()
         || (canManageVeterinaires()
           && belongsToBergerie(resource.data.bergerieId));
     }
 
-    // Carnet de santé : historique des problèmes et soins par mouton.
     match /carnet_sante/{soinId} {
       allow read: if isAdmin()
         || (signedIn()
           && currentUser().data.actif == true
           && currentUser().data.bergerieId == resource.data.bergerieId);
-
       allow create: if isAdmin()
         || (canManageSante()
           && belongsToBergerie(request.resource.data.bergerieId)
           && belongsToMouton(request.resource.data.moutonId));
-
       allow update: if isAdmin()
         || (canManageSante()
           && belongsToBergerie(resource.data.bergerieId)
           && request.resource.data.bergerieId == resource.data.bergerieId
           && belongsToMouton(request.resource.data.moutonId));
-
       allow delete: if isAdmin()
         || (canManageSante()
           && belongsToBergerie(resource.data.bergerieId)
           && belongsToMouton(resource.data.moutonId));
     }
 
-    // Alimentation : achats et apports alimentaires de chaque bergerie.
     match /alimentations/{alimentationId} {
-      allow read: if isAdmin()
-        || belongsToBergerie(resource.data.bergerieId);
-
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
       allow create: if isAdmin()
         || (canManageAlimentation()
           && belongsToBergerie(request.resource.data.bergerieId));
-
       allow update: if isAdmin()
         || (canManageAlimentation()
           && belongsToBergerie(resource.data.bergerieId)
           && request.resource.data.bergerieId == resource.data.bergerieId);
-
       allow delete: if isAdmin()
         || (canManageAlimentation()
           && belongsToBergerie(resource.data.bergerieId));
     }
 
-    // Moutons : isolation stricte par bergerie.
-    match /moutons/{moutonId} {
-      allow read: if isAdmin()
-        || belongsToBergerie(resource.data.bergerieId);
+    match /interventions/{interventionId} {
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
+      allow create: if isAdmin()
+        || (canManageInterventions()
+          && belongsToBergerie(request.resource.data.bergerieId));
+      allow update: if isAdmin()
+        || (canManageInterventions()
+          && belongsToBergerie(resource.data.bergerieId)
+          && request.resource.data.bergerieId == resource.data.bergerieId);
+      allow delete: if isAdmin()
+        || (canManageInterventions()
+          && belongsToBergerie(resource.data.bergerieId));
+    }
 
+    match /moutons/{moutonId} {
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
       allow create: if isAdmin()
         || (canCreateMouton()
           && belongsToBergerie(request.resource.data.bergerieId));
-
       allow update: if isAdmin()
         || (canUpdateMouton()
           && belongsToBergerie(resource.data.bergerieId)
           && request.resource.data.bergerieId == resource.data.bergerieId);
-
       allow delete: if isAdmin()
         || (canUpdateMouton()
           && belongsToBergerie(resource.data.bergerieId));
     }
 
-    // Gestations : isolation stricte par bergerie.
     match /gestations/{gestationId} {
-      allow read: if isAdmin()
-        || belongsToBergerie(resource.data.bergerieId);
-
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
       allow create: if isAdmin()
         || (canManageGestation()
           && belongsToBergerie(request.resource.data.bergerieId));
-
       allow update: if isAdmin()
         || (canManageGestation()
           && belongsToBergerie(resource.data.bergerieId)
           && request.resource.data.bergerieId == resource.data.bergerieId);
-
       allow delete: if isAdmin()
         || (canManageGestation()
           && belongsToBergerie(resource.data.bergerieId));
     }
 
-    // Reproductions : l'app ne stocke pas directement bergerieId.
-    // L'appartenance est donc vérifiée via le mouton concerné.
     match /reproductions/{reproductionId} {
-      allow read: if isAdmin()
-        || belongsToMouton(resource.data.moutonId);
-
+      allow read: if isAdmin() || belongsToMouton(resource.data.moutonId);
       allow create: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(request.resource.data.moutonId));
-
       allow update: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(resource.data.moutonId)
           && request.resource.data.moutonId == resource.data.moutonId);
-
       allow delete: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(resource.data.moutonId));
     }
 
-    // Mises bas : l'appartenance est vérifiée via le mouton concerné.
     match /mises_bas/{miseBasId} {
-      allow read: if isAdmin()
-        || belongsToMouton(resource.data.moutonId);
-
+      allow read: if isAdmin() || belongsToMouton(resource.data.moutonId);
       allow create: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(request.resource.data.moutonId));
-
       allow update: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(resource.data.moutonId)
           && request.resource.data.moutonId == resource.data.moutonId);
-
       allow delete: if isAdmin()
         || (canManageReproduction()
           && belongsToMouton(resource.data.moutonId));
     }
 
-    // Phase de migration : les autres collections restent accessibles
-    // uniquement à l'admin jusqu'à leur migration par bergerie.
     match /{document=**} {
       allow read, write: if isAdmin();
     }
