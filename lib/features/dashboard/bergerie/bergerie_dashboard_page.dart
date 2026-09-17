@@ -143,7 +143,7 @@ class BergerieDrawer extends StatelessWidget {
                   _section('FINANCES'),
                   _menu(context, Icons.account_balance_wallet_rounded, 'Finances', '/finances'),
                   _section('RAPPORTS'),
-                  _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports-financiers'),
+                  _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports'),
                   const Divider(color: Colors.white24),
                   _soon(context, Icons.person_rounded, 'Mon compte'),
                   _soon(context, Icons.settings_rounded, 'Paramètres'),
