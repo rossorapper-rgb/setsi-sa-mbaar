@@ -16,21 +16,15 @@ import 'mise_bas_page.dart';
 class GestationsPage extends StatefulWidget {
   final BergerieModel? bergerie;
 
-  const GestationsPage({
-    super.key,
-    this.bergerie,
-  });
+  const GestationsPage({super.key, this.bergerie});
 
   @override
   State<GestationsPage> createState() => _GestationsPageState();
 }
 
 class _GestationsPageState extends State<GestationsPage> {
-  final FirebaseGestationRepository _repository =
-      FirebaseGestationRepository();
-
-  final FirebaseMoutonRepository _moutonRepository =
-      FirebaseMoutonRepository();
+  final FirebaseGestationRepository _repository = FirebaseGestationRepository();
+  final FirebaseMoutonRepository _moutonRepository = FirebaseMoutonRepository();
 
   bool _loading = true;
   List<GestationModel> _gestations = [];
@@ -43,47 +37,42 @@ class _GestationsPageState extends State<GestationsPage> {
   }
 
   Future<void> _charger() async {
-    if (mounted) {
-      setState(() => _loading = true);
-    }
+    if (mounted) setState(() => _loading = true);
 
     try {
       final session = CurrentUserService.instance;
       final bergerieIdSession = session.bergerieId?.trim();
 
-      List<GestationModel> gestations;
-      List<MoutonModel> moutons;
+      late final Future<List<GestationModel>> gestationsFuture;
+      late final Future<List<MoutonModel>> moutonsFuture;
 
       if (widget.bergerie != null) {
-        // Une bergerie précise a été demandée.
-        gestations = await _repository.getGestationsParBergerie(
-          widget.bergerie!.id,
-        );
-        moutons = await _moutonRepository.getMoutonsByBergerie(
-          widget.bergerie!.id,
-        );
+        final bergerieId = widget.bergerie!.id;
+        gestationsFuture = _repository.getGestationsParBergerie(bergerieId);
+        moutonsFuture = _moutonRepository.getMoutonsByBergerie(bergerieId);
       } else if (session.isAdmin) {
-        // L'administrateur peut voir toutes les bergeries.
-        gestations = await _repository.getGestations();
-        moutons = await _moutonRepository.getMoutons();
+        gestationsFuture = _repository.getGestations();
+        moutonsFuture = _moutonRepository.getMoutons();
       } else {
-        // Responsable, technicien et client restent strictement
-        // dans leur bergerie. On n'interroge plus la collection
-        // clients, car cette requête globale est interdite par les
-        // règles Firestore et n'est pas nécessaire ici.
         if (bergerieIdSession == null || bergerieIdSession.isEmpty) {
-          throw Exception(
-            'Aucune bergerie n\'est associée à votre compte.',
-          );
+          throw Exception("Aucune bergerie n'est associée à votre compte.");
         }
 
-        gestations = await _repository.getGestationsParBergerie(
-          bergerieIdSession,
-        );
-        moutons = await _moutonRepository.getMoutonsByBergerie(
-          bergerieIdSession,
-        );
+        gestationsFuture =
+            _repository.getGestationsParBergerie(bergerieIdSession);
+        moutonsFuture =
+            _moutonRepository.getMoutonsByBergerie(bergerieIdSession);
       }
+
+      // Les deux requêtes partent en même temps : la page n'attend plus
+      // la fin du chargement des gestations avant de charger les moutons.
+      final results = await Future.wait<Object>([
+        gestationsFuture,
+        moutonsFuture,
+      ]);
+
+      final gestations = results[0] as List<GestationModel>;
+      final moutons = results[1] as List<MoutonModel>;
 
       final gestationsUniques = <String, GestationModel>{};
       for (final gestation in gestations) {
@@ -91,9 +80,7 @@ class _GestationsPageState extends State<GestationsPage> {
       }
 
       final listeFinale = gestationsUniques.values.toList();
-      listeFinale.sort(
-        (a, b) => b.dateCreation.compareTo(a.dateCreation),
-      );
+      listeFinale.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
 
       if (!mounted) return;
 
@@ -124,58 +111,34 @@ class _GestationsPageState extends State<GestationsPage> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => AddGestationPage(
-          bergerie: widget.bergerie,
-        ),
+        builder: (_) => AddGestationPage(bergerie: widget.bergerie),
       ),
     );
-
-    if (result == true) {
-      _charger();
-    }
+    if (result == true) _charger();
   }
 
   Future<void> _ouvrirDetails(GestationModel gestation) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => GestationDetailsPage(
-          gestation: gestation,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => GestationDetailsPage(gestation: gestation)),
     );
-
     _charger();
   }
 
   Future<void> _modifier(GestationModel gestation) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => AddGestationPage(
-          gestation: gestation,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => AddGestationPage(gestation: gestation)),
     );
-
-    if (result == true) {
-      _charger();
-    }
+    if (result == true) _charger();
   }
 
   Future<void> _miseBas(GestationModel gestation) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => MiseBasPage(
-          gestation: gestation,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => MiseBasPage(gestation: gestation)),
     );
-
-    if (result == true) {
-      _charger();
-    }
+    if (result == true) _charger();
   }
 
   @override
@@ -201,10 +164,7 @@ class _GestationsPageState extends State<GestationsPage> {
               : 'Gestations - ${widget.bergerie!.nom}',
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _charger,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _charger),
         ],
       ),
       body: _loading
