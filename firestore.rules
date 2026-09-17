@@ -22,7 +22,13 @@ service cloud.firestore {
     match /users/{userId} { allow read: if signedIn() && (request.auth.uid == userId || isAdmin()); allow create, update, delete: if isAdmin(); }
     match /bergerie_config/{bergerieId} {
       allow read: if isAdmin() || belongsToBergerie(bergerieId);
-      allow create, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        belongsToBergerie(bergerieId) &&
+        currentUser().data.role == 'responsable' &&
+        request.resource.data.bergerieId == bergerieId &&
+        request.resource.data.active == true
+      );
+      allow delete: if isAdmin();
       allow update: if isAdmin() || (
         belongsToBergerie(bergerieId) &&
         currentUser().data.role == 'responsable' &&
