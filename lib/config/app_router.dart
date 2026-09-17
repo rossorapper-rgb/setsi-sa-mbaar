@@ -21,6 +21,7 @@ import '../features/naissances/pages/naissances_page.dart';
 import '../features/rapports/pages/rapports_bergerie_page.dart';
 import '../features/parametres/pages/parametres_bergerie_page.dart';
 import '../features/parametres/pages/informations_bergerie_page.dart';
+import '../features/parametres/pages/personnalisation_bergerie_page.dart';
 import '../features/abonnements/pages/abonnements_page.dart';
 import '../features/finances/pages/finances_home_page.dart';
 import '../features/finances/pages/paiements_page.dart';
