@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
-import '../../../core/session/current_user_service.dart';
 import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
 
@@ -29,7 +28,9 @@ class _NaissancesPageState extends State<NaissancesPage> {
     super.initState();
     _load();
     _searchController.addListener(() {
-      if (mounted) setState(() => _recherche = _searchController.text.trim().toLowerCase());
+      if (mounted) {
+        setState(() => _recherche = _searchController.text.trim().toLowerCase());
+      }
     });
   }
 
@@ -65,7 +66,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
     }).toList();
   }
 
-  Future<void> _openBirth( GestationModel naissance) async {
+  Future<void> _openBirth(GestationModel naissance) async {
     await showDialog<void>(
       context: context,
       builder: (_) => _NaissanceDetailsDialog(
@@ -136,7 +137,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Rechercher une mère ou une observation…',
+                hintText: 'Rechercher une mère, un géniteur ou une observation…',
                 prefixIcon: Icon(Icons.search_rounded, color: _primary),
                 suffixIcon: _recherche.isEmpty
                     ? null
@@ -189,6 +190,8 @@ class _NaissanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photo = naissance.photoUrl;
+    final mere = naissance.nomFemelle.isEmpty ? 'Mère sans nom' : naissance.nomFemelle;
+    final geniteur = naissance.belierNom.isEmpty ? 'Géniteur non renseigné' : naissance.belierNom;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -218,8 +221,10 @@ class _NaissanceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(naissance.nomFemelle.isEmpty ? 'Mère sans nom' : naissance.nomFemelle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                    const SizedBox(height: 4),
+                    Text(mere, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    const SizedBox(height: 2),
+                    Text('Géniteur : $geniteur', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    const SizedBox(height: 3),
                     Text(_date(naissance.dateMiseBas), style: TextStyle(color: primary, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 3),
                     Text('${naissance.nombreAgneaux} agneau(x) • ${naissance.nombreMales} mâle(s) • ${naissance.nombreFemelles} femelle(s) • ${naissance.nombreMortNes} mort(s)-né(s)', style: const TextStyle(fontSize: 12, color: Colors.black54)),
@@ -249,6 +254,9 @@ class _NaissanceDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mere = naissance.nomFemelle.isEmpty ? 'Mère sans nom' : naissance.nomFemelle;
+    final geniteur = naissance.belierNom.isEmpty ? 'Non renseigné' : naissance.belierNom;
+
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
@@ -272,7 +280,8 @@ class _NaissanceDetailsDialog extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 16),
-              _Info('Mère', naissance.nomFemelle),
+              _Info('Mère', mere),
+              _Info('Géniteur', geniteur),
               _Info('Date de mise bas', _date(naissance.dateMiseBas)),
               _Info('Total agneaux', '${naissance.nombreAgneaux}'),
               _Info('Mâles', '${naissance.nombreMales}'),
@@ -304,10 +313,15 @@ class _Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
-        child: RichText(text: TextSpan(style: DefaultTextStyle.of(context).style, children: [
-          TextSpan(text: '$label : ', style: const TextStyle(fontWeight: FontWeight.w800)),
-          TextSpan(text: value),
-        ])),
+        child: RichText(
+          text: TextSpan(
+            style: DefaultTextStyle.of(context).style,
+            children: [
+              TextSpan(text: '$label : ', style: const TextStyle(fontWeight: FontWeight.w800)),
+              TextSpan(text: value),
+            ],
+          ),
+        ),
       );
 }
 
