@@ -72,14 +72,17 @@ class FirebaseInterventionRepository {
     final user = CurrentUserService.instance.currentUser;
     if (user == null) return [];
 
-    Query<Map<String, dynamic>> query = _collection;
     final bergerieId = user.bergerieId?.trim();
+    if (bergerieId == null || bergerieId.isEmpty) return [];
 
-    if (bergerieId != null && bergerieId.isNotEmpty) {
-      query = query.where('bergerieId', isEqualTo: bergerieId);
-    }
+    return getParBergerie(bergerieId);
+  }
 
-    final snapshot = await query.get();
+  Future<List<InterventionModel>> getParBergerie(String bergerieId) async {
+    final snapshot = await _collection
+        .where('bergerieId', isEqualTo: bergerieId)
+        .get();
+
     final liste = snapshot.docs
         .map((doc) => InterventionModel.fromMap(doc.data()))
         .toList();
@@ -88,9 +91,10 @@ class FirebaseInterventionRepository {
     return liste;
   }
 
-  Future<List<InterventionModel>> getParBergerie(String bergerieId) async {
+  // Compatibilite avec le dashboard admin historique.
+  Future<List<InterventionModel>> getInterventionsDuClient(String clientId) async {
     final snapshot = await _collection
-        .where('bergerieId', isEqualTo: bergerieId)
+        .where('clientId', isEqualTo: clientId)
         .get();
 
     final liste = snapshot.docs
