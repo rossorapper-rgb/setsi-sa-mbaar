@@ -14,6 +14,7 @@ import '../features/moutons/pages/add_mouton_page.dart';
 import '../features/interventions/pages/interventions_page.dart';
 import '../features/gestation/pages/gestations_page.dart';
 import '../features/allo_veto/pages/allo_veto_page.dart';
+import '../features/sante/pages/carnet_sante_page.dart';
 import '../features/abonnements/pages/abonnements_page.dart';
 import '../features/finances/pages/finances_home_page.dart';
 import '../features/finances/pages/paiements_page.dart';
@@ -74,6 +75,15 @@ String? _gestationRedirect() {
   return null;
 }
 
+String? _santeRedirect() {
+  final currentUser = CurrentUserService.instance.currentUser;
+  if (currentUser == null) return '/login';
+  final role = CurrentUserService.instance.role;
+  if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) return '/dashboard/bergerie';
+  if (role != UserRole.admin && (currentUser.bergerieId == null || currentUser.bergerieId!.trim().isEmpty)) return '/dashboard/bergerie';
+  return null;
+}
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
   routes: [
@@ -88,6 +98,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/interventions', redirect: (context, state) => _interventionRedirect(), builder: (context, state) => const InterventionsPage()),
     GoRoute(path: '/gestations', redirect: (context, state) => _gestationRedirect(), builder: (context, state) => const GestationsPage()),
     GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
+    GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/abonnements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AbonnementsPage()),
     GoRoute(path: '/finances', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const FinancesHomePage()),
     GoRoute(path: '/paiements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const PaiementsPage()),
