@@ -16,6 +16,7 @@ import '../features/gestation/pages/gestations_page.dart';
 import '../features/allo_veto/pages/allo_veto_page.dart';
 import '../features/sante/pages/carnet_sante_page.dart';
 import '../features/alimentation/pages/alimentation_page.dart';
+import '../features/finances/pages/finances_bergerie_page.dart';
 import '../features/abonnements/pages/abonnements_page.dart';
 import '../features/finances/pages/finances_home_page.dart';
 import '../features/finances/pages/paiements_page.dart';
@@ -94,6 +95,15 @@ String? _alimentationRedirect() {
   return null;
 }
 
+String? _financeBergerieRedirect() {
+  final currentUser = CurrentUserService.instance.currentUser;
+  if (currentUser == null) return '/login';
+  final role = CurrentUserService.instance.role;
+  if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) return '/dashboard/bergerie';
+  if (role != UserRole.admin && (currentUser.bergerieId == null || currentUser.bergerieId!.trim().isEmpty)) return '/dashboard/bergerie';
+  return null;
+}
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
   routes: [
@@ -110,8 +120,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
     GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
+    GoRoute(path: '/finances', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const FinancesBergeriePage()),
     GoRoute(path: '/abonnements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AbonnementsPage()),
-    GoRoute(path: '/finances', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const FinancesHomePage()),
+    GoRoute(path: '/finances-admin', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const FinancesHomePage()),
     GoRoute(path: '/paiements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const PaiementsPage()),
     GoRoute(path: '/creances', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const CreancesPage()),
     GoRoute(path: '/dashboard-financier', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const DashboardFinancierPage()),
