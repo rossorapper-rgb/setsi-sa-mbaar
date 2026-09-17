@@ -147,7 +147,7 @@ class BergerieDrawer extends StatelessWidget {
                   _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports'),
                   const Divider(color: Colors.white24),
                   _soon(context, Icons.person_rounded, 'Mon compte'),
-                  _soon(context, Icons.settings_rounded, 'Paramètres'),
+                  _menu(context, Icons.settings_rounded, 'Paramètres', '/parametres'),
                 ],
               ),
             ),
