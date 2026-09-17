@@ -11,128 +11,43 @@ class FirebaseVeterinaireRepository {
 
   static const String _collection = 'veterinaires';
 
-  /// Ajouter un vétérinaire
-  Future<void> addVeterinaire(
-      VeterinaireModel veterinaire,
-      ) async {
+  Future<void> addVeterinaire(VeterinaireModel veterinaire) async {
     await _firestore
         .collection(_collection)
         .doc(veterinaire.id)
         .set(veterinaire.toMap());
   }
 
-  /// Modifier un vétérinaire
-  Future<void> updateVeterinaire(
-      VeterinaireModel veterinaire,
-      ) async {
+  Future<void> updateVeterinaire(VeterinaireModel veterinaire) async {
     await _firestore
         .collection(_collection)
         .doc(veterinaire.id)
         .update(veterinaire.toMap());
   }
 
-  /// Activer / Désactiver
-  Future<void> setDisponibilite({
-    required String id,
-    required bool disponible,
-  }) async {
-    await _firestore
-        .collection(_collection)
-        .doc(id)
-        .update({
-      'disponible': disponible,
-    });
+  Future<void> deleteVeterinaire(String id) async {
+    await _firestore.collection(_collection).doc(id).delete();
   }
 
-  /// Tous les vétérinaires
-  Future<List<VeterinaireModel>> getVeterinaires() async {
+  Future<List<VeterinaireModel>> getVeterinairesParBergerie(
+    String bergerieId,
+  ) async {
     final snapshot = await _firestore
         .collection(_collection)
+        .where('bergerieId', isEqualTo: bergerieId)
         .get();
 
     final veterinaires = snapshot.docs
         .map(
           (doc) => VeterinaireModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
         .toList();
 
     veterinaires.sort(
-          (a, b) => a.nom
-          .toLowerCase()
-          .compareTo(
-        b.nom.toLowerCase(),
-      ),
-    );
-
-    return veterinaires;
-  }
-
-  /// Seulement les vétérinaires disponibles
-  Future<List<VeterinaireModel>>
-  getVeterinairesDisponibles() async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where(
-      'disponible',
-      isEqualTo: true,
-    )
-        .get();
-
-    final veterinaires = snapshot.docs
-        .map(
-          (doc) => VeterinaireModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
-        .toList();
-
-    veterinaires.sort(
-          (a, b) => a.nom
-          .toLowerCase()
-          .compareTo(
-        b.nom.toLowerCase(),
-      ),
-    );
-
-    return veterinaires;
-  }
-
-  /// Recherche par région
-  Future<List<VeterinaireModel>>
-  getVeterinairesParRegion(
-      String region,
-      ) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where(
-      'region',
-      isEqualTo: region,
-    )
-        .where(
-      'disponible',
-      isEqualTo: true,
-    )
-        .get();
-
-    final veterinaires = snapshot.docs
-        .map(
-          (doc) => VeterinaireModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
-        .toList();
-
-    veterinaires.sort(
-          (a, b) => a.nom
-          .toLowerCase()
-          .compareTo(
-        b.nom.toLowerCase(),
-      ),
+      (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
     );
 
     return veterinaires;
