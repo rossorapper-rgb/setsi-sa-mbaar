@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ParametresBergeriePage extends StatelessWidget {
   const ParametresBergeriePage({super.key});
@@ -10,7 +11,7 @@ class ParametresBergeriePage extends StatelessWidget {
         title: const Text('Paramètres'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.go('/dashboard/bergerie'),
         ),
       ),
       body: ListView(
