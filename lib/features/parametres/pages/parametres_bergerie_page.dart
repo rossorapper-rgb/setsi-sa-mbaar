@@ -16,8 +16,9 @@ class ParametresBergeriePage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
-        children: const [
+        children: [
           _SectionCard(
+            onTap: () => context.go('/parametres/informations'),
             icon: Icons.home_work_rounded,
             title: 'Informations de la bergerie',
             subtitle: 'Nom, adresse, téléphone et responsable',
@@ -54,11 +55,13 @@ class ParametresBergeriePage extends StatelessWidget {
 }
 
 class _SectionCard extends StatelessWidget {
+  final VoidCallback? onTap;
   final IconData icon;
   final String title;
   final String subtitle;
 
   const _SectionCard({
+    this.onTap,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -85,6 +88,7 @@ class _SectionCard extends StatelessWidget {
           child: Text(subtitle),
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
       ),
     );
   }
