@@ -60,6 +60,14 @@ service cloud.firestore {
           || currentUser().data.role == 'technicien');
     }
 
+    function canManageVeterinaires() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien'
+          || currentUser().data.role == 'client');
+    }
+
     function belongsToMouton(moutonId) {
       return signedIn()
         && currentUser().data.actif == true
@@ -85,6 +93,25 @@ service cloud.firestore {
     match /clients/{clientId} {
       allow read: if isAdmin() || belongsToClient(clientId);
       allow create, update, delete: if isAdmin();
+    }
+
+    // Carnet vétérinaire : contacts personnels de chaque bergerie.
+    match /veterinaires/{veterinaireId} {
+      allow read: if isAdmin()
+        || belongsToBergerie(resource.data.bergerieId);
+
+      allow create: if isAdmin()
+        || (canManageVeterinaires()
+          && belongsToBergerie(request.resource.data.bergerieId));
+
+      allow update: if isAdmin()
+        || (canManageVeterinaires()
+          && belongsToBergerie(resource.data.bergerieId)
+          && request.resource.data.bergerieId == resource.data.bergerieId);
+
+      allow delete: if isAdmin()
+        || (canManageVeterinaires()
+          && belongsToBergerie(resource.data.bergerieId));
     }
 
     // Moutons : isolation stricte par bergerie.
