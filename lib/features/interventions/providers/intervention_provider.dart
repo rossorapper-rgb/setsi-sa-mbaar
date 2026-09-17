@@ -3,147 +3,58 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/intervention_model.dart';
 import '../repositories/firebase_intervention_repository.dart';
 
-final interventionRepositoryProvider =
-Provider<FirebaseInterventionRepository>(
-      (ref) => FirebaseInterventionRepository(),
+final interventionRepositoryProvider = Provider<FirebaseInterventionRepository>(
+  (ref) => FirebaseInterventionRepository(),
 );
 
 class InterventionNotifier
     extends StateNotifier<AsyncValue<List<InterventionModel>>> {
-InterventionNotifier(this._repository)
-: super(const AsyncLoading()) {
-chargerInterventions();
-}
-
-final FirebaseInterventionRepository _repository;
-
-Future<void> chargerInterventions() async {
-try {
-final interventions =
-await _repository.getToutesLesInterventions();
-
-state = AsyncData(interventions);
-} catch (e, st) {
-state = AsyncError(e, st);
-}
-}
-
-Future<void> ajouterIntervention({
-required String clientId,
-required String clientNom,
-  required String bergerieId,
-  required String bergerieNom,
-required DateTime dateIntervention,
-required String heureDebut,
-required String heureFin,
-required bool lavage,
-required bool nettoyageBergerie,
-required bool desinfection,
-required String agent,
-required String vehicule,
-required int nombreMoutons,
-  String? abonnementId,
-  List<String> moutonsConcernes = const [],
-
-  bool vermifugation = false,
-  String produitVermifuge = "",
-  DateTime? prochaineVermifugation,
-
-  bool traitementEnCours = false,
-  String maladie = "",
-  DateTime? finTraitement,
-
-  String recommandations = "",
-String observations = "",
-}) async {
-try {
-await _repository.createIntervention(
-clientId: clientId,
-clientNom: clientNom,
-  bergerieId: bergerieId,
-  bergerieNom: bergerieNom,
-dateIntervention: dateIntervention,
-heureDebut: heureDebut,
-heureFin: heureFin,
-lavage: lavage,
-nettoyageBergerie: nettoyageBergerie,
-desinfection: desinfection,
-agent: agent,
-vehicule: vehicule,
-nombreMoutons: nombreMoutons,
-  abonnementId: abonnementId,
-  moutonsConcernes: moutonsConcernes,
-
-  vermifugation: vermifugation,
-  produitVermifuge: produitVermifuge,
-  prochaineVermifugation: prochaineVermifugation,
-
-  traitementEnCours: traitementEnCours,
-  maladie: maladie,
-  finTraitement: finTraitement,
-
-  recommandations: recommandations,
-observations: observations,
-);
-
-await chargerInterventions();
-} catch (e) {
-rethrow;
-}
-}
-
-Future<void> modifierIntervention(
-InterventionModel intervention,
-) async {
-try {
-await _repository.updateIntervention(
-intervention,
-);
-
-await chargerInterventions();
-} catch (e) {
-rethrow;
-}
-}
-Future<void> supprimerIntervention(
-    String id,
-    ) async {
-  try {
-    await _repository.deleteIntervention(id);
-
-    await chargerInterventions();
-  } catch (e) {
-    rethrow;
+  InterventionNotifier(this._repository) : super(const AsyncLoading()) {
+    chargerInterventions();
   }
-}
 
-Future<void> changerStatut({
-  required String interventionId,
-  required String statut,
-}) async {
-  try {
-    await _repository.updateStatut(
-      interventionId: interventionId,
-      statut: statut,
-    );
+  final FirebaseInterventionRepository _repository;
 
-    await chargerInterventions();
-  } catch (e) {
-    rethrow;
+  Future<void> chargerInterventions() async {
+    try {
+      final interventions = await _repository.getToutesLesInterventions();
+      state = AsyncData(interventions);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
   }
-}
 
-Future<void> rafraichir() async {
-  await chargerInterventions();
-}
-}
-
-final interventionProvider = StateNotifierProvider<
-    InterventionNotifier,
-    AsyncValue<List<InterventionModel>>>(
-      (ref) {
-    return InterventionNotifier(
-      ref.read(interventionRepositoryProvider),
+  Future<void> ajouterIntervention({
+    required String type,
+    required DateTime date,
+    String? moutonId,
+    String? moutonNom,
+    String observation = '',
+  }) async {
+    await _repository.ajouter(
+      type: type,
+      date: date,
+      moutonId: moutonId,
+      moutonNom: moutonNom,
+      observation: observation,
     );
-  },
-);
+    await chargerInterventions();
+  }
+
+  Future<void> modifierIntervention(InterventionModel intervention) async {
+    await _repository.modifier(intervention);
+    await chargerInterventions();
+  }
+
+  Future<void> supprimerIntervention(String id) async {
+    await _repository.supprimer(id);
+    await chargerInterventions();
+  }
+
+  Future<void> rafraichir() => chargerInterventions();
+}
+
+final interventionProvider = StateNotifierProvider<InterventionNotifier,
+    AsyncValue<List<InterventionModel>>>((ref) {
+  return InterventionNotifier(ref.read(interventionRepositoryProvider));
+});
