@@ -74,8 +74,10 @@ class CloudinaryImageService {
     return _upload(
       bytes: bytes,
       folder: 'bergeries/$bergerieId/config',
-      publicId: 'logo',
-      filename: 'logo.jpg',
+      // Un identifiant unique évite le cache Cloudinary et permet
+      // de remplacer le logo autant de fois que nécessaire.
+      publicId: 'logo_${DateTime.now().millisecondsSinceEpoch}',
+      filename: 'logo_${DateTime.now().millisecondsSinceEpoch}.jpg',
     );
   }
 
