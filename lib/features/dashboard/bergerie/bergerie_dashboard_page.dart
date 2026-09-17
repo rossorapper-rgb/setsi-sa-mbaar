@@ -131,7 +131,7 @@ class BergerieDrawer extends StatelessWidget {
                   _section('MON ÉLEVAGE'),
                   _menu(context, Icons.pets_rounded, 'Moutons', '/moutons'),
                   _menu(context, Icons.favorite_rounded, 'Gestations', '/gestations'),
-                  _soon(context, Icons.child_friendly_rounded, 'Naissances'),
+                  _menu(context, Icons.child_friendly_rounded, 'Naissances', '/naissances'),
                   _section('SANTÉ'),
                   _menu(context, Icons.health_and_safety_rounded, 'Carnet de santé', '/carnet-sante'),
                   _menu(context, Icons.medical_services_rounded, 'Mon Carnet Véto', '/allo-veto'),
