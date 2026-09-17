@@ -123,11 +123,13 @@ service cloud.firestore {
     }
 
     // Carnet de santé : historique des problèmes et soins par mouton.
-    // L'entrée doit toujours appartenir à la bergerie de l'utilisateur
-    // et au mouton de cette même bergerie.
+    // La lecture reprend volontairement le même contrôle direct de bergerie
+    // que les requêtes de la page, afin que Firestore puisse autoriser la liste.
     match /carnet_sante/{soinId} {
       allow read: if isAdmin()
-        || belongsToBergerie(resource.data.bergerieId);
+        || (signedIn()
+          && currentUser().data.actif == true
+          && currentUser().data.bergerieId == resource.data.bergerieId);
 
       allow create: if isAdmin()
         || (canManageSante()
