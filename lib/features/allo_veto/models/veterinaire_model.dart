@@ -1,59 +1,44 @@
 class VeterinaireModel {
   final String id;
+  final String bergerieId;
   final String nom;
   final String telephone;
-  final String region;
-  final String specialite;
-  final bool disponible;
 
   const VeterinaireModel({
     required this.id,
+    required this.bergerieId,
     required this.nom,
     required this.telephone,
-    required this.region,
-    required this.specialite,
-    required this.disponible,
   });
 
-  factory VeterinaireModel.fromMap(
-      Map<String, dynamic> map,
-      ) {
+  factory VeterinaireModel.fromMap(Map<String, dynamic> map) {
     return VeterinaireModel(
       id: map['id'] ?? '',
+      bergerieId: map['bergerieId'] ?? '',
       nom: map['nom'] ?? '',
       telephone: map['telephone'] ?? '',
-      region: map['region'] ?? '',
-      specialite: map['specialite'] ?? '',
-      disponible: map['disponible'] ?? true,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      'bergerieId': bergerieId,
       'nom': nom,
       'telephone': telephone,
-      'region': region,
-      'specialite': specialite,
-      'disponible': disponible,
     };
   }
 
   VeterinaireModel copyWith({
     String? id,
+    String? bergerieId,
     String? nom,
     String? telephone,
-    String? region,
-    String? specialite,
-    bool? disponible,
   }) {
     return VeterinaireModel(
       id: id ?? this.id,
+      bergerieId: bergerieId ?? this.bergerieId,
       nom: nom ?? this.nom,
       telephone: telephone ?? this.telephone,
-      region: region ?? this.region,
-      specialite: specialite ?? this.specialite,
-      disponible: disponible ?? this.disponible,
     );
   }
 }
