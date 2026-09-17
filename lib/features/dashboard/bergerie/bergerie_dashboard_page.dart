@@ -136,7 +136,7 @@ class BergerieDrawer extends StatelessWidget {
                   _menu(context, Icons.health_and_safety_rounded, 'Carnet de santé', '/carnet-sante'),
                   _menu(context, Icons.medical_services_rounded, 'Mon Carnet Véto', '/allo-veto'),
                   _section('ALIMENTATION'),
-                  _soon(context, Icons.grass_rounded, 'Alimentation'),
+                  _menu(context, Icons.grass_rounded, 'Alimentation', '/alimentation'),
                   _soon(context, Icons.inventory_2_rounded, 'Stocks'),
                   _section('ACTIVITÉS'),
                   _menu(context, Icons.assignment_rounded, 'Interventions', '/interventions'),
@@ -497,7 +497,7 @@ class _Actions extends StatelessWidget {
                   _ActionData(Icons.pets_rounded, 'Ajouter un mouton', primary, '/moutons'),
                   _ActionData(Icons.favorite_rounded, 'Enregistrer une saillie', orange, '/gestations'),
                   _ActionData(Icons.medical_services_rounded, 'Enregistrer un soin', primary, '/carnet-sante'),
-                  _ActionData(Icons.grass_rounded, 'Ajouter alimentation', orange, null),
+                  _ActionData(Icons.grass_rounded, 'Ajouter alimentation', orange, '/alimentation'),
                   _ActionData(Icons.assignment_rounded, 'Enregistrer activité', primary, '/interventions'),
                   _ActionData(Icons.bar_chart_rounded, 'Voir mes rapports', orange, '/rapports-financiers'),
                 ];
