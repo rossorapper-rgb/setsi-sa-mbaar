@@ -68,6 +68,14 @@ service cloud.firestore {
           || currentUser().data.role == 'client');
     }
 
+    function canManageSante() {
+      return signedIn()
+        && currentUser().data.actif == true
+        && (currentUser().data.role == 'responsable'
+          || currentUser().data.role == 'technicien'
+          || currentUser().data.role == 'client');
+    }
+
     function belongsToMouton(moutonId) {
       return signedIn()
         && currentUser().data.actif == true
@@ -112,6 +120,30 @@ service cloud.firestore {
       allow delete: if isAdmin()
         || (canManageVeterinaires()
           && belongsToBergerie(resource.data.bergerieId));
+    }
+
+    // Carnet de santé : historique des problèmes et soins par mouton.
+    // L'entrée doit toujours appartenir à la bergerie de l'utilisateur
+    // et au mouton de cette même bergerie.
+    match /carnet_sante/{soinId} {
+      allow read: if isAdmin()
+        || belongsToBergerie(resource.data.bergerieId);
+
+      allow create: if isAdmin()
+        || (canManageSante()
+          && belongsToBergerie(request.resource.data.bergerieId)
+          && belongsToMouton(request.resource.data.moutonId));
+
+      allow update: if isAdmin()
+        || (canManageSante()
+          && belongsToBergerie(resource.data.bergerieId)
+          && request.resource.data.bergerieId == resource.data.bergerieId
+          && belongsToMouton(request.resource.data.moutonId));
+
+      allow delete: if isAdmin()
+        || (canManageSante()
+          && belongsToBergerie(resource.data.bergerieId)
+          && belongsToMouton(resource.data.moutonId));
     }
 
     // Moutons : isolation stricte par bergerie.
