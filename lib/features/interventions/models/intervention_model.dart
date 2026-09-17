@@ -17,6 +17,15 @@ class InterventionModel {
     this.observation = '',
   });
 
+  // Compatibilite avec les anciens composants du dashboard admin.
+  DateTime get dateIntervention => date;
+  String get agent => '';
+  String get statut => '';
+  bool get lavage => type.toLowerCase().contains('lavage');
+  bool get nettoyageBergerie => type.toLowerCase().contains('nettoyage');
+  bool get desinfection => type.toLowerCase().contains('désinfection') || type.toLowerCase().contains('desinfection');
+  String get bergerieNom => '';
+
   InterventionModel copyWith({
     String? id,
     String? bergerieId,
