@@ -17,6 +17,7 @@ import '../features/allo_veto/pages/allo_veto_page.dart';
 import '../features/sante/pages/carnet_sante_page.dart';
 import '../features/alimentation/pages/alimentation_page.dart';
 import '../features/finances/pages/finances_bergerie_page.dart';
+import '../features/naissances/pages/naissances_page.dart';
 import '../features/abonnements/pages/abonnements_page.dart';
 import '../features/finances/pages/finances_home_page.dart';
 import '../features/finances/pages/paiements_page.dart';
@@ -104,6 +105,8 @@ String? _financeBergerieRedirect() {
   return null;
 }
 
+String? _naissanceRedirect() => _financeBergerieRedirect();
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
   routes: [
@@ -117,6 +120,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/moutons/add', redirect: (context, state) => _moutonsRedirect(), builder: (context, state) => const AddMoutonPage()),
     GoRoute(path: '/interventions', redirect: (context, state) => _interventionRedirect(), builder: (context, state) => const InterventionsPage()),
     GoRoute(path: '/gestations', redirect: (context, state) => _gestationRedirect(), builder: (context, state) => const GestationsPage()),
+    GoRoute(path: '/naissances', redirect: (context, state) => _naissanceRedirect(), builder: (context, state) => const NaissancesPage()),
     GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
     GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
@@ -129,32 +133,24 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/rapports-financiers', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const RapportsFinanciersPage()),
     GoRoute(path: '/utilisateurs', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const UtilisateursPage()),
     GoRoute(path: '/utilisateurs/add', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AddUtilisateurPage()),
-    GoRoute(
-      path: '/utilisateurs/details/:id',
-      redirect: (context, state) => _adminOnlyRedirect(),
-      builder: (context, state) {
-        final id = state.pathParameters['id'];
-        if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
-        return UtilisateurDetailsPage(utilisateurId: id);
-      },
-    ),
-    GoRoute(
-      path: '/utilisateurs/edit/:id',
-      redirect: (context, state) => _adminOnlyRedirect(),
-      builder: (context, state) {
-        final id = state.pathParameters['id'];
-        if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
-        return FutureBuilder(
-          future: FirebaseUtilisateurRepository().getUtilisateurById(id),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            if (snapshot.hasError) return Scaffold(body: Center(child: Text('Erreur : ${snapshot.error}')));
-            final utilisateur = snapshot.data;
-            if (utilisateur == null) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
-            return AddUtilisateurPage(utilisateur: utilisateur);
-          },
-        );
-      },
-    ),
+    GoRoute(path: '/utilisateurs/details/:id', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) {
+      final id = state.pathParameters['id'];
+      if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+      return UtilisateurDetailsPage(utilisateurId: id);
+    }),
+    GoRoute(path: '/utilisateurs/edit/:id', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) {
+      final id = state.pathParameters['id'];
+      if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+      return FutureBuilder(
+        future: FirebaseUtilisateurRepository().getUtilisateurById(id),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          if (snapshot.hasError) return Scaffold(body: Center(child: Text('Erreur : ${snapshot.error}')));
+          final utilisateur = snapshot.data;
+          if (utilisateur == null) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
+          return AddUtilisateurPage(utilisateur: utilisateur);
+        },
+      );
+    }),
   ],
 );
