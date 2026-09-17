@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
 import '../../moutons/repository/firebase_mouton_repository.dart';
 
@@ -459,14 +460,95 @@ class _Alerts extends StatelessWidget {
   const _Alerts({required this.primary});
   final Color primary;
 
+  Future<List<GestationModel>> _chargerRappels() async {
+    final gestations = await FirebaseGestationRepository().getGestationsEnCours();
+
+    final rappels = gestations.where((g) {
+      return !g.miseBasEffectuee && (g.procheDeLaMiseBas || g.estEnRetard);
+    }).toList();
+
+    rappels.sort((a, b) => a.dateProbableMiseBas.compareTo(b.dateProbableMiseBas));
+    return rappels;
+  }
+
+  String _message(GestationModel g) {
+    if (g.estEnRetard) {
+      final joursRetard = DateTime.now().difference(g.dateProbableMiseBas).inDays;
+      if (joursRetard <= 0) return 'Mise bas prévue aujourd’hui';
+      return 'Mise bas en retard de $joursRetard jour${joursRetard > 1 ? 's' : ''}';
+    }
+
+    final jours = g.joursRestants;
+    if (jours <= 0) return 'Mise bas prévue aujourd’hui';
+    if (jours == 1) return 'Mise bas prévue demain';
+    return 'Mise bas prévue dans $jours jours';
+  }
+
   @override
   Widget build(BuildContext context) => _Panel(
         title: '🔔 Alertes & priorités',
-        child: Column(
-          children: [
-            _Row(icon: Icons.check_circle_rounded, color: Colors.green, text: 'Aucune alerte urgente'),
-            _Row(icon: Icons.info_rounded, color: primary, text: 'Les rappels importants apparaîtront ici'),
-          ],
+        child: FutureBuilder<List<GestationModel>>(
+          future: _chargerRappels(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _Row(
+                icon: Icons.hourglass_top_rounded,
+                color: Colors.orange,
+                text: 'Chargement des rappels…',
+              );
+            }
+
+            if (snapshot.hasError) {
+              return _Row(
+                icon: Icons.error_outline_rounded,
+                color: Colors.red,
+                text: 'Impossible de charger les rappels',
+              );
+            }
+
+            final rappels = snapshot.data ?? const <GestationModel>[];
+
+            if (rappels.isEmpty) {
+              return Column(
+                children: [
+                  const _Row(
+                    icon: Icons.check_circle_rounded,
+                    color: Colors.green,
+                    text: 'Aucune alerte urgente',
+                  ),
+                  _Row(
+                    icon: Icons.info_rounded,
+                    color: primary,
+                    text: 'Aucun rappel de mise bas pour le moment',
+                  ),
+                ],
+              );
+            }
+
+            return Column(
+              children: [
+                ...rappels.take(3).map((g) {
+                  final urgent = g.estEnRetard || g.joursRestants <= 1;
+                  final color = urgent ? Colors.red : Colors.orange;
+                  final date = '${g.dateProbableMiseBas.day}/${g.dateProbableMiseBas.month}/${g.dateProbableMiseBas.year}';
+
+                  return _Row(
+                    icon: urgent ? Icons.warning_rounded : Icons.event_available_rounded,
+                    color: color,
+                    text: '${g.nomFemelle} — ${_message(g)} — $date',
+                    onTap: () => context.go('/gestations'),
+                  );
+                }),
+                if (rappels.length > 3)
+                  _Row(
+                    icon: Icons.more_horiz_rounded,
+                    color: primary,
+                    text: '${rappels.length - 3} autre${rappels.length - 3 > 1 ? 's' : ''} rappel${rappels.length - 3 > 1 ? 's' : ''}',
+                    onTap: () => context.go('/gestations'),
+                  ),
+              ],
+            );
+          },
         ),
       );
 }
@@ -565,27 +647,38 @@ class _Action extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.color, required this.text});
+  const _Row({required this.icon, required this.color, required this.text, this.onTap});
   final IconData icon;
   final Color color;
   final String text;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .06),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 21),
-            const SizedBox(width: 9),
-            Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final content = Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .06),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 21),
+          const SizedBox(width: 9),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+        ],
+      ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(11),
+      onTap: onTap,
+      child: content,
+    );
+  }
 }
 
 class _Panel extends StatelessWidget {
