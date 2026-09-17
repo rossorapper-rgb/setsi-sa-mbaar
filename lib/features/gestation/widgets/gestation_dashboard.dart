@@ -30,36 +30,112 @@ class GestationDashboard extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Center(
             child: Text(
-              "Aucune gestation enregistrée.",
+              'Aucune gestation enregistrée.',
             ),
           ),
         ),
       );
     }
 
-    return Card(
-      child: Column(
-        children: gestations.map((g) {
-          return ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.pets),
-            ),
-            title: InkWell(
-              onTap: () => onOuvrirFiche(g),
-              child: Text(
-                g.nomFemelle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+    final rappels = gestations.where((g) {
+      return !g.miseBasEffectuee && (g.procheDeLaMiseBas || g.estEnRetard);
+    }).toList();
+
+    return Column(
+      children: [
+        if (rappels.isNotEmpty)
+          Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.notifications_active_rounded,
+                        color: rappels.any((g) => g.estEnRetard)
+                            ? Colors.red
+                            : Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Rappels',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ...rappels.map(_rappelTile),
+                ],
               ),
             ),
-            subtitle: Text(
-              "Saillie : "
-                  "${g.dateSaillie.day}/${g.dateSaillie.month}/${g.dateSaillie.year}",
-            ),
-          );
-        }).toList(),
+          ),
+        Card(
+          child: Column(
+            children: gestations.map((g) {
+              return ListTile(
+                leading: const CircleAvatar(
+                  child: Icon(Icons.pets),
+                ),
+                title: InkWell(
+                  onTap: () => onOuvrirFiche(g),
+                  child: Text(
+                    g.nomFemelle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                subtitle: Text(
+                  'Saillie : '
+                      '${g.dateSaillie.day}/${g.dateSaillie.month}/${g.dateSaillie.year}\n'
+                      'Mise bas prévue : '
+                      '${g.dateProbableMiseBas.day}/${g.dateProbableMiseBas.month}/${g.dateProbableMiseBas.year}',
+                ),
+                isThreeLine: true,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rappelTile(GestationModel g) {
+    final retard = g.estEnRetard;
+    final jours = g.joursRestants;
+
+    String message;
+    if (retard) {
+      final joursRetard = DateTime.now().difference(g.dateProbableMiseBas).inDays;
+      message = joursRetard <= 0
+          ? 'Mise bas prévue aujourd’hui'
+          : 'Mise bas en retard de $joursRetard jour${joursRetard > 1 ? 's' : ''}';
+    } else if (jours <= 0) {
+      message = 'Mise bas prévue aujourd’hui';
+    } else if (jours == 1) {
+      message = 'Mise bas prévue demain';
+    } else {
+      message = 'Mise bas prévue dans $jours jours';
+    }
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        retard ? Icons.warning_rounded : Icons.event_available_rounded,
+        color: retard ? Colors.red : Colors.orange,
       ),
+      title: Text(
+        g.nomFemelle,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(message),
+      onTap: () => onOuvrirFiche(g),
     );
   }
 }
