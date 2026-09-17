@@ -5,14 +5,10 @@ import '../models/gestation_model.dart';
 
 class FirebaseGestationRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   static const String _collection = 'gestations';
-
-  // Statut réellement utilisé dans Firestore pour une gestation en cours.
   static const String _statutGestante = 'Gestante';
 
-  CollectionReference<Map<String, dynamic>> get _gestations =>
-      _firestore.collection(_collection);
+  CollectionReference<Map<String, dynamic>> get _gestations => _firestore.collection(_collection);
 
   String? get _bergerieIdSession {
     final id = CurrentUserService.instance.bergerieId?.trim();
@@ -23,151 +19,87 @@ class FirebaseGestationRepository {
 
   Future<List<GestationModel>> getGestations() async {
     Query<Map<String, dynamic>> query = _gestations;
-
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return [];
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
-    // Pas de orderBy Firestore avec le filtre bergerieId : cela évite
-    // d'exiger un index composite pour le chargement de la page.
     final snapshot = await query.get();
-
-    final result = snapshot.docs
-        .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-        .toList();
-
+    final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
     result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
     return result;
   }
 
   Stream<List<GestationModel>> watchGestations() {
     Query<Map<String, dynamic>> query = _gestations;
-
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return Stream.value([]);
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
-    return query.snapshots().map(
-          (snapshot) {
-        final result = snapshot.docs
-            .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-            .toList();
-        result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
-        return result;
-      },
-    );
+    return query.snapshots().map((snapshot) {
+      final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
+      result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+      return result;
+    });
   }
 
   Future<GestationModel?> getGestationById(String id) async {
     final doc = await _gestations.doc(id).get();
-
-    if (!doc.exists || doc.data() == null) {
-      return null;
-    }
-
+    if (!doc.exists || doc.data() == null) return null;
     final gestation = GestationModel.fromMap(doc.data()!, doc.id);
-
-    if (!_isAdmin && gestation.bergerieId != _bergerieIdSession) {
-      return null;
-    }
-
+    if (!_isAdmin && gestation.bergerieId != _bergerieIdSession) return null;
     return gestation;
   }
 
   Future<GestationModel?> getGestationActiveByBrebis(String brebisId) async {
-    Query<Map<String, dynamic>> query = _gestations
-        .where('brebisId', isEqualTo: brebisId)
-        .where('statut', isEqualTo: _statutGestante);
-
+    Query<Map<String, dynamic>> query = _gestations.where('brebisId', isEqualTo: brebisId).where('statut', isEqualTo: _statutGestante);
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return null;
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
     final snapshot = await query.limit(1).get();
-
-    if (snapshot.docs.isEmpty) {
-      return null;
-    }
-
+    if (snapshot.docs.isEmpty) return null;
     final doc = snapshot.docs.first;
     return GestationModel.fromMap(doc.data(), doc.id);
   }
 
-  Future<void> addGestation(GestationModel gestation) async {
-    await _gestations.doc(gestation.id).set(gestation.toMap());
-  }
-
-  Future<void> updateGestation(GestationModel gestation) async {
-    await _gestations.doc(gestation.id).update(gestation.toMap());
-  }
-
-  Future<void> deleteGestation(String id) async {
-    await _gestations.doc(id).delete();
-  }
+  Future<void> addGestation(GestationModel gestation) async => _gestations.doc(gestation.id).set(gestation.toMap());
+  Future<void> updateGestation(GestationModel gestation) async => _gestations.doc(gestation.id).update(gestation.toMap());
+  Future<void> deleteGestation(String id) async => _gestations.doc(id).delete();
 
   Future<List<GestationModel>> getGestationsByMouton(String brebisId) async {
-    Query<Map<String, dynamic>> query = _gestations.where(
-      'brebisId',
-      isEqualTo: brebisId,
-    );
-
+    Query<Map<String, dynamic>> query = _gestations.where('brebisId', isEqualTo: brebisId);
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return [];
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
     final snapshot = await query.get();
-
-    final result = snapshot.docs
-        .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
     result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
     return result;
   }
 
   Future<List<GestationModel>> getGestationsEnCours() async {
-    Query<Map<String, dynamic>> query = _gestations.where(
-      'statut',
-      isEqualTo: _statutGestante,
-    );
-
+    Query<Map<String, dynamic>> query = _gestations.where('statut', isEqualTo: _statutGestante);
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return [];
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
     final snapshot = await query.get();
-
-    final result = snapshot.docs
-        .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
     result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
     return result;
   }
 
-  Future<List<GestationModel>> getGestationsParBergerie(
-    String bergerieId,
-  ) async {
-    if (!_isAdmin && _bergerieIdSession != bergerieId) {
-      return [];
-    }
-
+  Future<List<GestationModel>> getGestationsParBergerie(String bergerieId) async {
+    if (!_isAdmin && _bergerieIdSession != bergerieId) return [];
     try {
-      final snapshot = await _gestations
-          .where('bergerieId', isEqualTo: bergerieId)
-          .get();
-
-      final result = snapshot.docs
-          .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
-          .toList();
+      final snapshot = await _gestations.where('bergerieId', isEqualTo: bergerieId).get();
+      final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
       result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
       return result;
     } catch (e) {
@@ -176,69 +108,30 @@ class FirebaseGestationRepository {
     }
   }
 
-  Future<List<GestationModel>> getGestationsActives() async {
-    return getGestationsEnCours();
-  }
-
-  Future<int> getNombreGestations() async {
-    if (!_isAdmin && _bergerieIdSession == null) return 0;
-    return (await getGestations()).length;
-  }
-
-  Future<int> getNombreGestationsEnCours() async {
-    return (await getGestationsEnCours()).length;
-  }
+  Future<List<GestationModel>> getGestationsActives() async => getGestationsEnCours();
+  Future<int> getNombreGestations() async => (!_isAdmin && _bergerieIdSession == null) ? 0 : (await getGestations()).length;
+  Future<int> getNombreGestationsEnCours() async => (await getGestationsEnCours()).length;
 
   Future<int> getNombreGestationsTerminees() async {
-    Query<Map<String, dynamic>> query = _gestations.where(
-      'statut',
-      isEqualTo: 'Terminée',
-    );
-
+    Query<Map<String, dynamic>> query = _gestations.where('statut', isEqualTo: 'Terminée');
     if (!_isAdmin) {
       final bergerieId = _bergerieIdSession;
       if (bergerieId == null) return 0;
       query = query.where('bergerieId', isEqualTo: bergerieId);
     }
-
-    final snapshot = await query.get();
-    return snapshot.size;
+    return (await query.get()).size;
   }
 
   Future<List<GestationModel>> rechercherGestations(String recherche) async {
     final liste = await getGestations();
     final filtre = recherche.trim().toLowerCase();
-
-    return liste.where((g) {
-      return g.nomFemelle.toLowerCase().contains(filtre) ||
-          g.belierNom.toLowerCase().contains(filtre) ||
-          g.statut.toLowerCase().contains(filtre);
-    }).toList();
+    return liste.where((g) => g.nomFemelle.toLowerCase().contains(filtre) || g.belierNom.toLowerCase().contains(filtre) || g.statut.toLowerCase().contains(filtre)).toList();
   }
 
-  Future<void> annulerGestation(String id) async {
-    await _gestations.doc(id).update({
-      'statut': 'Annulée',
-      'active': false,
-      'dateModification': Timestamp.fromDate(DateTime.now()),
-    });
-  }
+  Future<void> annulerGestation(String id) async => _gestations.doc(id).update({'statut': 'Annulée', 'active': false, 'dateModification': Timestamp.fromDate(DateTime.now())});
+  Future<void> reactiverGestation(String id) async => _gestations.doc(id).update({'statut': _statutGestante, 'active': true, 'dateModification': Timestamp.fromDate(DateTime.now())});
 
-  Future<void> reactiverGestation(String id) async {
-    await _gestations.doc(id).update({
-      'statut': _statutGestante,
-      'active': true,
-      'dateModification': Timestamp.fromDate(DateTime.now()),
-    });
-  }
-
-  Future<void> terminerGestation({
-    required String id,
-    required DateTime dateMiseBas,
-    required int nombrePetits,
-    required int males,
-    required int femelles,
-  }) async {
+  Future<void> terminerGestation({required String id, required DateTime dateMiseBas, required int nombrePetits, required int males, required int femelles}) async {
     await _gestations.doc(id).update({
       'statut': 'Terminée',
       'dateMiseBas': Timestamp.fromDate(dateMiseBas),
@@ -258,6 +151,7 @@ class FirebaseGestationRepository {
     required int nombreFemelles,
     required int nombreMortNes,
     String observations = '',
+    String? photoUrl,
   }) async {
     await _gestations.doc(gestationId).update({
       'statut': 'Terminée',
@@ -267,28 +161,14 @@ class FirebaseGestationRepository {
       'nombreFemelles': nombreFemelles,
       'nombreMortNes': nombreMortNes,
       'observations': observations,
+      'photoUrl': photoUrl,
       'active': false,
       'dateModification': Timestamp.fromDate(DateTime.now()),
     });
   }
 
-  Future<void> mettreAJourStatut({
-    required String gestationId,
-    required String statut,
-  }) async {
-    await _gestations.doc(gestationId).update({
-      'statut': statut,
-      'dateModification': Timestamp.fromDate(DateTime.now()),
-    });
-  }
-
-  Future<void> cloturerGestation(String gestationId) async {
-    await _gestations.doc(gestationId).update({
-      'statut': 'Terminée',
-      'active': false,
-      'dateModification': Timestamp.fromDate(DateTime.now()),
-    });
-  }
+  Future<void> mettreAJourStatut({required String gestationId, required String statut}) async => _gestations.doc(gestationId).update({'statut': statut, 'dateModification': Timestamp.fromDate(DateTime.now())});
+  Future<void> cloturerGestation(String gestationId) async => _gestations.doc(gestationId).update({'statut': 'Terminée', 'active': false, 'dateModification': Timestamp.fromDate(DateTime.now())});
 
   Future<int> getNombreGestationsEnRetard() async {
     final liste = await getGestationsEnCours();
@@ -297,11 +177,6 @@ class FirebaseGestationRepository {
 
   Future<int> getNombreMisesBasProchaines() async {
     final liste = await getGestationsEnCours();
-
-    return liste
-        .where(
-          (g) => g.joursRestants >= 0 && g.joursRestants <= 15,
-        )
-        .length;
+    return liste.where((g) => g.joursRestants >= 0 && g.joursRestants <= 15).length;
   }
 }
