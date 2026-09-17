@@ -48,6 +48,39 @@ class BergerieDashboardPage extends StatelessWidget {
   }
 }
 
+class _BergerieLogo extends StatelessWidget {
+  const _BergerieLogo({
+    required this.logo,
+    required this.color,
+  });
+
+  final String? logo;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (logo == null || logo!.isEmpty) {
+      return Icon(Icons.home_work_rounded, color: color, size: 44);
+    }
+
+    if (logo!.startsWith('http://') || logo!.startsWith('https://')) {
+      return Image.network(
+        logo!,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            Icon(Icons.home_work_rounded, color: color, size: 44),
+      );
+    }
+
+    return Image.asset(
+      logo!,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) =>
+          Icon(Icons.home_work_rounded, color: color, size: 44),
+    );
+  }
+}
+
 class BergerieDrawer extends StatelessWidget {
   const BergerieDrawer({super.key, required this.config});
 
@@ -85,14 +118,9 @@ class BergerieDrawer extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Image.asset(
-                      'assets/images/bergerie_baraka_logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.home_work_rounded,
-                        color: primary,
-                        size: 44,
-                      ),
+                    child: _BergerieLogo(
+                      logo: config.logo,
+                      color: primary,
                     ),
                   ),
                   const SizedBox(height: 9),
