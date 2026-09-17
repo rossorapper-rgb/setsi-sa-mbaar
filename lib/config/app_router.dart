@@ -129,6 +129,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/rapports', redirect: (context, state) => _rapportBergerieRedirect(), builder: (context, state) => const RapportsBergeriePage()),
     GoRoute(path: '/parametres', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const ParametresBergeriePage()),
     GoRoute(path: '/parametres/informations', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const InformationsBergeriePage()),
+    GoRoute(path: '/parametres/personnalisation', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const PersonnalisationBergeriePage()),
     GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
     GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
