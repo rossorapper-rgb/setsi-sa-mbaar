@@ -140,6 +140,8 @@ class BergerieDrawer extends StatelessWidget {
                   _soon(context, Icons.inventory_2_rounded, 'Stocks'),
                   _section('ACTIVITÉS'),
                   _menu(context, Icons.assignment_rounded, 'Interventions', '/interventions'),
+                  _section('FINANCES'),
+                  _menu(context, Icons.account_balance_wallet_rounded, 'Finances', '/finances'),
                   _section('RAPPORTS'),
                   _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports-financiers'),
                   const Divider(color: Colors.white24),
@@ -499,7 +501,7 @@ class _Actions extends StatelessWidget {
                   _ActionData(Icons.medical_services_rounded, 'Enregistrer un soin', primary, '/carnet-sante'),
                   _ActionData(Icons.grass_rounded, 'Ajouter alimentation', orange, '/alimentation'),
                   _ActionData(Icons.assignment_rounded, 'Enregistrer activité', primary, '/interventions'),
-                  _ActionData(Icons.bar_chart_rounded, 'Voir mes rapports', orange, '/rapports-financiers'),
+                  _ActionData(Icons.account_balance_wallet_rounded, 'Voir mes finances', orange, '/finances'),
                 ];
                 final action = actions[index];
                 return _Action(
