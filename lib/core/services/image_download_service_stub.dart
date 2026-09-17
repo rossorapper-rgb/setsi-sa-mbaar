@@ -1,3 +1,7 @@
+import 'package:url_launcher/url_launcher.dart';
+
 Future<bool> downloadImage(String url, String filename) async {
-  return false;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return false;
+  return launchUrl(uri, mode: LaunchMode.externalApplication);
 }
