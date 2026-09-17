@@ -18,36 +18,22 @@ class InterventionService {
   }) {
     _compteur++;
 
-    final numero = "INT-2026-${_compteur.toString().padLeft(4, '0')}";
+    final type = nettoyageBergerie
+        ? 'Nettoyage de la bergerie'
+        : desinfection
+            ? 'Désinfection'
+            : lavage
+                ? 'Lavage'
+                : 'Autre';
 
     return InterventionModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      numero: numero,
-
-      clientId: "",
-      clientNom: clientNom,
-
-      bergerieId: "",
-      bergerieNom: "",
-
-      origineIntervention: "Ponctuelle",
-
-      dateIntervention: dateIntervention,
-      heureDebut: "",
-      heureFin: "",
-
-      lavage: lavage,
-      nettoyageBergerie: nettoyageBergerie,
-      desinfection: desinfection,
-
-      agent: agent,
-      vehicule: vehicule,
-
-      nombreMoutons: nombreMoutons,
-
-      observations: observations,
-
-      statut: "Planifiée",
+      bergerieId: '',
+      type: type,
+      date: dateIntervention,
+      moutonId: null,
+      moutonNom: null,
+      observation: observations,
     );
   }
 }
