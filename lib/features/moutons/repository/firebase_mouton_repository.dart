@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/session/current_user_service.dart';
-import '../../clients/repositories/firebase_client_repository.dart';
 import '../../auth/services/auth_service.dart';
-import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 
 class FirebaseMoutonRepository {
@@ -40,57 +38,32 @@ class FirebaseMoutonRepository {
     });
   }
 
-  /// Tous les moutons actifs
+  /// Tous les moutons actifs de la bergerie de l'utilisateur.
+  /// L'administrateur peut voir tous les moutons actifs.
   Future<List<MoutonModel>> getMoutons() async {
-    if (AuthService.instance.isAdmin ||
-        AuthService.instance.isResponsable) {
-      final snapshot = await _firestore
-          .collection(_collection)
-          .where('actif', isEqualTo: true)
-          .get();
-
-      final moutons = snapshot.docs
-          .map(
-            (doc) => MoutonModel.fromMap({
-          ...doc.data(),
-          'id': doc.id,
-        }),
-      )
-          .toList();
-
-      moutons.sort(
-            (a, b) =>
-            a.nom.toLowerCase().compareTo(
-              b.nom.toLowerCase(),
-            ),
-      );
-
-      return moutons;
-    }
-
     final utilisateur = CurrentUserService.instance.currentUser;
 
-    if (utilisateur == null) {
+    if (AuthService.instance.isAdmin) {
+      return _getMoutonsFromQuery(
+        _firestore
+            .collection(_collection)
+            .where('actif', isEqualTo: true),
+      );
+    }
+
+    if (utilisateur == null || utilisateur.bergerieId.trim().isEmpty) {
       return [];
     }
 
-    // Le client est le propriétaire principal du mouton.
-    // La bergerie est facultative.
-    final clients = await FirebaseClientRepository().getClients();
+    return getMoutonsByBergerie(utilisateur.bergerieId);
+  }
 
-    if (clients.isEmpty) {
-      return [];
-    }
+  Future<List<MoutonModel>> _getMoutonsFromQuery(
+    Query<Map<String, dynamic>> query,
+  ) async {
+    final snapshot = await query.get();
 
-    final clientId = clients.first.id;
-
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('clientId', isEqualTo: clientId)
-        .where('actif', isEqualTo: true)
-        .get();
-
-    final resultat = snapshot.docs
+    final moutons = snapshot.docs
         .map(
           (doc) => MoutonModel.fromMap({
             ...doc.data(),
@@ -99,33 +72,13 @@ class FirebaseMoutonRepository {
         )
         .toList();
 
-    // Compatibilité avec les anciens moutons enregistrés avant clientId.
-    final bergeries =
-        await FirebaseBergerieRepository().getAllBergeries();
-
-    final idsExistants = resultat.map((m) => m.id).toSet();
-
-    for (final bergerie in bergeries) {
-      final moutons =
-          await getMoutonsByBergerie(bergerie.id);
-
-      for (final mouton in moutons) {
-        if (mouton.clientId.isEmpty &&
-            !idsExistants.contains(mouton.id)) {
-          resultat.add(mouton);
-          idsExistants.add(mouton.id);
-        }
-      }
-    }
-
-    resultat.sort(
-      (a, b) =>
-          a.nom.toLowerCase().compareTo(
-            b.nom.toLowerCase(),
-          ),
+    moutons.sort(
+      (a, b) => a.nom.toLowerCase().compareTo(
+        b.nom.toLowerCase(),
+      ),
     );
 
-    return resultat;
+    return moutons;
   }
 
   /// Un mouton par son id
@@ -147,67 +100,41 @@ class FirebaseMoutonRepository {
 
   /// Tous les moutons d'une bergerie
   Future<List<MoutonModel>> getMoutonsByBergerie(
-      String bergerieId,
-      ) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('bergerieId', isEqualTo: bergerieId)
-        .where('actif', isEqualTo: true)
-        .get();
+    String bergerieId,
+  ) async {
+    if (bergerieId.trim().isEmpty) {
+      return [];
+    }
 
-    final moutons = snapshot.docs
-        .map(
-          (doc) => MoutonModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      }),
-    )
-        .toList();
-
-    moutons.sort(
-          (a, b) =>
-          a.nom.toLowerCase().compareTo(
-            b.nom.toLowerCase(),
-          ),
+    return _getMoutonsFromQuery(
+      _firestore
+          .collection(_collection)
+          .where('bergerieId', isEqualTo: bergerieId)
+          .where('actif', isEqualTo: true),
     );
-
-    return moutons;
   }
 
   /// Tous les moutons d'un client.
   /// La bergerie n'est pas obligatoire.
   Future<List<MoutonModel>> getMoutonsByClient(
-      String clientId,
-      ) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('clientId', isEqualTo: clientId)
-        .where('actif', isEqualTo: true)
-        .get();
+    String clientId,
+  ) async {
+    if (clientId.trim().isEmpty) {
+      return [];
+    }
 
-    final moutons = snapshot.docs
-        .map(
-          (doc) => MoutonModel.fromMap({
-            ...doc.data(),
-            'id': doc.id,
-          }),
-        )
-        .toList();
-
-    moutons.sort(
-      (a, b) =>
-          a.nom.toLowerCase().compareTo(
-            b.nom.toLowerCase(),
-          ),
+    return _getMoutonsFromQuery(
+      _firestore
+          .collection(_collection)
+          .where('clientId', isEqualTo: clientId)
+          .where('actif', isEqualTo: true),
     );
-
-    return moutons;
   }
 
   /// Moutons du client qui ne sont rattachés à aucune bergerie.
   Future<List<MoutonModel>> getMoutonsSansBergerie(
-      String clientId,
-      ) async {
+    String clientId,
+  ) async {
     final moutons = await getMoutonsByClient(clientId);
 
     return moutons
@@ -219,8 +146,12 @@ class FirebaseMoutonRepository {
 
   /// Nombre de moutons d'une bergerie
   Future<int> getNombreMoutons(
-      String bergerieId,
-      ) async {
+    String bergerieId,
+  ) async {
+    if (bergerieId.trim().isEmpty) {
+      return 0;
+    }
+
     final snapshot = await _firestore
         .collection(_collection)
         .where('bergerieId', isEqualTo: bergerieId)
@@ -230,18 +161,17 @@ class FirebaseMoutonRepository {
     return snapshot.docs.length;
   }
 
-  /// Tous les béliers actifs
+  /// Tous les béliers actifs de la bergerie de l'utilisateur.
   Future<List<MoutonModel>> getBeliers() async {
     final moutons = await getMoutons();
 
     return moutons.where((m) {
       final sexe = m.sexe.toLowerCase();
-
       return sexe == 'male' || sexe == 'mâle';
     }).toList();
   }
 
-  /// Toutes les brebis actives
+  /// Toutes les brebis actives de la bergerie de l'utilisateur.
   Future<List<MoutonModel>> getBrebis() async {
     final moutons = await getMoutons();
 
@@ -252,11 +182,9 @@ class FirebaseMoutonRepository {
 
   /// Toutes les brebis d'une bergerie
   Future<List<MoutonModel>> getBrebisByBergerie(
-      String bergerieId,
-      ) async {
-    final moutons = await getMoutonsByBergerie(
-      bergerieId,
-    );
+    String bergerieId,
+  ) async {
+    final moutons = await getMoutonsByBergerie(bergerieId);
 
     return moutons.where((m) {
       return m.sexe.toLowerCase() == 'femelle';
@@ -265,15 +193,12 @@ class FirebaseMoutonRepository {
 
   /// Tous les béliers d'une bergerie
   Future<List<MoutonModel>> getBeliersByBergerie(
-      String bergerieId,
-      ) async {
-    final moutons = await getMoutonsByBergerie(
-      bergerieId,
-    );
+    String bergerieId,
+  ) async {
+    final moutons = await getMoutonsByBergerie(bergerieId);
 
     return moutons.where((m) {
       final sexe = m.sexe.toLowerCase();
-
       return sexe == 'male' || sexe == 'mâle';
     }).toList();
   }
