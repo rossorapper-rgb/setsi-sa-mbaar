@@ -179,7 +179,20 @@ class GestationModel {
   bool get annulee => statut == 'Annulée';
   int get joursGestation => DateTime.now().difference(dateSaillie).inDays;
   int get dureeGestation => joursGestation;
-  int get joursRestants => dateProbableMiseBas.difference(DateTime.now()).inDays;
+
+  /// Nombre de jours civils entre aujourd'hui et la mise bas prévue.
+  /// On ignore volontairement l'heure afin d'éviter qu'une date à minuit
+  /// soit comptée comme un jour de moins.
+  int get joursRestants {
+    final now = DateTime.now();
+    final aujourdHui = DateTime(now.year, now.month, now.day);
+    final miseBas = DateTime(
+      dateProbableMiseBas.year,
+      dateProbableMiseBas.month,
+      dateProbableMiseBas.day,
+    );
+    return miseBas.difference(aujourdHui).inDays;
+  }
 
   double get progression {
     const int dureeNormale = 150;
@@ -190,6 +203,6 @@ class GestationModel {
   }
 
   bool get miseBasEffectuee => dateMiseBas != null;
-  bool get estEnRetard => !miseBasEffectuee && DateTime.now().isAfter(dateProbableMiseBas);
+  bool get estEnRetard => !miseBasEffectuee && joursRestants < 0;
   bool get procheDeLaMiseBas => !miseBasEffectuee && joursRestants >= 0 && joursRestants <= 15;
 }
