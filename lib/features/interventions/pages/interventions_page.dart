@@ -39,8 +39,8 @@ class InterventionsPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () => ref.read(interventionProvider.notifier).rafraichir(),
         child: interventionsAsync.when(
-          loading: () => const ListView(
-            children: [
+          loading: () => ListView(
+            children: const [
               SizedBox(height: 260),
               Center(child: CircularProgressIndicator()),
             ],
@@ -49,7 +49,7 @@ class InterventionsPage extends ConsumerWidget {
             padding: const EdgeInsets.all(24),
             children: [
               const SizedBox(height: 120),
-              Icon(Icons.error_outline_rounded, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline_rounded, size: 60, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Impossible de charger les interventions.\n$error',
