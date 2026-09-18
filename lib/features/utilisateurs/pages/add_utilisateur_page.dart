@@ -407,6 +407,14 @@ class _AddUtilisateurPageState
         await repository.updateUtilisateur(utilisateur);
       }
 
+      // Invalide le cache du profil modifié afin que la fiche
+      // Détails utilisateur affiche immédiatement les nouvelles données.
+      if (!_modeCreation) {
+        ref.invalidate(
+          utilisateurProvider(widget.utilisateur!.id),
+        );
+      }
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
