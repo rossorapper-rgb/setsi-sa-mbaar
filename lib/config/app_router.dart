@@ -148,7 +148,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/clients/add', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const AddClientPage()),
     GoRoute(path: '/bergeries', redirect: (context, state) => _adminResponsableTechnicienRedirect(), builder: (context, state) => const BergeriesPage()),
     GoRoute(path: '/moutons', redirect: (context, state) => _moutonsRedirect(), builder: (context, state) => const MesMoutonsPage()),
-    GoRoute(path: '/moutons/add', redirect: (context, state) => _moutonsRedirect(), builder: (context, state) => const AddMoutonPage()),
+    GoRoute(path: '/moutons/add', redirect: (context, state) => _permissionRedirect('moutons.edit'), builder: (context, state) => const AddMoutonPage()),
     GoRoute(path: '/interventions', redirect: (context, state) => _interventionRedirect(), builder: (context, state) => const InterventionsPage()),
     GoRoute(path: '/gestations', redirect: (context, state) => _gestationRedirect(), builder: (context, state) => const GestationsPage()),
     GoRoute(path: '/naissances', redirect: (context, state) => _naissanceRedirect(), builder: (context, state) => const NaissancesPage()),
