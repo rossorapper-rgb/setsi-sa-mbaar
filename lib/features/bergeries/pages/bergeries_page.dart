@@ -15,6 +15,8 @@ class BergeriesPage extends StatefulWidget {
 }
 
 class _BergeriesPageState extends State<BergeriesPage> {
+final primary = Theme.of(context).colorScheme.primary;
+
 final FirebaseBergerieRepository _repository =
 FirebaseBergerieRepository();
 
@@ -228,7 +230,7 @@ contentPadding:
 EdgeInsets.zero,
 leading: const Icon(
 Icons.pets,
-color: Colors.green,
+color: primary,
 ),
 title: Text(
 "$nombre ${nombre > 1 ? "moutons" : "mouton"}",
