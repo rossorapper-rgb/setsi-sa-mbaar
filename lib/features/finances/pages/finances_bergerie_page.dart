@@ -103,7 +103,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     final alimentController = TextEditingController();
     final quantiteController = TextEditingController();
     String unite = 'kg';
-    String categorie = type == FinanceEntryType.depense ? 'Autre' : 'Vente';
+    String categorie = type == FinanceEntryType.depense ? 'Alimentation' : 'Vente';
     DateTime date = DateTime.now();
 
     final ok = await showDialog<bool>(
@@ -134,8 +134,14 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'Autre', child: Text('Autre dépense')),
-                      DropdownMenuItem(value: 'Alimentation', child: Text('Alimentation')),
+                      DropdownMenuItem(value: 'Alimentation', child: Text('🌾 Alimentation')),
+                      DropdownMenuItem(value: 'Sante', child: Text('💊 Santé / vétérinaire')),
+                      DropdownMenuItem(value: 'Entretien', child: Text('🧹 Entretien / nettoyage')),
+                      DropdownMenuItem(value: 'Transport', child: Text('🚚 Transport')),
+                      DropdownMenuItem(value: 'Salaires', child: Text('👷 Salaires / main-d’œuvre')),
+                      DropdownMenuItem(value: 'Materiel', child: Text('🔧 Matériel / équipement')),
+                      DropdownMenuItem(value: 'EauElectricite', child: Text('💡 Électricité / eau')),
+                      DropdownMenuItem(value: 'Autre', child: Text('📦 Autres')),
                     ],
                     onChanged: (value) {
                       if (value != null) setDialogState(() => categorie = value);
