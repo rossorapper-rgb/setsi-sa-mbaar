@@ -143,9 +143,9 @@ class DashboardDrawer extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   onTap: () async {
-                    await FirebaseAuth.instance.signOut();
                     CurrentUserService.instance.clear();
                     CurrentBergerieConfig.instance.clear();
+                    await FirebaseAuth.instance.signOut();
 
                     if (!context.mounted) return;
                     context.go('/login');
