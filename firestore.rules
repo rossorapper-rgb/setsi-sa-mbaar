@@ -6,6 +6,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function currentUser() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
     function isAdmin() { return signedIn() && currentUser().data.role == 'admin' && currentUser().data.actif == true; }
+    function isResponsable() { return signedIn() && currentUser().data.role == 'responsable' && currentUser().data.actif == true; }
     function belongsToBergerie(bergerieId) { return signedIn() && currentUser().data.actif == true && currentUser().data.bergerieId == bergerieId; }
     function belongsToClient(clientId) { return signedIn() && currentUser().data.actif == true && currentUser().data.bergerieId != null && currentUser().data.bergerieId != '' && get(/databases/$(database)/documents/bergeries/$(currentUser().data.bergerieId)).data.clientId == clientId; }
     function canCreateMouton() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
@@ -104,20 +105,20 @@ service cloud.firestore {
     }
 
     match /finance_entries/{entryId} {
-      allow read: if isAdmin() ||
+      allow read: if isAdmin() || isResponsable() ||
         (belongsToBergerie(resource.data.bergerieId) &&
          ((resource.data.type == 'depense' && canViewDepenses()) ||
           (resource.data.type == 'vente' && canViewVentes())));
-      allow create: if isAdmin() ||
+      allow create: if isAdmin() || isResponsable() ||
         (belongsToBergerie(request.resource.data.bergerieId) &&
          ((request.resource.data.type == 'depense' && canEditDepenses()) ||
           (request.resource.data.type == 'vente' && canEditVentes())));
-      allow update: if isAdmin() ||
+      allow update: if isAdmin() || isResponsable() ||
         (belongsToBergerie(resource.data.bergerieId) &&
          request.resource.data.bergerieId == resource.data.bergerieId &&
          ((resource.data.type == 'depense' && request.resource.data.type == 'depense' && canEditDepenses()) ||
           (resource.data.type == 'vente' && request.resource.data.type == 'vente' && canEditVentes())));
-      allow delete: if isAdmin() ||
+      allow delete: if isAdmin() || isResponsable() ||
         (belongsToBergerie(resource.data.bergerieId) &&
          ((resource.data.type == 'depense' && canEditDepenses()) ||
           (resource.data.type == 'vente' && canEditVentes())));
