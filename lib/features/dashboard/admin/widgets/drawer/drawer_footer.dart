@@ -30,7 +30,7 @@ class DrawerFooter extends StatelessWidget {
               CurrentBergerieConfig.instance.clear();
 
               if (!context.mounted) return;
-              context.go('/login');
+              context.replace('/login');
             },
           ),
 
