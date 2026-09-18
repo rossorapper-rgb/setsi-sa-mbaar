@@ -34,6 +34,13 @@ import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
 import '../features/utilisateurs/repository/firebase_utilisateur_repository.dart';
 
+String? _permissionRedirect(String permission) {
+  final session = CurrentUserService.instance;
+  if (!session.isLoggedIn) return '/login';
+  if (session.hasPermission(permission)) return null;
+  return '/dashboard/bergerie';
+}
+
 String? _adminOnlyRedirect() {
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
@@ -58,6 +65,8 @@ String? _adminResponsableTechnicienRedirect() {
 }
 
 String? _moutonsRedirect() {
+  final permission = _permissionRedirect('moutons.view');
+  if (permission != null) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -67,6 +76,8 @@ String? _moutonsRedirect() {
 }
 
 String? _interventionRedirect() {
+  final permission = _permissionRedirect('interventions.view');
+  if (permission != null) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -75,6 +86,8 @@ String? _interventionRedirect() {
 }
 
 String? _gestationRedirect() {
+  final permission = _permissionRedirect('gestations.view');
+  if (permission != null) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -84,6 +97,8 @@ String? _gestationRedirect() {
 }
 
 String? _santeRedirect() {
+  final permission = _permissionRedirect('sante.view');
+  if (permission != null) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -93,6 +108,8 @@ String? _santeRedirect() {
 }
 
 String? _alimentationRedirect() {
+  final permission = _permissionRedirect('alimentation.view');
+  if (permission != null) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -102,6 +119,9 @@ String? _alimentationRedirect() {
 }
 
 String? _financeBergerieRedirect() {
+  final permission = _permissionRedirect('depenses.view');
+  if (permission != null &&
+      !_permissionRedirect('depenses.edit').toString().contains('null')) return permission;
   final currentUser = CurrentUserService.instance.currentUser;
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
@@ -110,8 +130,8 @@ String? _financeBergerieRedirect() {
   return null;
 }
 
-String? _naissanceRedirect() => _financeBergerieRedirect();
-String? _rapportBergerieRedirect() => _financeBergerieRedirect();
+String? _naissanceRedirect() => _permissionRedirect('naissances.view');
+String? _rapportBergerieRedirect() => _permissionRedirect('rapports_financiers.view');
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -128,11 +148,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/gestations', redirect: (context, state) => _gestationRedirect(), builder: (context, state) => const GestationsPage()),
     GoRoute(path: '/naissances', redirect: (context, state) => _naissanceRedirect(), builder: (context, state) => const NaissancesPage()),
     GoRoute(path: '/rapports', redirect: (context, state) => _rapportBergerieRedirect(), builder: (context, state) => const RapportsBergeriePage()),
-    GoRoute(path: '/parametres', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const ParametresBergeriePage()),
-    GoRoute(path: '/parametres/informations', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const InformationsBergeriePage()),
-    GoRoute(path: '/parametres/personnalisation', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const PersonnalisationBergeriePage()),
-    GoRoute(path: '/parametres/securite', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const SecuriteComptePage()),
-    GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
+    GoRoute(path: '/parametres', redirect: (context, state) => _permissionRedirect('parametres.view'), builder: (context, state) => const ParametresBergeriePage()),
+    GoRoute(path: '/parametres/informations', redirect: (context, state) => _permissionRedirect('parametres.edit'), builder: (context, state) => const InformationsBergeriePage()),
+    GoRoute(path: '/parametres/personnalisation', redirect: (context, state) => _permissionRedirect('parametres.edit'), builder: (context, state) => const PersonnalisationBergeriePage()),
+    GoRoute(path: '/parametres/securite', redirect: (context, state) => _permissionRedirect('parametres.view'), builder: (context, state) => const SecuriteComptePage()),
+    GoRoute(path: '/allo-veto', redirect: (context, state) => _permissionRedirect('veto.view'), builder: (context, state) => const AlloVetoPage()),
     GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
     GoRoute(path: '/finances', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const FinancesBergeriePage()),
@@ -142,14 +162,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/creances', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const CreancesPage()),
     GoRoute(path: '/dashboard-financier', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const DashboardFinancierPage()),
     GoRoute(path: '/rapports-financiers', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const RapportsFinanciersPage()),
-    GoRoute(path: '/utilisateurs', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const UtilisateursPage()),
-    GoRoute(path: '/utilisateurs/add', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const AddUtilisateurPage()),
-    GoRoute(path: '/utilisateurs/details/:id', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) {
+    GoRoute(path: '/utilisateurs', redirect: (context, state) => _permissionRedirect('utilisateurs.view'), builder: (context, state) => const UtilisateursPage()),
+    GoRoute(path: '/utilisateurs/add', redirect: (context, state) => _permissionRedirect('utilisateurs.manage'), builder: (context, state) => const AddUtilisateurPage()),
+    GoRoute(path: '/utilisateurs/details/:id', redirect: (context, state) => _permissionRedirect('utilisateurs.view'), builder: (context, state) {
       final id = state.pathParameters['id'];
       if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
       return UtilisateurDetailsPage(utilisateurId: id);
     }),
-    GoRoute(path: '/utilisateurs/edit/:id', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) {
+    GoRoute(path: '/utilisateurs/edit/:id', redirect: (context, state) => _permissionRedirect('utilisateurs.manage'), builder: (context, state) {
       final id = state.pathParameters['id'];
       if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
       return FutureBuilder(
