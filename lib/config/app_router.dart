@@ -118,8 +118,6 @@ String? _alimentationRedirect() {
       session.hasPermission('alimentation.view') ||
       session.hasPermission('alimentation.edit');
   if (!canAccess) return '/dashboard/bergerie';
-  if (currentUser == null) return '/login';
-  final role = CurrentUserService.instance.role;
   if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) return '/dashboard/bergerie';
   if (role != UserRole.admin && (currentUser.bergerieId == null || currentUser.bergerieId!.trim().isEmpty)) return '/dashboard/bergerie';
   return null;
