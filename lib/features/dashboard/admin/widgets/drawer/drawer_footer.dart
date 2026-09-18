@@ -25,9 +25,9 @@ class DrawerFooter extends StatelessWidget {
               'Déconnexion',
             ),
             onTap: () async {
-              await FirebaseAuth.instance.signOut();
               CurrentUserService.instance.clear();
               CurrentBergerieConfig.instance.clear();
+              await FirebaseAuth.instance.signOut();
 
               if (!context.mounted) return;
               context.replace('/login');
