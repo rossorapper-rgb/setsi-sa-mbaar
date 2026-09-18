@@ -71,6 +71,12 @@ class CurrentUserService {
 
   /// Vérifie une permission
   bool hasPermission(String permission) {
+    // L'administrateur et le responsable ont accès à tous les modules.
+    // Les permissions granulaires s'appliquent aux autres rôles.
+    if (isAdmin || isResponsable) {
+      return true;
+    }
+
     return permissions[permission] ?? false;
   }
 }
