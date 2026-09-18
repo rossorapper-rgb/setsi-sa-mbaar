@@ -16,6 +16,11 @@ service cloud.firestore {
     function canManageSante() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canManageAlimentation() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canManageInterventions() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
+    function canViewDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['depenses.view'] == true); }
+    function canEditDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['depenses.edit'] == true); }
+    function canViewVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['ventes.view'] == true); }
+    function canEditVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['ventes.edit'] == true); }
+
     function canManageFinance() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function belongsToMouton(moutonId) { return signedIn() && currentUser().data.actif == true && exists(/databases/$(database)/documents/moutons/$(moutonId)) && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId; }
 
@@ -99,10 +104,23 @@ service cloud.firestore {
     }
 
     match /finance_entries/{entryId} {
-      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
-      allow create: if isAdmin() || (canManageFinance() && belongsToBergerie(request.resource.data.bergerieId));
-      allow update: if isAdmin() || (canManageFinance() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId);
-      allow delete: if isAdmin() || (canManageFinance() && belongsToBergerie(resource.data.bergerieId));
+      allow read: if isAdmin() ||
+        (belongsToBergerie(resource.data.bergerieId) &&
+         ((resource.data.type == 'depense' && canViewDepenses()) ||
+          (resource.data.type == 'vente' && canViewVentes())));
+      allow create: if isAdmin() ||
+        (belongsToBergerie(request.resource.data.bergerieId) &&
+         ((request.resource.data.type == 'depense' && canEditDepenses()) ||
+          (request.resource.data.type == 'vente' && canEditVentes())));
+      allow update: if isAdmin() ||
+        (belongsToBergerie(resource.data.bergerieId) &&
+         request.resource.data.bergerieId == resource.data.bergerieId &&
+         ((resource.data.type == 'depense' && request.resource.data.type == 'depense' && canEditDepenses()) ||
+          (resource.data.type == 'vente' && request.resource.data.type == 'vente' && canEditVentes())));
+      allow delete: if isAdmin() ||
+        (belongsToBergerie(resource.data.bergerieId) &&
+         ((resource.data.type == 'depense' && canEditDepenses()) ||
+          (resource.data.type == 'vente' && canEditVentes())));
     }
 
     match /moutons/{moutonId} {
