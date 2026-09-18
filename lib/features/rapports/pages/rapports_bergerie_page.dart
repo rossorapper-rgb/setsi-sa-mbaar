@@ -170,7 +170,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     final solde = _ventes - _depenses;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: config.couleurPrimaire,
         foregroundColor: Colors.white,
@@ -204,13 +204,13 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                       const SizedBox(height: 24),
                       const Text('Finances du mois', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      _financeCard('Ventes', _ventes, Icons.trending_up, Colors.green),
+                      _financeCard('Ventes', _ventes, Icons.trending_up, config.couleurPrimaire),
                       const SizedBox(height: 10),
-                      _financeCard('Dépenses', _depenses, Icons.trending_down, Colors.red),
+                      _financeCard('Dépenses', _depenses, Icons.trending_down, config.couleurSecondaire),
                       const SizedBox(height: 10),
                       _financeCard('Dont alimentation', _alimentation, Icons.restaurant, config.couleurSecondaire),
                       const SizedBox(height: 10),
-                      _financeCard('Solde', solde, Icons.account_balance_wallet, solde >= 0 ? Colors.green : Colors.red),
+                      _financeCard('Solde', solde, Icons.account_balance_wallet, solde >= 0 ? config.couleurPrimaire : config.couleurSecondaire),
                     ],
                   ),
                 ),
