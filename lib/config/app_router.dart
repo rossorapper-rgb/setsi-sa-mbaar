@@ -108,9 +108,16 @@ String? _santeRedirect() {
 }
 
 String? _alimentationRedirect() {
-  final permission = _permissionRedirect('alimentation.view');
-  if (permission != null) return permission;
-  final currentUser = CurrentUserService.instance.currentUser;
+  final session = CurrentUserService.instance;
+  if (!session.isLoggedIn) return '/login';
+  final currentUser = session.currentUser;
+  if (currentUser == null) return '/login';
+  final role = session.role;
+  final canAccess = session.isAdmin ||
+      role == UserRole.responsable ||
+      session.hasPermission('alimentation.view') ||
+      session.hasPermission('alimentation.edit');
+  if (!canAccess) return '/dashboard/bergerie';
   if (currentUser == null) return '/login';
   final role = CurrentUserService.instance.role;
   if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) return '/dashboard/bergerie';
