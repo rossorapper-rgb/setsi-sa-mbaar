@@ -116,14 +116,16 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: libelleController,
-                  decoration: InputDecoration(
-                    labelText: type == FinanceEntryType.depense ? 'Libellé' : 'Produit / mouton vendu',
-                    border: const OutlineInputBorder(),
+                if (type == FinanceEntryType.vente || categorie == 'Autre') ...[
+                  TextField(
+                    controller: libelleController,
+                    decoration: InputDecoration(
+                      labelText: type == FinanceEntryType.depense ? 'Libellé' : 'Produit / mouton vendu',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                ],
                 if (type == FinanceEntryType.depense) ...[
                   DropdownButtonFormField<String>(
                     initialValue: categorie,
@@ -237,13 +239,28 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                   montantController.text.trim().replaceAll(',', '.'),
                 );
 
-                if (libelle.isEmpty || montant == null || montant <= 0) {
+                if (montant == null || montant <= 0) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     const SnackBar(
-                      content: Text('Veuillez renseigner un libellé et un montant valide.'),
+                      content: Text('Veuillez renseigner un montant valide.'),
                     ),
                   );
                   return;
+                }
+
+                if (type != FinanceEntryType.depense || categorie == 'Autre') {
+                  if (libelle.isEmpty) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          type == FinanceEntryType.vente
+                              ? 'Veuillez renseigner le produit ou le mouton vendu.'
+                              : 'Veuillez renseigner le libellé.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                 }
 
                 if (categorie == 'Alimentation') {
@@ -306,16 +323,40 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez renseigner une quantité valide.')));
       return;
     }
-    if (libelle.isEmpty || montant == null || montant <= 0) {
+    if (montant == null || montant <= 0) {
       libelleController.dispose();
       montantController.dispose();
       observationController.dispose();
+      alimentController.dispose();
+      quantiteController.dispose();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Veuillez renseigner un libellé et un montant valide.')),
+          const SnackBar(content: Text('Veuillez renseigner un montant valide.')),
         );
       }
       return;
+    }
+
+    if (type == FinanceEntryType.vente || categorie == 'Autre') {
+      if (libelle.isEmpty) {
+        libelleController.dispose();
+        montantController.dispose();
+        observationController.dispose();
+        alimentController.dispose();
+        quantiteController.dispose();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                type == FinanceEntryType.vente
+                    ? 'Veuillez renseigner le produit ou le mouton vendu.'
+                    : 'Veuillez renseigner le libellé.',
+              ),
+            ),
+          );
+        }
+        return;
+      }
     }
 
     try {
@@ -329,9 +370,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           unite: unite,
           prix: montant,
           date: date,
-          observation: observationController.text.trim().isEmpty
-              ? libelle
-              : '${libelle.isEmpty ? '' : '$libelle — '}${observationController.text.trim()}',
+          observation: observationController.text.trim(),
         );
         await _alimentationRepository.ajouter(alimentation);
       } else {
