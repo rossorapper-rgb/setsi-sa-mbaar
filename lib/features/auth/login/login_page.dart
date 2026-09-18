@@ -15,7 +15,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController telephoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -23,22 +23,26 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    emailController.dispose();
+    telephoneController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez saisir votre email et votre mot de passe.')));
+    if (telephoneController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez saisir votre numéro de téléphone et votre mot de passe.')));
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
+      final telephone = telephoneController.text.trim();
+      final emailTechnique = FirebaseUtilisateurRepository()
+          .genererEmailTechnique(telephone);
+
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
+        email: emailTechnique,
         password: passwordController.text.trim(),
       );
       final firebaseUser = credential.user;
@@ -76,8 +80,8 @@ class _LoginPageState extends State<LoginPage> {
       switch (e.code) {
         case 'user-not-found': message = 'Utilisateur introuvable.'; break;
         case 'wrong-password': message = 'Mot de passe incorrect.'; break;
-        case 'invalid-email': message = 'Adresse email invalide.'; break;
-        case 'invalid-credential': message = 'Email ou mot de passe incorrect.'; break;
+        case 'invalid-email': message = 'Numéro de téléphone invalide.'; break;
+        case 'invalid-credential': message = 'Numéro de téléphone ou mot de passe incorrect.'; break;
         case 'user-disabled': message = 'Ce compte utilisateur est désactivé.'; break;
         default: message = e.message ?? 'Erreur de connexion.';
       }
@@ -111,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
                 const Text('Le premier service professionnel\nde lavage de moutons au Sénégal', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 15)),
                 const SizedBox(height: 35),
-                TextField(controller: emailController, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, onSubmitted: (_) => FocusScope.of(context).nextFocus(), decoration: InputDecoration(labelText: 'Adresse email', prefixIcon: const Icon(Icons.email_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
+                TextField(controller: telephoneController, keyboardType: TextInputType.phone, textInputAction: TextInputAction.next, onSubmitted: (_) => FocusScope.of(context).nextFocus(), decoration: InputDecoration(labelText: 'Numéro de téléphone', hintText: '77 123 45 67', prefixIcon: const Icon(Icons.phone_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
                 const SizedBox(height: 20),
                 TextField(
                   controller: passwordController,
