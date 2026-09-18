@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../alimentation/models/alimentation_model.dart';
+import '../../alimentation/repository/firebase_alimentation_repository.dart';
+import 'package:uuid/uuid.dart';
 import '../models/finance_entry_model.dart';
 import '../repository/firebase_finance_repository.dart';
 import '../../../core/session/current_user_service.dart';
@@ -16,6 +18,8 @@ class FinancesBergeriePage extends StatefulWidget {
 
 class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
   final _repository = FirebaseFinanceRepository();
+  final _alimentationRepository = FirebaseAlimentationRepository();
+  final _uuid = const Uuid();
   final _money = NumberFormat('#,##0', 'fr_FR');
   final _dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -96,6 +100,10 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     final libelleController = TextEditingController();
     final montantController = TextEditingController();
     final observationController = TextEditingController();
+    final alimentController = TextEditingController();
+    final quantiteController = TextEditingController();
+    String unite = 'kg';
+    String categorie = type == FinanceEntryType.depense ? 'Autre' : 'Vente';
     DateTime date = DateTime.now();
 
     final ok = await showDialog<bool>(
@@ -115,6 +123,68 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (type == FinanceEntryType.depense) ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: categorie,
+                    decoration: const InputDecoration(
+                      labelText: 'Catégorie',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Autre', child: Text('Autre dépense')),
+                      DropdownMenuItem(value: 'Alimentation', child: Text('Alimentation')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setDialogState(() => categorie = value);
+                    },
+                  ),
+                  if (categorie == 'Alimentation') ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: alimentController,
+                      decoration: const InputDecoration(
+                        labelText: 'Aliment',
+                        hintText: 'Ex. Maïs, son, aliment bétail...',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: quantiteController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Quantité',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: unite,
+                            decoration: const InputDecoration(
+                              labelText: 'Unité',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'kg', child: Text('kg')),
+                              DropdownMenuItem(value: 'sac', child: Text('sac')),
+                              DropdownMenuItem(value: 'litre', child: Text('litre')),
+                              DropdownMenuItem(value: 'unité', child: Text('unité')),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) setDialogState(() => unite = value);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
                 TextField(
                   controller: montantController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -172,11 +242,31 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       libelleController.dispose();
       montantController.dispose();
       observationController.dispose();
+      alimentController.dispose();
+      quantiteController.dispose();
       return;
     }
 
     final libelle = libelleController.text.trim();
     final montant = double.tryParse(montantController.text.trim().replaceAll(',', '.'));
+    if (categorie == 'Alimentation' && alimentController.text.trim().isEmpty) {
+      alimentController.dispose();
+      quantiteController.dispose();
+      libelleController.dispose();
+      montantController.dispose();
+      observationController.dispose();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez renseigner l’aliment.')));
+      return;
+    }
+    if (categorie == 'Alimentation' && (double.tryParse(quantiteController.text.trim().replaceAll(',', '.')) ?? 0) <= 0) {
+      alimentController.dispose();
+      quantiteController.dispose();
+      libelleController.dispose();
+      montantController.dispose();
+      observationController.dispose();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez renseigner une quantité valide.')));
+      return;
+    }
     if (libelle.isEmpty || montant == null || montant <= 0) {
       libelleController.dispose();
       montantController.dispose();
@@ -190,13 +280,30 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     }
 
     try {
-      await _repository.ajouter(
-        type: type,
-        libelle: libelle,
-        montant: montant,
-        date: date,
-        observation: observationController.text,
-      );
+      if (type == FinanceEntryType.depense && categorie == 'Alimentation') {
+        final quantite = double.parse(quantiteController.text.trim().replaceAll(',', '.'));
+        final alimentation = AlimentationModel(
+          id: _uuid.v4(),
+          bergerieId: _session.bergerieId!.trim(),
+          aliment: alimentController.text.trim(),
+          quantite: quantite,
+          unite: unite,
+          prix: montant,
+          date: date,
+          observation: observationController.text.trim().isEmpty
+              ? libelle
+              : '${libelle.isEmpty ? '' : '$libelle — '}${observationController.text.trim()}',
+        );
+        await _alimentationRepository.ajouter(alimentation);
+      } else {
+        await _repository.ajouter(
+          type: type,
+          libelle: libelle,
+          montant: montant,
+          date: date,
+          observation: observationController.text,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
