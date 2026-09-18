@@ -47,7 +47,8 @@ class _AlimentationPageState extends State<AlimentationPage> {
         throw Exception('Aucune bergerie n’est associée à ce compte.');
       }
 
-      final alimentations = await _repository.getParBergerie(bergerieId);
+      final canView = CurrentUserService.instance.hasPermission('alimentation.view');
+      final alimentations = canView ? await _repository.getParBergerie(bergerieId) : <AlimentationModel>[];
 
       if (!mounted) return;
       setState(() {
@@ -129,6 +130,8 @@ class _AlimentationPageState extends State<AlimentationPage> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
     final compact = MediaQuery.of(context).size.width < 700;
+    final canView = CurrentUserService.instance.hasPermission('alimentation.view');
+    final canEdit = CurrentUserService.instance.hasPermission('alimentation.edit');
 
     return Scaffold(
       appBar: AppBar(
@@ -145,7 +148,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
           ),
         ],
       ),
-      floatingActionButton: !_loading && _erreur == null && _bergerieId.isNotEmpty
+      floatingActionButton: !_loading && _erreur == null && _bergerieId.isNotEmpty && canEdit
           ? FloatingActionButton.extended(
               onPressed: () => _ouvrirFormulaire(),
               icon: const Icon(Icons.add),
@@ -197,9 +200,9 @@ class _AlimentationPageState extends State<AlimentationPage> {
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 18),
-          _resumeCard(compact),
-          const SizedBox(height: 18),
-          TextField(
+          if (canView) _resumeCard(compact),
+          if (canView) const SizedBox(height: 18),
+          if (canView) TextField(
             onChanged: (value) => setState(() => _recherche = value),
             decoration: InputDecoration(
               hintText: 'Rechercher un aliment',
@@ -208,8 +211,21 @@ class _AlimentationPageState extends State<AlimentationPage> {
               filled: true,
             ),
           ),
-          const SizedBox(height: 20),
-          if (filtered.isEmpty)
+          if (canView) const SizedBox(height: 20),
+          if (!canView)
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Icon(Icons.lock_outline),
+                    SizedBox(width: 10),
+                    Expanded(child: Text('Vous pouvez enregistrer une alimentation, mais les achats et montants enregistrés ne sont pas visibles avec votre niveau d’accès.')),
+                  ],
+                ),
+              ),
+            ),
+          if (canView && filtered.isEmpty)
             Card(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -233,7 +249,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
                 ),
               ),
             )
-          else
+          else if (canView)
             ...filtered.map(_buildCard),
         ],
       ),
