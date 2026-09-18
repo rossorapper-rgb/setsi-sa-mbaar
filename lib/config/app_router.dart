@@ -22,6 +22,7 @@ import '../features/rapports/pages/rapports_bergerie_page.dart';
 import '../features/parametres/pages/parametres_bergerie_page.dart';
 import '../features/parametres/pages/informations_bergerie_page.dart';
 import '../features/parametres/pages/personnalisation_bergerie_page.dart';
+import '../features/parametres/pages/securite_compte_page.dart';
 import '../features/abonnements/pages/abonnements_page.dart';
 import '../features/finances/pages/finances_home_page.dart';
 import '../features/finances/pages/paiements_page.dart';
@@ -130,6 +131,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/parametres', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const ParametresBergeriePage()),
     GoRoute(path: '/parametres/informations', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const InformationsBergeriePage()),
     GoRoute(path: '/parametres/personnalisation', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const PersonnalisationBergeriePage()),
+    GoRoute(path: '/parametres/securite', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const SecuriteComptePage()),
     GoRoute(path: '/allo-veto', builder: (context, state) => const AlloVetoPage()),
     GoRoute(path: '/carnet-sante', redirect: (context, state) => _santeRedirect(), builder: (context, state) => const CarnetSantePage()),
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
