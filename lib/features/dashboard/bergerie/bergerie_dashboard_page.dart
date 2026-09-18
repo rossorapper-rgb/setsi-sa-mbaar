@@ -22,7 +22,7 @@ class BergerieDashboardPage extends StatelessWidget {
     final desktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC),
+      backgroundColor: config.couleurFond,
       appBar: desktop
           ? null
           : AppBar(
@@ -343,7 +343,7 @@ class _DashboardContent extends StatelessWidget {
                 const CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.person_rounded, color: Colors.blue),
+                  child: Icon(Icons.person_rounded, color: primary),
                 ),
               ],
             ),
