@@ -33,8 +33,9 @@ class BergerieConfig {
         bergerieId: 'setsi-sa-mbaar',
         nomBergerie: "SET'S I SA MBAAR",
         nomApplication: "SET'S I SA MBAAR",
-        couleurPrimaire: Color(0xFF123B63),
-        couleurSecondaire: Color(0xFF2E9E5B),
+        couleurPrimaire: Color(0xFF1597B7),
+        couleurSecondaire: Color(0xFFF59A00),
+        couleurFond: Colors.white,
         slogan: 'Le partenaire de votre élevage',
       );
 
@@ -98,8 +99,8 @@ class BergerieConfig {
         nomBergerie: map['nomBergerie'] as String? ?? '',
         nomApplication: map['nomApplication'] as String? ?? '',
         logo: map['logo'] as String?,
-        couleurPrimaire: _colorFromMap(map['couleurPrimaire'], const Color(0xFF123B63)),
-        couleurSecondaire: _colorFromMap(map['couleurSecondaire'], const Color(0xFF2E9E5B)),
+        couleurPrimaire: _colorFromMap(map['couleurPrimaire'], const Color(0xFF1597B7)),
+        couleurSecondaire: _colorFromMap(map['couleurSecondaire'], const Color(0xFFF59A00)),
         couleurFond: _colorFromMap(map['couleurFond'], Colors.white),
         slogan: map['slogan'] as String?,
         telephone: map['telephone'] as String?,
