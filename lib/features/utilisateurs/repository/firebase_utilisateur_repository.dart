@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../models/utilisateur_model.dart';
+import '../../../core/session/current_user_service.dart';
 
 class FirebaseUtilisateurRepository {
   FirebaseUtilisateurRepository({
@@ -10,6 +11,7 @@ class FirebaseUtilisateurRepository {
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+  final CurrentUserService _session = CurrentUserService.instance;
 
   static const String _collection = 'users';
 
@@ -200,13 +202,11 @@ class FirebaseUtilisateurRepository {
   /// Tous les utilisateurs actifs
   /// ===========================
   Future<List<UtilisateurModel>> getUtilisateurs() async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where(
-      'actif',
-      isEqualTo: true,
-    )
-        .get();
+    Query<Map<String, dynamic>> query = _firestore.collection(_collection).where('actif', isEqualTo: true);
+    if (!_session.isAdmin && _session.bergerieId != null && _session.bergerieId!.isNotEmpty) {
+      query = query.where('bergerieId', isEqualTo: _session.bergerieId);
+    }
+    final snapshot = await query.get();
 
     final utilisateurs = snapshot.docs
         .map(
@@ -398,13 +398,11 @@ class FirebaseUtilisateurRepository {
   /// Flux des utilisateurs actifs
   /// ===========================
   Stream<List<UtilisateurModel>> streamUtilisateurs() {
-    return _firestore
-        .collection(_collection)
-        .where(
-      'actif',
-      isEqualTo: true,
-    )
-        .snapshots()
+    Query<Map<String, dynamic>> query = _firestore.collection(_collection).where('actif', isEqualTo: true);
+    if (!_session.isAdmin && _session.bergerieId != null && _session.bergerieId!.isNotEmpty) {
+      query = query.where('bergerieId', isEqualTo: _session.bergerieId);
+    }
+    return query.snapshots()
         .map((snapshot) {
       final utilisateurs = snapshot.docs
           .map(
