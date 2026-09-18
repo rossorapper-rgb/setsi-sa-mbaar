@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/current_bergerie_config.dart';
 import '../../../../core/session/current_user_service.dart';
+import '../../../../core/navigation/logout_navigation.dart';
 
 import '../models/drawer_menu_item.dart';
 import '../services/drawer_menu_service.dart';
@@ -146,7 +147,8 @@ class DashboardDrawer extends StatelessWidget {
                     await FirebaseAuth.instance.signOut();
 
                     if (!context.mounted) return;
-                    context.replace('/login');
+                    navigateToLoginAfterLogout();
+                    context.go('/login');
                   },
                 ),
               ),
