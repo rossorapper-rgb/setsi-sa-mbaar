@@ -618,7 +618,7 @@ class _Actions extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
+              itemCount: 5,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
                 crossAxisSpacing: 8,
@@ -630,7 +630,6 @@ class _Actions extends StatelessWidget {
                   _ActionData(Icons.pets_rounded, 'Ajouter un mouton', primary, '/moutons'),
                   _ActionData(Icons.favorite_rounded, 'Enregistrer une saillie', orange, '/gestations'),
                   _ActionData(Icons.medical_services_rounded, 'Enregistrer un soin', primary, '/carnet-sante'),
-                  _ActionData(Icons.grass_rounded, 'Ajouter alimentation', orange, '/alimentation'),
                   _ActionData(Icons.assignment_rounded, 'Enregistrer activité', primary, '/interventions'),
                   _ActionData(Icons.account_balance_wallet_rounded, 'Voir mes finances', orange, '/finances'),
                 ];
