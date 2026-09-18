@@ -5,6 +5,7 @@ import '../../../core/widgets/app_action_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/session/current_user_service.dart';
 
 import '../../bergeries/models/bergerie_model.dart';
 import '../../bergeries/repository/firebase_bergerie_repository.dart';
@@ -47,6 +48,8 @@ class _AddUtilisateurPageState
   bool _actif = true;
   bool _loading = false;
 
+  final CurrentUserService _session = CurrentUserService.instance;
+
   bool get _modeCreation => widget.utilisateur == null;
 
   @override
@@ -54,6 +57,10 @@ class _AddUtilisateurPageState
     super.initState();
 
     _futureBergeries = _chargerBergeries();
+
+    if (!_session.isAdmin) {
+      _bergerieId = _session.bergerieId;
+    }
 
     if (widget.utilisateur != null) {
       final u = widget.utilisateur!;
@@ -69,6 +76,8 @@ class _AddUtilisateurPageState
   }
 
   Future<List<BergerieModel>> _chargerBergeries() async {
+    if (!_session.isAdmin) return [];
+
     final bergeries = await _bergerieRepository.getAllBergeries();
 
     bergeries.removeWhere(
@@ -153,7 +162,9 @@ class _AddUtilisateurPageState
                     label: "Rôle",
                     icon: Icons.badge,
                     value: _role,
-                    items: UserRole.values
+                    items: (_session.isAdmin
+                            ? UserRole.values
+                            : UserRole.values.where((role) => role != UserRole.admin))
                         .map(
                           (role) => DropdownMenuItem<UserRole>(
                             value: role,
@@ -174,7 +185,7 @@ class _AddUtilisateurPageState
                     },
                   ),
 
-                  if (_bergerieObligatoire) ...[
+                  if (_bergerieObligatoire && _session.isAdmin) ...[
                     const SizedBox(height: 18),
 
                     FutureBuilder<List<BergerieModel>>(
@@ -366,8 +377,8 @@ class _AddUtilisateurPageState
           prenom: _prenomController.text.trim(),
           telephone: telephone,
           emailTechnique: emailTechnique,
-          role: _role,
-          bergerieId: _bergerieObligatoire ? _bergerieId : null,
+          role: _session.isAdmin ? _role : (_role == UserRole.admin ? UserRole.client : _role),
+          bergerieId: _session.isAdmin ? (_bergerieObligatoire ? _bergerieId : null) : _session.bergerieId,
           actif: _actif,
           dateCreation: DateTime.now(),
           derniereConnexion: null,
@@ -388,8 +399,8 @@ class _AddUtilisateurPageState
           prenom: _prenomController.text.trim(),
           telephone: telephone,
           emailTechnique: emailTechnique,
-          role: _role,
-          bergerieId: _bergerieObligatoire ? _bergerieId : null,
+          role: _session.isAdmin ? _role : (_role == UserRole.admin ? UserRole.client : _role),
+          bergerieId: _session.isAdmin ? (_bergerieObligatoire ? _bergerieId : null) : _session.bergerieId,
           actif: _actif,
         );
 
