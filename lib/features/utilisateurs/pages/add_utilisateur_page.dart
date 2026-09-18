@@ -13,6 +13,7 @@ import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/user_role.dart';
 import '../models/utilisateur_model.dart';
 import '../providers/utilisateur_provider.dart';
+import '../models/user_permissions.dart';
 
 class AddUtilisateurPage extends ConsumerStatefulWidget {
   final UtilisateurModel? utilisateur;
@@ -48,6 +49,8 @@ class _AddUtilisateurPageState
   bool _actif = true;
   bool _loading = false;
 
+  final Map<String, bool> _permissions = createDefaultPermissions();
+
   final CurrentUserService _session = CurrentUserService.instance;
 
   bool get _modeCreation => widget.utilisateur == null;
@@ -72,6 +75,9 @@ class _AddUtilisateurPageState
       _role = u.role;
       _bergerieId = u.bergerieId;
       _actif = u.actif;
+      _permissions
+        ..clear()
+        ..addAll(normalizePermissions(u.permissions));
     }
   }
 
@@ -308,6 +314,17 @@ class _AddUtilisateurPageState
                       });
                     },
                   ),
+
+                  const SizedBox(height: 24),
+
+                  _PermissionsSection(
+                    permissions: _permissions,
+                    onChanged: (key, value) {
+                      setState(() {
+                        _permissions[key] = value;
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -384,7 +401,7 @@ class _AddUtilisateurPageState
           derniereConnexion: null,
           creePar: "Administrateur",
           photoUrl: null,
-          permissions: {},
+          permissions: Map<String, bool>.from(_permissions),
         );
 
         await repository.createUtilisateurAvecCompte(
@@ -402,6 +419,7 @@ class _AddUtilisateurPageState
           role: _session.isAdmin ? _role : (_role == UserRole.admin ? UserRole.client : _role),
           bergerieId: _session.isAdmin ? (_bergerieObligatoire ? _bergerieId : null) : _session.bergerieId,
           actif: _actif,
+          permissions: Map<String, bool>.from(_permissions),
         );
 
         await repository.updateUtilisateur(utilisateur);
@@ -445,5 +463,107 @@ class _AddUtilisateurPageState
         _loading = false;
       });
     }
+  }
+}
+
+
+class _PermissionsSection extends StatelessWidget {
+  const _PermissionsSection({
+    required this.permissions,
+    required this.onChanged,
+  });
+
+  final Map<String, bool> permissions;
+  final void Function(String key, bool value) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.lock_outline, color: Colors.blue),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Permissions d'accès",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "Choisissez ce que cet utilisateur peut consulter et modifier.",
+            style: TextStyle(color: Colors.black54),
+          ),
+          const SizedBox(height: 16),
+          ...permissionGroups.map(
+            (group) => _PermissionGroup(
+              group: group,
+              permissions: permissions,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PermissionGroup extends StatelessWidget {
+  const _PermissionGroup({
+    required this.group,
+    required this.permissions,
+    required this.onChanged,
+  });
+
+  final PermissionGroup group;
+  final Map<String, bool> permissions;
+  final void Function(String key, bool value) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasEdit = group.editKey != null;
+    final viewKey = group.viewKey;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            dense: true,
+            title: Text(
+              group.label,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: const Text("Voir"),
+            value: permissions[viewKey] ?? false,
+            onChanged: (value) => onChanged(viewKey, value),
+          ),
+          if (hasEdit)
+            SwitchListTile(
+              dense: true,
+              title: const Text("Ajouter / modifier"),
+              value: permissions[group.editKey!] ?? false,
+              onChanged: (value) {
+                onChanged(group.editKey!, value);
+                if (value && !(permissions[viewKey] ?? false)) {
+                  onChanged(viewKey, true);
+                }
+              },
+            ),
+        ],
+      ),
+    );
   }
 }
