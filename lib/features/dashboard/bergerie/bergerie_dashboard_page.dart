@@ -91,6 +91,7 @@ class BergerieDrawer extends StatelessWidget {
     final primary = config.couleurPrimaire;
     final orange = config.couleurSecondaire;
     final mobile = MediaQuery.of(context).size.width < 900;
+    final session = CurrentUserService.instance;
 
     return Material(
       color: primary,
@@ -158,26 +159,44 @@ class BergerieDrawer extends StatelessWidget {
                 children: [
                   _menu(context, Icons.home_rounded, 'Accueil', '/dashboard/bergerie', true),
                   _section('MON ÉLEVAGE'),
-                  _menu(context, Icons.pets_rounded, 'Moutons', '/moutons'),
-                  _menu(context, Icons.favorite_rounded, 'Gestations', '/gestations'),
-                  _menu(context, Icons.child_friendly_rounded, 'Naissances', '/naissances'),
+                  if (session.hasPermission('moutons.view'))
+                    _menu(context, Icons.pets_rounded, 'Moutons', '/moutons'),
+                  if (session.hasPermission('gestations.view'))
+                    _menu(context, Icons.favorite_rounded, 'Gestations', '/gestations'),
+                  if (session.hasPermission('naissances.view'))
+                    _menu(context, Icons.child_friendly_rounded, 'Naissances', '/naissances'),
                   _section('SANTÉ'),
-                  _menu(context, Icons.health_and_safety_rounded, 'Carnet de santé', '/carnet-sante'),
-                  _menu(context, Icons.medical_services_rounded, 'Mon Carnet Véto', '/allo-veto'),
+                  if (session.hasPermission('sante.view'))
+                    _menu(context, Icons.health_and_safety_rounded, 'Carnet de santé', '/carnet-sante'),
+                  if (session.hasPermission('veto.view'))
+                    _menu(context, Icons.medical_services_rounded, 'Mon Carnet Véto', '/allo-veto'),
                   _section('ALIMENTATION'),
-                  _menu(context, Icons.grass_rounded, 'Alimentation', '/alimentation'),
+                  if (session.hasPermission('alimentation.view'))
+                    _menu(context, Icons.grass_rounded, 'Alimentation', '/alimentation'),
                   _soon(context, Icons.inventory_2_rounded, 'Stocks'),
                   _section('ACTIVITÉS'),
-                  _menu(context, Icons.assignment_rounded, 'Interventions', '/interventions'),
-                  _section('FINANCES'),
-                  _menu(context, Icons.account_balance_wallet_rounded, 'Finances', '/finances'),
-                  _section('RAPPORTS'),
-                  _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports'),
+                  if (session.hasPermission('interventions.view'))
+                    _menu(context, Icons.assignment_rounded, 'Interventions', '/interventions'),
+                  if (session.hasPermission('depenses.view') ||
+                      session.hasPermission('depenses.edit') ||
+                      session.hasPermission('ventes.view') ||
+                      session.hasPermission('ventes.edit'))
+                    _section('FINANCES'),
+                  if (session.hasPermission('depenses.view') ||
+                      session.hasPermission('depenses.edit') ||
+                      session.hasPermission('ventes.view') ||
+                      session.hasPermission('ventes.edit'))
+                    _menu(context, Icons.account_balance_wallet_rounded, 'Finances', '/finances'),
+                  if (session.hasPermission('rapports_financiers.view'))
+                    _section('RAPPORTS'),
+                  if (session.hasPermission('rapports_financiers.view'))
+                    _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports'),
                   const Divider(color: Colors.white24),
-                  if (CurrentUserService.instance.isAdmin || CurrentUserService.instance.isResponsable)
+                  if (session.hasPermission('utilisateurs.view'))
                     _menu(context, Icons.people_alt_rounded, 'Utilisateurs', '/utilisateurs'),
                   _soon(context, Icons.person_rounded, 'Mon compte'),
-                  _menu(context, Icons.settings_rounded, 'Paramètres', '/parametres'),
+                  if (session.hasPermission('parametres.view'))
+                    _menu(context, Icons.settings_rounded, 'Paramètres', '/parametres'),
                 ],
               ),
             ),
