@@ -119,14 +119,19 @@ String? _alimentationRedirect() {
 }
 
 String? _financeBergerieRedirect() {
-  final permission = _permissionRedirect('depenses.view');
-  if (permission != null &&
-      !_permissionRedirect('depenses.edit').toString().contains('null')) return permission;
-  final currentUser = CurrentUserService.instance.currentUser;
-  if (currentUser == null) return '/login';
-  final role = CurrentUserService.instance.role;
-  if (role != UserRole.admin && role != UserRole.responsable && role != UserRole.technicien && role != UserRole.client) return '/dashboard/bergerie';
-  if (role != UserRole.admin && (currentUser.bergerieId == null || currentUser.bergerieId!.trim().isEmpty)) return '/dashboard/bergerie';
+  final session = CurrentUserService.instance;
+  if (!session.isLoggedIn) return '/login';
+  if (!session.isAdmin &&
+      !session.hasPermission('depenses.view') &&
+      !session.hasPermission('depenses.edit') &&
+      !session.hasPermission('ventes.view') &&
+      !session.hasPermission('ventes.edit')) {
+    return '/dashboard/bergerie';
+  }
+  if (!session.isAdmin &&
+      (session.bergerieId == null || session.bergerieId!.trim().isEmpty)) {
+    return '/dashboard/bergerie';
+  }
   return null;
 }
 
