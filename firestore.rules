@@ -19,7 +19,38 @@ service cloud.firestore {
     function canManageFinance() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function belongsToMouton(moutonId) { return signedIn() && currentUser().data.actif == true && exists(/databases/$(database)/documents/moutons/$(moutonId)) && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId; }
 
-    match /users/{userId} { allow read: if signedIn() && (request.auth.uid == userId || isAdmin()); allow create, update, delete: if isAdmin(); }
+    match /users/{userId} {
+      allow read: if isAdmin() || (
+        signedIn() &&
+        currentUser().data.actif == true &&
+        (
+          request.auth.uid == userId ||
+          (resource.data.bergerieId != null &&
+           resource.data.bergerieId == currentUser().data.bergerieId)
+        )
+      );
+      allow create: if isAdmin() || (
+        signedIn() &&
+        currentUser().data.actif == true &&
+        currentUser().data.role == 'responsable' &&
+        request.resource.data.bergerieId == currentUser().data.bergerieId &&
+        request.resource.data.role != 'admin'
+      );
+      allow update: if isAdmin() || (
+        signedIn() &&
+        currentUser().data.actif == true &&
+        currentUser().data.role == 'responsable' &&
+        resource.data.bergerieId == currentUser().data.bergerieId &&
+        request.resource.data.bergerieId == resource.data.bergerieId &&
+        request.resource.data.role != 'admin'
+      );
+      allow delete: if isAdmin() || (
+        signedIn() &&
+        currentUser().data.actif == true &&
+        currentUser().data.role == 'responsable' &&
+        resource.data.bergerieId == currentUser().data.bergerieId
+      );
+    }
     match /bergerie_config/{bergerieId} {
       allow read: if isAdmin() || belongsToBergerie(bergerieId);
       allow create: if isAdmin() || (
