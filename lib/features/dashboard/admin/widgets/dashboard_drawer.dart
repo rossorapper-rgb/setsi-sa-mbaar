@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../core/config/current_bergerie_config.dart';
+import '../../../../core/session/current_user_service.dart';
 
 import '../models/drawer_menu_item.dart';
 import '../services/drawer_menu_service.dart';
@@ -138,7 +142,12 @@ class DashboardDrawer extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  onTap: () {
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    CurrentUserService.instance.clear();
+                    CurrentBergerieConfig.instance.clear();
+
+                    if (!context.mounted) return;
                     context.go('/login');
                   },
                 ),
