@@ -324,6 +324,8 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       libelleController.dispose();
       montantController.dispose();
       observationController.dispose();
+      alimentController.dispose();
+      quantiteController.dispose();
     }
   }
 
