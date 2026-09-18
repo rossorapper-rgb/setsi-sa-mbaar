@@ -34,6 +34,11 @@ import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
 import '../features/utilisateurs/repository/firebase_utilisateur_repository.dart';
 
+String? _sessionRedirect() {
+  if (!CurrentUserService.instance.isLoggedIn) return '/login';
+  return null;
+}
+
 String? _permissionRedirect(String permission) {
   final session = CurrentUserService.instance;
   if (!session.isLoggedIn) return '/login';
@@ -162,8 +167,8 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-    GoRoute(path: '/dashboard/admin', builder: (context, state) => const DashboardAdminPage()),
-    GoRoute(path: '/dashboard/bergerie', builder: (context, state) => const BergerieDashboardPage()),
+    GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
+    GoRoute(path: '/dashboard/bergerie', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const BergerieDashboardPage()),
     GoRoute(path: '/clients', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const ClientsPage()),
     GoRoute(path: '/clients/add', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const AddClientPage()),
     GoRoute(path: '/bergeries', redirect: (context, state) => _adminResponsableTechnicienRedirect(), builder: (context, state) => const BergeriesPage()),
