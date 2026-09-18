@@ -9,11 +9,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'firebase_options.dart';
 import 'core/config/current_bergerie_config.dart';
+import 'core/navigation/browser_history_guard.dart';
 import 'core/session/current_user_service.dart';
 import 'features/utilisateurs/repository/firebase_utilisateur_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  installBrowserHistoryGuard();
 
   await initializeDateFormatting('fr_FR');
 
