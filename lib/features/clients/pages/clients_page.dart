@@ -70,12 +70,12 @@ _isRefreshing = false;
 Widget build(BuildContext context) {
 final clientsAsync = ref.watch(clientsProvider);
 return Scaffold(
-    backgroundColor: const Color(0xFFF5F7FA),
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
     appBar: AppBar(
       elevation: 0,
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      foregroundColor: Colors.white,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
