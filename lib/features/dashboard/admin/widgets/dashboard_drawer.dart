@@ -83,8 +83,7 @@ class DashboardDrawer extends StatelessWidget {
                   vertical: 4,
                 ),
                 itemCount: menus.length,
-                separatorBuilder: (_, __) =>
-                const SizedBox(height: 4),
+                separatorBuilder: (_, __) => const SizedBox(height: 4),
                 itemBuilder: (context, index) {
                   final DrawerMenuItem item = menus[index];
                   final bool selected = selectedIndex == index;
@@ -94,8 +93,7 @@ class DashboardDrawer extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     child: ListTile(
                       selected: selected,
-                      selectedTileColor:
-                      primary.withValues(alpha: 0.12),
+                      selectedTileColor: primary.withValues(alpha: 0.12),
                       leading: Icon(
                         item.icon,
                         color: selected
@@ -148,7 +146,7 @@ class DashboardDrawer extends StatelessWidget {
                     await FirebaseAuth.instance.signOut();
 
                     if (!context.mounted) return;
-                    context.go('/login');
+                    context.replace('/login');
                   },
                 ),
               ),
