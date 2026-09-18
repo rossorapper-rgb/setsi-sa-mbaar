@@ -22,6 +22,8 @@ void installBrowserHistoryGuard() {
 void _redirectIfLoggedOut() {
   if (FirebaseAuth.instance.currentUser == null &&
       html.window.location.pathname != '/login') {
-    html.window.location.replace('/login');
+    // When Back restores an authenticated route, bounce forward to the
+    // current login entry instead of replacing the restored document.
+    html.window.history.forward();
   }
 }
