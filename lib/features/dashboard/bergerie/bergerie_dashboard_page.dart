@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/bergerie_config.dart';
@@ -206,7 +207,17 @@ class BergerieDrawer extends StatelessWidget {
                 'Déconnexion',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
-              onTap: () => context.go('/login'),
+              onTap: () async {
+                CurrentUserService.instance.clear();
+                CurrentBergerieConfig.instance.clear();
+                await FirebaseAuth.instance.signOut();
+
+                if (!context.mounted) return;
+                Router.neglect(
+                  context,
+                  () => context.go('/login'),
+                );
+              },
             ),
           ],
         ),
