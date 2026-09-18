@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/session/current_user_service.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/responsive_page.dart';
 
@@ -40,6 +41,9 @@ class _MoutonDetailsPageState
   final FirebaseMoutonRepository
   _moutonRepository =
   FirebaseMoutonRepository();
+
+  CurrentUserService get _session => CurrentUserService.instance;
+  bool get _canEdit => _session.hasPermission('moutons.edit');
 
   BergerieModel? _bergerie;
   ClientModel? _client;
@@ -483,7 +487,7 @@ class _MoutonDetailsPageState
           AppCard(
             child: Column(
               children: [
-                if (_bergerie != null)
+                if (_canEdit && _bergerie != null)
                   _actionButton(
                     icon: Icons.edit,
                     texte: "Modifier le mouton",
@@ -509,7 +513,8 @@ class _MoutonDetailsPageState
 
                 const SizedBox(height: 12),
 
-                _actionButton(
+                if (_canEdit)
+                  _actionButton(
                   icon: Icons.delete,
                   texte: "Supprimer le mouton",
                   couleur: Colors.red,
