@@ -17,6 +17,10 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
   final FirebaseMoutonRepository _moutonRepository =
       FirebaseMoutonRepository();
 
+  CurrentUserService get _session => CurrentUserService.instance;
+
+  bool get _canEdit => _session.hasPermission('moutons.edit');
+
   bool _loading = true;
   List<MoutonModel> _moutons = [];
   String? _erreur;
@@ -114,7 +118,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
           ),
         ],
       ),
-      floatingActionButton: _loading || _erreur != null
+      floatingActionButton: _loading || _erreur != null || !_canEdit
           ? null
           : FloatingActionButton.extended(
               onPressed: _ajouterMouton,
