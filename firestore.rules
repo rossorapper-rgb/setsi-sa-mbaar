@@ -16,7 +16,8 @@ service cloud.firestore {
     function canManageGestation() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien'); }
     function canManageVeterinaires() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canManageSante() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
-    function canManageAlimentation() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
+    function canViewAlimentation() { return isAdmin() || isResponsable() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['alimentation.view'] == true); }
+    function canEditAlimentation() { return isAdmin() || isResponsable() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['alimentation.edit'] == true); }
     function canManageInterventions() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canViewDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['depenses.view'] == true)); }
     function canEditDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['depenses.edit'] == true)); }
@@ -92,10 +93,10 @@ service cloud.firestore {
     }
 
     match /alimentations/{alimentationId} {
-      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
-      allow create: if isAdmin() || (canManageAlimentation() && belongsToBergerie(request.resource.data.bergerieId));
-      allow update: if isAdmin() || (canManageAlimentation() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId);
-      allow delete: if isAdmin() || (canManageAlimentation() && belongsToBergerie(resource.data.bergerieId));
+      allow read: if canViewAlimentation() && belongsToBergerie(resource.data.bergerieId);
+      allow create: if canEditAlimentation() && belongsToBergerie(request.resource.data.bergerieId);
+      allow update: if canEditAlimentation() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId;
+      allow delete: if canEditAlimentation() && belongsToBergerie(resource.data.bergerieId);
     }
 
     match /interventions/{interventionId} {
