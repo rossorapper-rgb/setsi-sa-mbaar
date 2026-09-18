@@ -35,7 +35,7 @@ children: [
 _menuCard(
 context,
 icon: Icons.payments_rounded,
-couleur: Colors.green,
+couleur: Theme.of(context).colorScheme.primary,
 titre: "Paiements",
 sousTitre:
 "Consulter et enregistrer",
@@ -45,7 +45,7 @@ page: const PaiementsPage(),
 _menuCard(
 context,
 icon: Icons.account_balance_wallet_rounded,
-couleur: Colors.red,
+couleur: Theme.of(context).colorScheme.secondary,
 titre: "Créances",
 sousTitre:
 "Montants à encaisser",
@@ -55,7 +55,7 @@ page: const CreancesPage(),
 _menuCard(
 context,
 icon: Icons.dashboard_rounded,
-couleur: Colors.indigo,
+couleur: Theme.of(context).colorScheme.primary,
 titre:
 "Dashboard",
 sousTitre:
@@ -66,7 +66,7 @@ const DashboardFinancierPage(),
   _menuCard(
     context,
     icon: Icons.bar_chart_rounded,
-    couleur: Colors.deepPurple,
+    couleur: Theme.of(context).colorScheme.secondary,
     titre: "Rapports",
     sousTitre:
     "PDF et Excel",
@@ -77,7 +77,7 @@ const DashboardFinancierPage(),
   _menuCard(
     context,
     icon: Icons.picture_as_pdf_rounded,
-    couleur: Colors.orange,
+    couleur: Theme.of(context).colorScheme.secondary,
     titre: "Factures",
     sousTitre:
     "Générer les factures",
@@ -96,7 +96,7 @@ const DashboardFinancierPage(),
   _menuCard(
     context,
     icon: Icons.receipt_long_rounded,
-    couleur: Colors.teal,
+    couleur: Theme.of(context).colorScheme.primary,
     titre: "Reçus",
     sousTitre:
     "Générer les reçus",
