@@ -51,6 +51,12 @@ class AuthRefreshNotifier extends ChangeNotifier {
   }
 }
 
+String? _globalSessionRedirect(GoRouterState state) {
+  final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+  if (!isLoggedIn && state.matchedLocation != '/login') return '/login';
+  return null;
+}
+
 String? _sessionRedirect() {
   if (!CurrentUserService.instance.isLoggedIn) return '/login';
   return null;
@@ -185,6 +191,7 @@ final GoRouter appRouter = GoRouter(
   refreshListenable: AuthRefreshNotifier(
     FirebaseAuth.instance.authStateChanges(),
   ),
+  redirect: (context, state) => _globalSessionRedirect(state),
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
