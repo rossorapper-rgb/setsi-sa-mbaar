@@ -71,9 +71,9 @@ class _LoginPageState extends State<LoginPage> {
 
       final role = CurrentUserService.instance.role;
       if (role == UserRole.admin) {
-        context.go('/dashboard/admin');
+        context.replace('/dashboard/admin');
       } else {
-        context.go('/dashboard/bergerie');
+        context.replace('/dashboard/bergerie');
       }
     } on FirebaseAuthException catch (e) {
       String message;
