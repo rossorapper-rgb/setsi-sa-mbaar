@@ -638,7 +638,7 @@ class _Actions extends StatelessWidget {
                   _ActionData(Icons.pets_rounded, 'Ajouter un mouton', primary, '/moutons'),
                   _ActionData(Icons.favorite_rounded, 'Enregistrer une saillie', orange, '/gestations'),
                   _ActionData(Icons.medical_services_rounded, 'Enregistrer un soin', primary, '/carnet-sante'),
-                  _ActionData(Icons.assignment_rounded, 'Enregistrer activité', primary, '/interventions'),
+                  _ActionData(Icons.assignment_rounded, 'Enregistrer une intervention', primary, '/interventions'),
                   _ActionData(Icons.account_balance_wallet_rounded, 'Voir mes finances', orange, '/finances'),
                 ];
                 final action = actions[index];
