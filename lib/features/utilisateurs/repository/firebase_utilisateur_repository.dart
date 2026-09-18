@@ -353,15 +353,25 @@ class FirebaseUtilisateurRepository {
   Future<bool> telephoneExiste(
       String telephone,
       ) async {
-    final snapshot = await _firestore
+    Query<Map<String, dynamic>> query = _firestore
         .collection(_collection)
         .where(
       'telephone',
       isEqualTo: telephone,
-    )
-        .limit(1)
-        .get();
+    );
 
+    // Un responsable ne doit rechercher que dans sa propre bergerie.
+    // Cela permet aussi aux règles Firestore de valider la requête.
+    if (!_session.isAdmin &&
+        _session.bergerieId != null &&
+        _session.bergerieId!.trim().isNotEmpty) {
+      query = query.where(
+        'bergerieId',
+        isEqualTo: _session.bergerieId,
+      );
+    }
+
+    final snapshot = await query.limit(1).get();
     return snapshot.docs.isNotEmpty;
   }
 
