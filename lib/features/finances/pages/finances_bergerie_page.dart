@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../alimentation/models/alimentation_model.dart';
 import '../models/finance_entry_model.dart';
 import '../repository/firebase_finance_repository.dart';
+import '../../../core/session/current_user_service.dart';
 
 class FinancesBergeriePage extends StatefulWidget {
   const FinancesBergeriePage({super.key});
@@ -22,6 +23,13 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
   List<AlimentationModel> _alimentations = [];
   bool _loading = true;
   String? _error;
+
+  CurrentUserService get _session => CurrentUserService.instance;
+  bool get _canViewDepenses => _session.hasPermission('depenses.view');
+  bool get _canEditDepenses => _session.hasPermission('depenses.edit');
+  bool get _canViewVentes => _session.hasPermission('ventes.view');
+  bool get _canEditVentes => _session.hasPermission('ventes.edit');
+  bool get _canViewFinance => _canViewDepenses || _canViewVentes;
   DateTime _mois = DateTime(DateTime.now().year, DateTime.now().month);
 
   @override
@@ -37,8 +45,8 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     });
     try {
       final results = await Future.wait([
-        _repository.getEntries(),
-        _repository.getAlimentations(),
+        _canViewFinance ? _repository.getEntries() : Future.value(<FinanceEntryModel>[]),
+        _canViewFinance ? _repository.getAlimentations() : Future.value(<AlimentationModel>[]),
       ]);
       if (!mounted) return;
       setState(() {
@@ -237,7 +245,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           IconButton(onPressed: _charger, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
-      floatingActionButton: _loading
+      floatingActionButton: _loading || (!_canEditDepenses && !_canEditVentes)
           ? null
           : FloatingActionButton.extended(
               onPressed: () => _choisirAction(),
@@ -278,27 +286,51 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      _SummaryCard(
-                        title: 'Ventes',
-                        value: '${_money.format(_ventes)} FCFA',
-                        icon: Icons.trending_up_rounded,
-                        color: Colors.green,
-                      ),
-                      const SizedBox(height: 10),
-                      _SummaryCard(
-                        title: 'Dépenses',
-                        value: '${_money.format(_depenses)} FCFA',
-                        subtitle: 'Alimentation : ${_money.format(_alimentationMois)} FCFA',
-                        icon: Icons.trending_down_rounded,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 10),
-                      _SummaryCard(
-                        title: 'Solde',
-                        value: '${_money.format(solde)} FCFA',
-                        icon: Icons.account_balance_wallet_rounded,
-                        color: solde >= 0 ? Colors.green : Colors.red,
-                      ),
+                      if (!_canViewFinance)
+                        const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(18),
+                            child: Row(
+                              children: [
+                                Icon(Icons.lock_outline),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Vous pouvez enregistrer des opérations autorisées, mais les montants financiers ne sont pas visibles avec votre niveau d’accès.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else ...[
+                        if (_canViewVentes)
+                          _SummaryCard(
+                            title: 'Ventes',
+                            value: '${_money.format(_ventes)} FCFA',
+                            icon: Icons.trending_up_rounded,
+                            color: Colors.green,
+                          ),
+                        if (_canViewDepenses) ...[
+                          const SizedBox(height: 10),
+                          _SummaryCard(
+                            title: 'Dépenses',
+                            value: '${_money.format(_depenses)} FCFA',
+                            subtitle: 'Alimentation : ${_money.format(_alimentationMois)} FCFA',
+                            icon: Icons.trending_down_rounded,
+                            color: Colors.red,
+                          ),
+                        ],
+                        if (_canViewVentes && _canViewDepenses) ...[
+                          const SizedBox(height: 10),
+                          _SummaryCard(
+                            title: 'Solde',
+                            value: '${_money.format(solde)} FCFA',
+                            icon: Icons.account_balance_wallet_rounded,
+                            color: solde >= 0 ? Colors.green : Colors.red,
+                          ),
+                        ],
+                      ],
                       const SizedBox(height: 22),
                       const Text('Historique', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 10),
@@ -337,16 +369,18 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       builder: (context) => SafeArea(
         child: Wrap(
           children: [
-            ListTile(
-              leading: const Icon(Icons.trending_down_rounded, color: Colors.red),
-              title: const Text('Ajouter une dépense'),
-              onTap: () => Navigator.pop(context, FinanceEntryType.depense),
-            ),
-            ListTile(
-              leading: const Icon(Icons.trending_up_rounded, color: Colors.green),
-              title: const Text('Ajouter une vente'),
-              onTap: () => Navigator.pop(context, FinanceEntryType.vente),
-            ),
+            if (_canEditDepenses)
+              ListTile(
+                leading: const Icon(Icons.trending_down_rounded, color: Colors.red),
+                title: const Text('Ajouter une dépense'),
+                onTap: () => Navigator.pop(context, FinanceEntryType.depense),
+              ),
+            if (_canEditVentes)
+              ListTile(
+                leading: const Icon(Icons.trending_up_rounded, color: Colors.green),
+                title: const Text('Ajouter une vente'),
+                onTap: () => Navigator.pop(context, FinanceEntryType.vente),
+              ),
           ],
         ),
       ),
