@@ -30,6 +30,7 @@ class ParametresBergeriePage extends StatelessWidget {
             subtitle: 'Logo, couleurs et slogan de votre bergerie',
           ),
           _SectionCard(
+            onTap: () => context.go('/utilisateurs'),
             icon: Icons.people_alt_rounded,
             title: 'Utilisateurs',
             subtitle: 'Gérer les utilisateurs de la bergerie',
