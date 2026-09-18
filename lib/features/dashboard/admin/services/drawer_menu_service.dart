@@ -89,19 +89,6 @@ class DrawerMenuService {
       ),
 
       // ==========================================================
-      // ADMIN
-      // ==========================================================
-
-      DrawerMenuItem(
-        icon: Icons.manage_accounts_rounded,
-        title: "Utilisateurs",
-        route: "/utilisateurs",
-        roles: const [
-          UserRole.admin,
-        ],
-      ),
-
-      // ==========================================================
       // ADMIN + RESPONSABLE + TECHNICIEN
       // ==========================================================
 
