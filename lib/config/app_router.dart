@@ -140,14 +140,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/creances', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const CreancesPage()),
     GoRoute(path: '/dashboard-financier', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const DashboardFinancierPage()),
     GoRoute(path: '/rapports-financiers', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const RapportsFinanciersPage()),
-    GoRoute(path: '/utilisateurs', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const UtilisateursPage()),
-    GoRoute(path: '/utilisateurs/add', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AddUtilisateurPage()),
-    GoRoute(path: '/utilisateurs/details/:id', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) {
+    GoRoute(path: '/utilisateurs', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const UtilisateursPage()),
+    GoRoute(path: '/utilisateurs/add', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const AddUtilisateurPage()),
+    GoRoute(path: '/utilisateurs/details/:id', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) {
       final id = state.pathParameters['id'];
       if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
       return UtilisateurDetailsPage(utilisateurId: id);
     }),
-    GoRoute(path: '/utilisateurs/edit/:id', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) {
+    GoRoute(path: '/utilisateurs/edit/:id', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) {
       final id = state.pathParameters['id'];
       if (id == null || id.isEmpty) return const Scaffold(body: Center(child: Text('Utilisateur introuvable.')));
       return FutureBuilder(
