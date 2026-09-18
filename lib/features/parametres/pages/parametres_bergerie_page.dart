@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/session/current_user_service.dart';
+import '../../utilisateurs/models/user_role.dart';
+
 class ParametresBergeriePage extends StatelessWidget {
   const ParametresBergeriePage({super.key});
 
@@ -17,6 +20,8 @@ class ParametresBergeriePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          if (CurrentUserService.instance.role == UserRole.responsable ||
+              CurrentUserService.instance.role == UserRole.admin) ...[
           _SectionCard(
             onTap: () => context.go('/parametres/informations'),
             icon: Icons.home_work_rounded,
@@ -45,6 +50,7 @@ class ParametresBergeriePage extends StatelessWidget {
             title: 'Rappels',
             subtitle: 'Gérer les rappels de la bergerie',
           ),
+          ],
           _SectionCard(
             onTap: () => context.go('/parametres/securite'),
             icon: Icons.lock_rounded,
