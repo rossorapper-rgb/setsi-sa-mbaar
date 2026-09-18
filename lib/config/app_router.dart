@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -165,6 +166,9 @@ String? _rapportBergerieRedirect() => _permissionRedirect('rapports_financiers.v
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
