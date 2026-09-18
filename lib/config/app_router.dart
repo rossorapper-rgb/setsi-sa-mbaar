@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -36,20 +34,6 @@ import '../features/utilisateurs/pages/utilisateurs_page.dart';
 import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
 import '../features/utilisateurs/repository/firebase_utilisateur_repository.dart';
-
-class AuthRefreshNotifier extends ChangeNotifier {
-  AuthRefreshNotifier(Stream<dynamic> stream) {
-    _subscription = stream.listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
-}
 
 String? _sessionRedirect() {
   if (!CurrentUserService.instance.isLoggedIn) return '/login';
@@ -182,9 +166,6 @@ String? _rapportBergerieRedirect() => _permissionRedirect('rapports_financiers.v
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
-  refreshListenable: AuthRefreshNotifier(
-    FirebaseAuth.instance.authStateChanges(),
-  ),
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
