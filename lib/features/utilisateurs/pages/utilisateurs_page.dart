@@ -36,6 +36,10 @@ ref.watch(utilisateursStreamProvider);
 
 return Scaffold(
 appBar: AppBar(
+leading: IconButton(
+icon: const Icon(Icons.arrow_back),
+onPressed: () => context.go('/dashboard/bergerie'),
+),
 title: const Text(
 "Utilisateurs",
 ),
