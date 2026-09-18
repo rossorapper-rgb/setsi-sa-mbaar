@@ -16,10 +16,10 @@ service cloud.firestore {
     function canManageSante() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canManageAlimentation() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function canManageInterventions() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
-    function canViewDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['depenses.view'] == true); }
-    function canEditDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['depenses.edit'] == true); }
-    function canViewVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['ventes.view'] == true); }
-    function canEditVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['ventes.edit'] == true); }
+    function canViewDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['depenses.view'] == true)); }
+    function canEditDepenses() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['depenses.edit'] == true)); }
+    function canViewVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['ventes.view'] == true)); }
+    function canEditVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['ventes.edit'] == true)); }
 
     function canManageFinance() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function belongsToMouton(moutonId) { return signedIn() && currentUser().data.actif == true && exists(/databases/$(database)/documents/moutons/$(moutonId)) && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId; }
