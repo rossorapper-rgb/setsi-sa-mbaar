@@ -108,6 +108,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
 
     final ok = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(type == FinanceEntryType.depense ? 'Ajouter une dépense' : 'Ajouter une vente'),
@@ -230,7 +231,45 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
               child: const Text('Annuler'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
+              onPressed: () {
+                final libelle = libelleController.text.trim();
+                final montant = double.tryParse(
+                  montantController.text.trim().replaceAll(',', '.'),
+                );
+
+                if (libelle.isEmpty || montant == null || montant <= 0) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Veuillez renseigner un libellé et un montant valide.'),
+                    ),
+                  );
+                  return;
+                }
+
+                if (categorie == 'Alimentation') {
+                  final quantite = double.tryParse(
+                    quantiteController.text.trim().replaceAll(',', '.'),
+                  );
+                  if (alimentController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Veuillez renseigner l’aliment.'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (quantite == null || quantite <= 0) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Veuillez renseigner une quantité valide.'),
+                      ),
+                    );
+                    return;
+                  }
+                }
+
+                Navigator.pop(dialogContext, true);
+              },
               child: const Text('Enregistrer'),
             ),
           ],
