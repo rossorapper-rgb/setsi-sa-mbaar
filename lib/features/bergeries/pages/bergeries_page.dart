@@ -15,8 +15,6 @@ class BergeriesPage extends StatefulWidget {
 }
 
 class _BergeriesPageState extends State<BergeriesPage> {
-final primary = Theme.of(context).colorScheme.primary;
-
 final FirebaseBergerieRepository _repository =
 FirebaseBergerieRepository();
 
@@ -54,6 +52,8 @@ _loadBergeries();
 
 @override
 Widget build(BuildContext context) {
+final primary = Theme.of(context).colorScheme.primary;
+
 return Scaffold(
   appBar: AppBar(
     leading: IconButton(
