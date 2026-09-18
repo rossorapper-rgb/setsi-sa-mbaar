@@ -160,6 +160,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
   }
 
   Widget _buildBody(List<AlimentationModel> filtered, bool compact) {
+    final canView = CurrentUserService.instance.hasPermission('alimentation.view');
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_erreur != null) {
