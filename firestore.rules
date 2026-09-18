@@ -9,8 +9,9 @@ service cloud.firestore {
     function isResponsable() { return signedIn() && currentUser().data.role == 'responsable' && currentUser().data.actif == true; }
     function belongsToBergerie(bergerieId) { return signedIn() && currentUser().data.actif == true && currentUser().data.bergerieId == bergerieId; }
     function belongsToClient(clientId) { return signedIn() && currentUser().data.actif == true && currentUser().data.bergerieId != null && currentUser().data.bergerieId != '' && get(/databases/$(database)/documents/bergeries/$(currentUser().data.bergerieId)).data.clientId == clientId; }
-    function canCreateMouton() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
-    function canUpdateMouton() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien'); }
+    function canViewMoutons() { return isAdmin() || isResponsable() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['moutons.view'] == true); }
+    function canCreateMouton() { return isAdmin() || isResponsable() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['moutons.edit'] == true); }
+    function canUpdateMouton() { return isAdmin() || isResponsable() || (signedIn() && currentUser().data.actif == true && currentUser().data.permissions['moutons.edit'] == true); }
     function canManageReproduction() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien'); }
     function canManageGestation() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien'); }
     function canManageVeterinaires() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
@@ -125,7 +126,7 @@ service cloud.firestore {
     }
 
     match /moutons/{moutonId} {
-      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
+      allow read: if canViewMoutons() && belongsToBergerie(resource.data.bergerieId);
       allow create: if isAdmin() || (canCreateMouton() && belongsToBergerie(request.resource.data.bergerieId));
       allow update: if isAdmin() || (canUpdateMouton() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId);
       allow delete: if isAdmin() || (canUpdateMouton() && belongsToBergerie(resource.data.bergerieId));
