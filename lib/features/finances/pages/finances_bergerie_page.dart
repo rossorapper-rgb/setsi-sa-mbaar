@@ -197,6 +197,19 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
         date: date,
         observation: observationController.text,
       );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              type == FinanceEntryType.depense
+                  ? 'Dépense enregistrée avec succès.'
+                  : 'Vente enregistrée avec succès.',
+            ),
+          ),
+        );
+      }
+
       await _charger();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
