@@ -193,9 +193,6 @@ class BergerieDrawer extends StatelessWidget {
                   if (session.hasPermission('rapports_financiers.view'))
                     _menu(context, Icons.bar_chart_rounded, 'Rapports', '/rapports'),
                   const Divider(color: Colors.white24),
-                  if (session.hasPermission('utilisateurs.view'))
-                    _menu(context, Icons.people_alt_rounded, 'Utilisateurs', '/utilisateurs'),
-                  _soon(context, Icons.person_rounded, 'Mon compte'),
                   if (session.hasPermission('parametres.view'))
                     _menu(context, Icons.settings_rounded, 'Paramètres', '/parametres'),
                 ],
