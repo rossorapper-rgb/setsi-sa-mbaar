@@ -146,7 +146,10 @@ class DashboardDrawer extends StatelessWidget {
                     await FirebaseAuth.instance.signOut();
 
                     if (!context.mounted) return;
-                    context.replace('/login');
+                    Router.neglect(
+                      context,
+                      () => context.go('/login'),
+                    );
                   },
                 ),
               ),
