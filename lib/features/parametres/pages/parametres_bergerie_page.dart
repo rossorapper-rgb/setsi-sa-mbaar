@@ -46,9 +46,10 @@ class ParametresBergeriePage extends StatelessWidget {
             subtitle: 'Gérer les rappels de la bergerie',
           ),
           _SectionCard(
+            onTap: () => context.go('/parametres/securite'),
             icon: Icons.lock_rounded,
             title: 'Compte et sécurité',
-            subtitle: 'Compte, sécurité et déconnexion',
+            subtitle: 'Modifier mon mot de passe et sécuriser mon compte',
           ),
         ],
       ),
