@@ -53,13 +53,13 @@ class StatCard extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     evolution,
                     style: const TextStyle(
-                      color: Colors.green,
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
