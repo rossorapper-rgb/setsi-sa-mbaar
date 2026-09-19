@@ -429,9 +429,7 @@ class _AddUtilisateurPageState
           derniereConnexion: null,
           creePar: "Administrateur",
           photoUrl: null,
-          permissions: _responsableModifieSonPropreCompte
-              ? Map<String, bool>.from(ancienUtilisateur.permissions)
-              : Map<String, bool>.from(_permissions),
+          permissions: Map<String, bool>.from(_permissions),
         );
 
         await repository.createUtilisateurAvecCompte(
@@ -449,7 +447,9 @@ class _AddUtilisateurPageState
           role: _session.isAdmin ? _role : (_role == UserRole.admin ? UserRole.client : _role),
           bergerieId: _session.isAdmin ? (_bergerieObligatoire ? _bergerieId : null) : _session.bergerieId,
           actif: _actif,
-          permissions: Map<String, bool>.from(_permissions),
+          permissions: _responsableModifieSonPropreCompte
+              ? Map<String, bool>.from(ancienUtilisateur.permissions)
+              : Map<String, bool>.from(_permissions),
         );
 
         await repository.updateUtilisateur(utilisateur);
