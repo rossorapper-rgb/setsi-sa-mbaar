@@ -99,7 +99,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFF5F8FC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
