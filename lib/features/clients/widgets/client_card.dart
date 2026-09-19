@@ -18,7 +18,7 @@ class ClientCard extends StatelessWidget {
     this.onWhatsapp,
   });
 
-  Color get abonnementColor {
+  Color abonnementColor(BuildContext context) {
     switch (client.abonnement.toLowerCase()) {
       case "prestige":
         return Colors.orange;
@@ -27,7 +27,7 @@ class ClientCard extends StatelessWidget {
         return Colors.blue;
 
       case "essentiel":
-        return Colors.green;
+        return Theme.of(context).colorScheme.primary;
 
       default:
         return Colors.grey;
@@ -60,7 +60,7 @@ class ClientCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: Colors.blue.shade100,
+                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                   child: const Icon(
                     Icons.person,
                     size: 30,
@@ -116,12 +116,12 @@ class ClientCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Chip(
-                      backgroundColor: abonnementColor.withOpacity(.15),
+                      backgroundColor: abonnementColor(context).withValues(alpha: .15),
                       side: BorderSide.none,
                       label: Text(
                         client.abonnement,
                         style: TextStyle(
-                          color: abonnementColor,
+                          color: abonnementColor(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
