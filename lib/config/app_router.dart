@@ -40,6 +40,21 @@ String? _sessionRedirect() {
   return null;
 }
 
+String? _loginBergerieId(GoRouterState state) {
+  final fromRoute = state.uri.queryParameters['bergerie']?.trim();
+  if (fromRoute != null && fromRoute.isNotEmpty) {
+    return fromRoute;
+  }
+
+  // En Flutter Web avec une URL de type #/login?bergerie=..., le
+  // paramètre peut se retrouver dans le fragment du navigateur.
+  final fragment = Uri.base.fragment;
+  if (fragment.isEmpty) return null;
+
+  final fragmentUri = Uri.tryParse(fragment);
+  return fragmentUri?.queryParameters['bergerie']?.trim();
+}
+
 String? _permissionRedirect(String permission) {
   final session = CurrentUserService.instance;
   if (!session.isLoggedIn) return '/login';
@@ -188,7 +203,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => LoginPage(
-        bergerieId: state.uri.queryParameters['bergerie'],
+        bergerieId: _loginBergerieId(state),
       ),
     ),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
