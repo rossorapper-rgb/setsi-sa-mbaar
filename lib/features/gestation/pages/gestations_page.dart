@@ -100,7 +100,7 @@ class _GestationsPageState extends State<GestationsPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           content: Text('Impossible de charger les gestations : $e'),
         ),
       );
