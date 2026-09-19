@@ -80,7 +80,7 @@ class DashboardQuickActions extends ConsumerWidget {
       _QuickAction(
         title: isClient ? "Ajouter un mouton" : "Nouveau mouton",
         icon: Icons.pets_rounded,
-        color: Colors.blue,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => isClient
             ? _ajouterMouton(context, ref)
             : context.go('/bergeries'),
@@ -88,31 +88,31 @@ class DashboardQuickActions extends ConsumerWidget {
       _QuickAction(
         title: "Nouvelle gestation",
         icon: Icons.favorite_rounded,
-        color: Colors.orange,
+        color: Theme.of(context).colorScheme.secondary,
         onTap: () => context.go('/gestations'),
       ),
       _QuickAction(
         title: isClient ? "Enregistrer un soin" : "Intervention",
         icon: Icons.medical_services_rounded,
-        color: Colors.blue,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/interventions'),
       ),
       _QuickAction(
         title: "Ajouter une alimentation",
         icon: Icons.grass_rounded,
-        color: Colors.orange,
+        color: Theme.of(context).colorScheme.secondary,
         onTap: () => context.go('/interventions'),
       ),
       _QuickAction(
         title: "Enregistrer une activité",
         icon: Icons.assignment_rounded,
-        color: Colors.blue,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/interventions'),
       ),
       _QuickAction(
         title: "Voir mes rapports",
         icon: Icons.bar_chart_rounded,
-        color: Colors.orange,
+        color: Theme.of(context).colorScheme.secondary,
         onTap: () => context.go('/rapports-financiers'),
       ),
     ];
