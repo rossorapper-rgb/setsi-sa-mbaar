@@ -112,7 +112,7 @@ class _AdminAlerts extends StatelessWidget {
           alerts.add(
             _Alert(
               icon: Icons.medical_services_rounded,
-              color: Colors.orange,
+              color: Theme.of(context).colorScheme.secondary,
               title:
               '$interventionsAujourdhui intervention(s) aujourd\'hui',
               subtitle:
@@ -228,7 +228,7 @@ class _BergerieAlerts extends StatelessWidget {
           alerts.add(
             _Alert(
               icon: Icons.medical_services_rounded,
-              color: Colors.orange,
+              color: Theme.of(context).colorScheme.secondary,
               title: '$interventions intervention(s) enregistrée(s)',
               subtitle:
               'Consultez le module Interventions pour le suivi.',
@@ -308,7 +308,7 @@ class _TechnicienAlerts extends StatelessWidget {
       alerts.add(
         _Alert(
           icon: Icons.today_rounded,
-          color: Colors.orange,
+          color: Theme.of(context).colorScheme.secondary,
           title: '$aujourdHui intervention(s) aujourd\'hui',
           subtitle:
           'Consultez vos interventions programmées.',
@@ -320,7 +320,7 @@ class _TechnicienAlerts extends StatelessWidget {
       alerts.add(
         _Alert(
           icon: Icons.pending_actions_rounded,
-          color: Colors.blue,
+          color: Theme.of(context).colorScheme.primary,
           title: '$enCours intervention(s) en cours',
           subtitle:
           'Des interventions nécessitent encore votre suivi.',
@@ -367,7 +367,7 @@ class _AlertsCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.notifications_active_rounded,
-                color: Color(0xFF0B6E4F),
+                color: Theme.of(context).colorScheme.primary,
               ),
               SizedBox(width: 10),
               Text(
@@ -420,14 +420,14 @@ class _EmptyAlert extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7F5),
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.check_circle_outline_rounded,
-            color: Color(0xFF0B6E4F),
+            color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 14),
           Expanded(
