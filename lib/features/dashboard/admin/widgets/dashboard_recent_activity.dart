@@ -52,21 +52,21 @@ class _AdminRecentActivity extends StatelessWidget {
     final activities = <_ActivityItem>[
       const _ActivityItem(
         icon: Icons.person_add_alt_1_rounded,
-        color: Colors.blue,
+        color: Theme.of(context).colorScheme.primary,
         title: 'Nouveau client enregistré',
         subtitle: 'Mamadou Ndiaye',
         time: 'Il y a 10 min',
       ),
       const _ActivityItem(
         icon: Icons.pets_rounded,
-        color: Colors.green,
+        color: Theme.of(context).colorScheme.primary,
         title: 'Nouveau mouton ajouté',
         subtitle: 'Bergerie de Grand-Yoff',
         time: '09:15',
       ),
       const _ActivityItem(
         icon: Icons.medical_services_rounded,
-        color: Colors.orange,
+        color: Theme.of(context).colorScheme.secondary,
         title: 'Intervention terminée',
         subtitle: 'Lavage et désinfection',
         time: '08:40',
@@ -214,7 +214,7 @@ class _FilteredRecentActivity extends StatelessWidget {
 
     return _ActivityItem(
       icon: Icons.medical_services_rounded,
-      color: Colors.orange,
+      color: Theme.of(context).colorScheme.secondary,
       title: statut,
       subtitle: description.isEmpty
           ? 'Intervention'
@@ -292,7 +292,7 @@ class _RecentActivityCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.history_rounded,
-                color: Color(0xFF0B6E4F),
+                color: Theme.of(context).colorScheme.primary,
               ),
               SizedBox(width: 10),
               Text(
@@ -353,14 +353,14 @@ class _EmptyActivity extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7F5),
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.check_circle_outline_rounded,
-            color: Color(0xFF0B6E4F),
+            color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 14),
           Expanded(
