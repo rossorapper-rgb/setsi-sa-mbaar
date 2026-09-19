@@ -305,8 +305,8 @@ class _DashboardContent extends StatelessWidget {
     final primary = config.couleurPrimaire;
     final orange = config.couleurSecondaire;
     final imageAccueil = config.imageAccueil?.trim();
-    final imageWidth = compact ? 92.0 : 175.0;
-    final imageHeight = compact ? 82.0 : 120.0;
+    final imageWidth = compact ? 120.0 : 230.0;
+    final imageHeight = compact ? 90.0 : 145.0;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(compact ? 14 : 24),
