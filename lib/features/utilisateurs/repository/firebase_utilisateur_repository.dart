@@ -122,6 +122,22 @@ class FirebaseUtilisateurRepository {
         .update(utilisateur.toMap());
   }
 
+
+  /// ===========================
+  /// Mettre à jour uniquement la photo de profil
+  /// ===========================
+  Future<void> updatePhotoUrl(
+      String utilisateurId,
+      String? photoUrl,
+      ) async {
+    await _firestore
+        .collection(_collection)
+        .doc(utilisateurId)
+        .update({
+      'photoUrl': photoUrl,
+    });
+  }
+
   /// ===========================
   /// Désactiver un utilisateur
   /// ===========================
