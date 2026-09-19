@@ -156,7 +156,7 @@ class DashboardHeader extends StatelessWidget {
 
                       Text(
                         role,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: 12,
                         ),
