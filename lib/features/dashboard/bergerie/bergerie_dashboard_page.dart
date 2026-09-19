@@ -304,6 +304,9 @@ class _DashboardContent extends StatelessWidget {
     final compact = MediaQuery.of(context).size.width < 700;
     final primary = config.couleurPrimaire;
     final orange = config.couleurSecondaire;
+    final imageAccueil = config.imageAccueil?.trim();
+    final imageWidth = compact ? 92.0 : 175.0;
+    final imageHeight = compact ? 82.0 : 120.0;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(compact ? 14 : 24),
@@ -347,6 +350,29 @@ class _DashboardContent extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (imageAccueil != null && imageAccueil.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      imageAccueil,
+                      width: imageWidth,
+                      height: imageHeight,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: imageWidth,
+                        height: imageHeight,
+                        color: Colors.white.withValues(alpha: .12),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Colors.white70,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 12),
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
