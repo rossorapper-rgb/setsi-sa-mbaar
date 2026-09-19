@@ -266,7 +266,7 @@ class BergerieDrawer extends StatelessWidget {
       );
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends StatefulWidget {
   const _DashboardContent({
     required this.config,
     required this.nomUtilisateur,
@@ -276,6 +276,19 @@ class _DashboardContent extends StatelessWidget {
   final BergerieConfig config;
   final String nomUtilisateur;
   final String? photoUrl;
+
+  @override
+  State<_DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<_DashboardContent> {
+  late Future<List<int>> _statsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture = _chargerStatistiques();
+  }
 
   Future<List<int>> _chargerStatistiques() async {
     final moutonRepository = FirebaseMoutonRepository();
@@ -301,6 +314,9 @@ class _DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final config = widget.config;
+    final nomUtilisateur = widget.nomUtilisateur;
+    final photoUrl = widget.photoUrl;
     final compact = MediaQuery.of(context).size.width < 700;
     final primary = config.couleurPrimaire;
     final orange = config.couleurSecondaire;
@@ -388,7 +404,7 @@ class _DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FutureBuilder<List<int>>(
-            future: _chargerStatistiques(),
+            future: _statsFuture,
             builder: (context, snapshot) {
               final moutonsCount = snapshot.hasData ? snapshot.data![0] : 0;
               final gestationsCount = snapshot.hasData ? snapshot.data![1] : 0;
