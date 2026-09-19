@@ -93,6 +93,18 @@ class CloudinaryImageService {
     );
   }
 
+  Future<String> uploadBergerieImageAccueil({
+    required Uint8List bytes,
+    required String bergerieId,
+  }) {
+    return _upload(
+      bytes: bytes,
+      folder: 'bergeries/\$bergerieId/config',
+      publicId: 'accueil_\${DateTime.now().millisecondsSinceEpoch}',
+      filename: 'accueil_\${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
+  }
+
   Future<String> uploadNaissancePhoto({
     required Uint8List bytes,
     required String bergerieId,
