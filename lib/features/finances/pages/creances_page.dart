@@ -310,7 +310,7 @@ _montantCard(
 "Facturé",
 paiement
 .montantFacture,
-Colors.blue,
+Theme.of(context).colorScheme.primary,
 ),
 ),
 
@@ -323,7 +323,7 @@ _montantCard(
 "Payé",
 paiement
 .montantPaye,
-Colors.green,
+Theme.of(context).colorScheme.primary,
 ),
 ),
 
