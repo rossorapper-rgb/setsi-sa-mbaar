@@ -50,7 +50,11 @@ service cloud.firestore {
         currentUser().data.role == 'responsable' &&
         resource.data.bergerieId == currentUser().data.bergerieId &&
         request.resource.data.bergerieId == resource.data.bergerieId &&
-        request.resource.data.role != 'admin'
+        request.resource.data.role != 'admin' &&
+        (
+          request.auth.uid != userId ||
+          request.resource.data.permissions == resource.data.permissions
+        )
       );
       allow delete: if isAdmin() || (
         signedIn() &&
