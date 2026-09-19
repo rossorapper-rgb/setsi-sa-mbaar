@@ -345,7 +345,7 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
         leading: IconButton(
           tooltip: 'Retour',
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/dashboard/bergerie'),
         ),
         title: const Text('🩺 Mon Carnet Véto'),
         centerTitle: true,
