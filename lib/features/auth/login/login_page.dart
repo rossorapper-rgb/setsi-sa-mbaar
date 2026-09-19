@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -111,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Image.asset('assets/images/app_icon.png', height: 180),
                 const SizedBox(height: 20),
-                const Text("SET'SI SA MBAAR", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0B6E4F))),
+                const Text("SET'SI SA MBAAR", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF1597B7))),
                 const SizedBox(height: 8),
                 const Text('Le premier service professionnel\nde lavage de moutons au Sénégal', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 15)),
                 const SizedBox(height: 35),
@@ -125,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(labelText: 'Mot de passe', prefixIcon: const Icon(Icons.lock_outline), suffixIcon: IconButton(icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off), onPressed: () => setState(() => _obscurePassword = !_obscurePassword)), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
                 ),
                 const SizedBox(height: 30),
-                SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: _isLoading ? null : _login, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0B6E4F), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : const Text('SE CONNECTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
+                SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: _isLoading ? null : _login, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1597B7), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : const Text('SE CONNECTER', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
                 const SizedBox(height: 15),
                 TextButton(onPressed: () {}, child: const Text('Mot de passe oublié ?')),
               ],
