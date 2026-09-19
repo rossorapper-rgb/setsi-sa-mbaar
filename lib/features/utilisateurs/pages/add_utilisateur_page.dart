@@ -322,29 +322,7 @@ class _AddUtilisateurPageState
 
                   const SizedBox(height: 24),
 
-                  if (_responsableModifieSonPropreCompte) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.lock_outline, color: Colors.orange),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              "Vos permissions d'accès ne peuvent pas être modifiées depuis votre propre compte. Un administrateur peut les modifier si nécessaire.",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else
+                  if (!_responsableModifieSonPropreCompte)
                     _PermissionsSection(
                       permissions: _permissions,
                       onChanged: (key, value) {
