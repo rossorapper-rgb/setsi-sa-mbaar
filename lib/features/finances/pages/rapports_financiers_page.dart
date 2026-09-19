@@ -151,7 +151,7 @@ const SizedBox(height: 10),
 
 Card(
 child: ListTile(
-leading: const Icon(
+leading: Icon(
 Icons.table_chart,
 color: Theme.of(context).colorScheme.secondary,
 ),
