@@ -85,7 +85,7 @@ children: [
 _rapportCard(
 "Recettes du jour",
 jour,
-Colors.green,
+Theme.of(context).colorScheme.primary,
 Icons.today,
 ),
 
@@ -94,7 +94,7 @@ const SizedBox(height: 12),
 _rapportCard(
 "Recettes du mois",
 mois,
-Colors.blue,
+Theme.of(context).colorScheme.secondary,
 Icons.calendar_month,
 ),
 
@@ -103,7 +103,7 @@ const SizedBox(height: 12),
 _rapportCard(
 "Recettes de l'année",
 annee,
-Colors.deepPurple,
+Theme.of(context).colorScheme.primary,
 Icons.trending_up,
 ),
 
@@ -153,7 +153,7 @@ Card(
 child: ListTile(
 leading: const Icon(
 Icons.table_chart,
-color: Colors.green,
+color: Theme.of(context).colorScheme.secondary,
 ),
 title: const Text(
 "Exporter en Excel",
