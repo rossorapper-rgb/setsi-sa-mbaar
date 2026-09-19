@@ -1,8 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/session/current_user_service.dart';
+import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 
 class SecuriteComptePage extends StatefulWidget {
   const SecuriteComptePage({super.key});
@@ -21,6 +26,7 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
   bool _obscureNouveau = true;
   bool _obscureConfirmation = true;
   bool _loading = false;
+  bool _photoLoading = false;
 
   @override
   void dispose() {
@@ -28,6 +34,75 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
     _nouveauMotDePasseController.dispose();
     _confirmationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _choisirPhoto() async {
+    final utilisateur = CurrentUserService.instance.currentUser;
+    if (utilisateur == null) return;
+
+    setState(() => _photoLoading = true);
+
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (image == null) return;
+
+      final Uint8List bytes = await image.readAsBytes();
+      if (bytes.length > 5 * 1024 * 1024) {
+        throw Exception('La photo doit faire moins de 5 Mo.');
+      }
+
+      final extension = image.name.contains('.')
+          ? image.name.split('.').last.toLowerCase()
+          : 'jpg';
+      final safeExtension = ['jpg', 'jpeg', 'png', 'webp'].contains(extension)
+          ? extension
+          : 'jpg';
+
+      final reference = FirebaseStorage.instance
+          .ref()
+          .child('users/${utilisateur.id}/profile.$safeExtension');
+
+      final metadata = SettableMetadata(
+        contentType: 'image/$safeExtension'.replaceFirst('image/jpg', 'image/jpeg'),
+      );
+
+      await reference.putData(bytes, metadata);
+      final photoUrl = await reference.getDownloadURL();
+
+      await FirebaseUtilisateurRepository().updatePhotoUrl(
+        utilisateur.id,
+        photoUrl,
+      );
+
+      final updatedUser = utilisateur.copyWith(photoUrl: photoUrl);
+      CurrentUserService.instance.setCurrentUser(updatedUser);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('Photo de profil mise à jour avec succès.'),
+        ),
+      );
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Impossible de modifier la photo : $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _photoLoading = false);
+    }
   }
 
   Future<void> _changerMotDePasse() async {
@@ -111,6 +186,73 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
     }
   }
 
+  Widget _buildPhotoSection(Color primary) {
+    final utilisateur = CurrentUserService.instance.currentUser;
+    final photoUrl = utilisateur?.photoUrl;
+
+    return Column(
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.account_circle_rounded, size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Ma photo de profil',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            CircleAvatar(
+              radius: 58,
+              backgroundColor: primary.withValues(alpha: 0.12),
+              backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                  ? NetworkImage(photoUrl)
+                  : null,
+              child: photoUrl == null || photoUrl.isEmpty
+                  ? Icon(Icons.person_rounded, size: 62, color: primary)
+                  : null,
+            ),
+            Material(
+              color: primary,
+              shape: const CircleBorder(),
+              child: IconButton(
+                onPressed: _photoLoading ? null : _choisirPhoto,
+                color: Colors.white,
+                icon: _photoLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.camera_alt_rounded),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Cette photo appartient uniquement à votre compte.',
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _photoLoading ? null : _choisirPhoto,
+          icon: const Icon(Icons.photo_library_outlined),
+          label: const Text('Choisir une photo'),
+        ),
+      ],
+    );
+  }
+
   InputDecoration _decoration(
     String label,
     IconData icon,
@@ -149,6 +291,13 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: _buildPhotoSection(primary),
+              ),
+            ),
+            const SizedBox(height: 20),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
