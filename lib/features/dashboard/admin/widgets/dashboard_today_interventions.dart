@@ -13,11 +13,11 @@ class DashboardTodayInterventions extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(
                   Icons.today,
-                  color: Colors.green,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 SizedBox(width: 8),
                 Text(
