@@ -207,14 +207,25 @@ class BergerieDrawer extends StatelessWidget {
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
               onTap: () async {
+                final bergerieId =
+                    CurrentUserService.instance.bergerieId?.trim();
+
                 CurrentUserService.instance.clear();
                 CurrentBergerieConfig.instance.clear();
                 await FirebaseAuth.instance.signOut();
 
                 if (!context.mounted) return;
+
+                final loginUri = bergerieId != null && bergerieId.isNotEmpty
+                    ? Uri(
+                        path: '/login',
+                        queryParameters: {'bergerie': bergerieId},
+                      ).toString()
+                    : '/login';
+
                 Router.neglect(
                   context,
-                  () => context.go('/login'),
+                  () => context.go(loginUri),
                 );
               },
             ),
