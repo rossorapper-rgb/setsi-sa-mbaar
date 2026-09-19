@@ -107,7 +107,7 @@ p.statut ==
 
 return Scaffold(
 backgroundColor:
-const Color(0xFFF5F7FA),
+Theme.of(context).scaffoldBackgroundColor,
 
 appBar: AppBar(
 leading: IconButton(
@@ -189,7 +189,7 @@ titre:
 valeur: payes
 .toString(),
 couleur:
-Colors.green,
+Theme.of(context).colorScheme.primary,
 icone: Icons
 .check_circle,
 ),
@@ -205,7 +205,7 @@ titre:
 valeur: partiels
 .toString(),
 couleur:
-Colors.orange,
+Theme.of(context).colorScheme.secondary,
 icone: Icons
 .payments,
 ),
