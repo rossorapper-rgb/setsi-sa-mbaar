@@ -58,7 +58,7 @@ class StatCard extends StatelessWidget {
                   ),
                   child: Text(
                     evolution,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
