@@ -132,7 +132,7 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = const Color(0xFF123B63);
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
