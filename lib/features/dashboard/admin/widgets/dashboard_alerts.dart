@@ -363,7 +363,7 @@ class _AlertsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.notifications_active_rounded,
@@ -425,7 +425,7 @@ class _EmptyAlert extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline_rounded,
             color: Theme.of(context).colorScheme.primary,
           ),
