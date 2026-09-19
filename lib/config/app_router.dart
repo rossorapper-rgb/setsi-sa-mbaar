@@ -165,7 +165,25 @@ String? _naissanceRedirect() => _permissionRedirect('naissances.view');
 String? _rapportBergerieRedirect() => _permissionRedirect('rapports_financiers.view');
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: CurrentUserService.instance.isLoggedIn
+      ? (CurrentUserService.instance.isAdmin
+          ? '/dashboard/admin'
+          : '/dashboard/bergerie')
+      : '/login',
+  redirect: (context, state) {
+    final session = CurrentUserService.instance;
+    final isLogin = state.matchedLocation == '/login';
+
+    if (!session.isLoggedIn) {
+      return isLogin ? null : '/login';
+    }
+
+    if (isLogin) {
+      return session.isAdmin ? '/dashboard/admin' : '/dashboard/bergerie';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
