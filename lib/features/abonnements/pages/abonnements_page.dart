@@ -15,7 +15,7 @@ class AbonnementsPage extends ConsumerWidget {
     final abonnements = ref.watch(abonnementProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Gestion des abonnements'),
         centerTitle: true,
