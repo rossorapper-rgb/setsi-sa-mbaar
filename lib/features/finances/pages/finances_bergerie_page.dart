@@ -116,12 +116,12 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie != 'Alimentation')) ...[
+                if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie == 'Autre')) ...[
                   TextField(
                     controller: libelleController,
                     decoration: InputDecoration(
                       labelText: type == FinanceEntryType.depense ? 'Libellé' : 'Produit / mouton vendu',
-                      hintText: type == FinanceEntryType.depense ? 'Ex. Transport pour livraison' : null,
+                      hintText: type == FinanceEntryType.depense ? 'Ex. Achat de matériel spécifique' : null,
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -253,7 +253,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                   return;
                 }
 
-                if (type != FinanceEntryType.depense || (type == FinanceEntryType.depense && categorie != 'Alimentation')) {
+                if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie == 'Autre')) {
                   if (libelle.isEmpty) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
                       SnackBar(
@@ -334,7 +334,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       return;
     }
 
-    if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie != 'Alimentation')) {
+    if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie == 'Autre')) {
       if (libelle.isEmpty) {
         libelleController.dispose();
         montantController.dispose();
