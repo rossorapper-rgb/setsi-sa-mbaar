@@ -67,6 +67,18 @@ class CloudinaryImageService {
     );
   }
 
+  Future<String> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String utilisateurId,
+  }) {
+    return _upload(
+      bytes: bytes,
+      folder: 'users/$utilisateurId/profile',
+      publicId: 'profile',
+      filename: 'profile.jpg',
+    );
+  }
+
   Future<String> uploadBergerieLogo({
     required Uint8List bytes,
     required String bergerieId,
