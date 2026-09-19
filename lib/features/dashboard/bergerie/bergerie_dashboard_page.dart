@@ -19,6 +19,7 @@ class BergerieDashboardPage extends StatelessWidget {
     final nom = user?.nomComplet.trim().isNotEmpty == true
         ? user!.nomComplet.trim()
         : 'Responsable';
+    final photoUrl = user?.photoUrl?.trim();
     final desktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(
@@ -40,6 +41,7 @@ class BergerieDashboardPage extends StatelessWidget {
               child: _DashboardContent(
                 config: config,
                 nomUtilisateur: nom,
+                photoUrl: photoUrl,
               ),
             ),
           ],
@@ -265,10 +267,15 @@ class BergerieDrawer extends StatelessWidget {
 }
 
 class _DashboardContent extends StatelessWidget {
-  const _DashboardContent({required this.config, required this.nomUtilisateur});
+  const _DashboardContent({
+    required this.config,
+    required this.nomUtilisateur,
+    required this.photoUrl,
+  });
 
   final BergerieConfig config;
   final String nomUtilisateur;
+  final String? photoUrl;
 
   Future<List<int>> _chargerStatistiques() async {
     final moutonRepository = FirebaseMoutonRepository();
@@ -343,7 +350,12 @@ class _DashboardContent extends StatelessWidget {
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.person_rounded, color: primary),
+                  backgroundImage: photoUrl != null && photoUrl!.isNotEmpty
+                      ? NetworkImage(photoUrl!)
+                      : null,
+                  child: photoUrl == null || photoUrl!.isEmpty
+                      ? Icon(Icons.person_rounded, color: primary)
+                      : null,
                 ),
               ],
             ),
