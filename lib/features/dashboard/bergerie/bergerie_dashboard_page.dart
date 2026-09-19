@@ -340,7 +340,7 @@ class _DashboardContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person_rounded, color: primary),
