@@ -14,6 +14,8 @@ class MoutonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
@@ -29,10 +31,10 @@ class MoutonCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: Colors.green.shade100,
+                backgroundColor: primary.withValues(alpha: 0.12),
                 child: Icon(
                   Icons.pets,
-                  color: Colors.green.shade700,
+                  color: primary,
                   size: 32,
                 ),
               ),
@@ -76,7 +78,7 @@ class MoutonCard extends StatelessWidget {
                         const Icon(
                           Icons.monitor_weight,
                           size: 18,
-                          color: Colors.green,
+                          color: primary,
                         ),
 
                         const SizedBox(width: 5),
