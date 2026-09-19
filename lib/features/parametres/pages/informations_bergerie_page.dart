@@ -123,15 +123,6 @@ class _InformationsBergeriePageState extends State<InformationsBergeriePage> {
                   ),
                   const SizedBox(height: 16),
                   _field(
-                    controller: TextEditingController(
-                      text: _config.bergerieId,
-                    ),
-                    label: 'Identifiant de la bergerie',
-                    icon: Icons.fingerprint_rounded,
-                    enabled: false,
-                  ),
-                  const SizedBox(height: 16),
-                  _field(
                     controller: _adresseController,
                     label: 'Adresse',
                     icon: Icons.location_on_rounded,
