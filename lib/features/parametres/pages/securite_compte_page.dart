@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/cloudinary_image_service.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 
@@ -58,23 +58,10 @@ class _SecuriteComptePageState extends State<SecuriteComptePage> {
         throw Exception('La photo doit faire moins de 5 Mo.');
       }
 
-      final extension = image.name.contains('.')
-          ? image.name.split('.').last.toLowerCase()
-          : 'jpg';
-      final safeExtension = ['jpg', 'jpeg', 'png', 'webp'].contains(extension)
-          ? extension
-          : 'jpg';
-
-      final reference = FirebaseStorage.instance
-          .ref()
-          .child('users/${utilisateur.id}/profile.$safeExtension');
-
-      final metadata = SettableMetadata(
-        contentType: 'image/$safeExtension'.replaceFirst('image/jpg', 'image/jpeg'),
+      final photoUrl = await CloudinaryImageService().uploadProfilePhoto(
+        bytes: bytes,
+        utilisateurId: utilisateur.id,
       );
-
-      await reference.putData(bytes, metadata);
-      final photoUrl = await reference.getDownloadURL();
 
       await FirebaseUtilisateurRepository().updatePhotoUrl(
         utilisateur.id,
