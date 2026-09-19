@@ -79,6 +79,47 @@ service cloud.firestore {
         request.resource.data.active == resource.data.active
       );
     }
+    match /bergerie_public_config/{bergerieId} {
+      allow read: if true;
+
+      allow create: if isAdmin() || (
+        belongsToBergerie(bergerieId) &&
+        currentUser().data.role == 'responsable' &&
+        request.resource.data.bergerieId == bergerieId &&
+        request.resource.data.keys().hasOnly([
+          'bergerieId',
+          'nomBergerie',
+          'nomApplication',
+          'logo',
+          'imageAccueil',
+          'couleurPrimaire',
+          'couleurSecondaire',
+          'couleurFond',
+          'slogan',
+          'active'
+        ])
+      );
+
+      allow update: if isAdmin() || (
+        belongsToBergerie(bergerieId) &&
+        currentUser().data.role == 'responsable' &&
+        request.resource.data.bergerieId == resource.data.bergerieId &&
+        request.resource.data.keys().hasOnly([
+          'bergerieId',
+          'nomBergerie',
+          'nomApplication',
+          'logo',
+          'imageAccueil',
+          'couleurPrimaire',
+          'couleurSecondaire',
+          'couleurFond',
+          'slogan',
+          'active'
+        ])
+      );
+
+      allow delete: if isAdmin();
+    }
     match /bergeries/{bergerieId} { allow read: if isAdmin() || belongsToBergerie(bergerieId); allow create, update, delete: if isAdmin(); }
     match /clients/{clientId} { allow read: if isAdmin() || belongsToClient(clientId); allow create, update, delete: if isAdmin(); }
 
