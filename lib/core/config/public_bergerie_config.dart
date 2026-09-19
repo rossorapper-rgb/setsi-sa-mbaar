@@ -115,7 +115,7 @@ class PublicBergerieConfigService {
     final snapshot = await _firestore
         .collection('bergerie_public_config')
         .doc(id)
-        .get();
+        .get(const GetOptions(source: Source.server));
 
     if (!snapshot.exists || snapshot.data() == null) {
       return id == PublicBergerieConfig.defaut().bergerieId
