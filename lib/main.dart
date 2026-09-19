@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,6 +27,12 @@ Future<void> main() async {
   // ------------------------------------------------------------
 
   final firebaseAuth = FirebaseAuth.instance;
+
+  // Sur le Web, on force explicitement la persistance locale de Firebase Auth.
+  // La session reste ainsi disponible après fermeture puis réouverture du navigateur.
+  if (kIsWeb) {
+    await firebaseAuth.setPersistence(Persistence.LOCAL);
+  }
 
   final firebaseUser =
       firebaseAuth.currentUser ??
