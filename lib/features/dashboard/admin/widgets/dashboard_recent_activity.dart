@@ -50,21 +50,21 @@ class _AdminRecentActivity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activities = <_ActivityItem>[
-      const _ActivityItem(
+      _ActivityItem(
         icon: Icons.person_add_alt_1_rounded,
         color: Theme.of(context).colorScheme.primary,
         title: 'Nouveau client enregistré',
         subtitle: 'Mamadou Ndiaye',
         time: 'Il y a 10 min',
       ),
-      const _ActivityItem(
+      _ActivityItem(
         icon: Icons.pets_rounded,
         color: Theme.of(context).colorScheme.primary,
         title: 'Nouveau mouton ajouté',
         subtitle: 'Bergerie de Grand-Yoff',
         time: '09:15',
       ),
-      const _ActivityItem(
+      _ActivityItem(
         icon: Icons.medical_services_rounded,
         color: Theme.of(context).colorScheme.secondary,
         title: 'Intervention terminée',
@@ -214,7 +214,7 @@ class _FilteredRecentActivity extends StatelessWidget {
 
     return _ActivityItem(
       icon: Icons.medical_services_rounded,
-      color: Theme.of(context).colorScheme.secondary,
+      color: const Color(0xFFF59A00),
       title: statut,
       subtitle: description.isEmpty
           ? 'Intervention'
@@ -288,7 +288,7 @@ class _RecentActivityCard extends StatelessWidget {
         crossAxisAlignment:
         CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.history_rounded,
@@ -358,7 +358,7 @@ class _EmptyActivity extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline_rounded,
             color: Theme.of(context).colorScheme.primary,
           ),
