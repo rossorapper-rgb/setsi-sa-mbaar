@@ -21,7 +21,7 @@ class InterventionDetailsPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Détail de l’intervention'),
       ),
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
