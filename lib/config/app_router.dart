@@ -185,7 +185,12 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => LoginPage(
+        bergerieId: state.uri.queryParameters['bergerie'],
+      ),
+    ),
     GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
     GoRoute(path: '/dashboard/bergerie', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const BergerieDashboardPage()),
     GoRoute(path: '/clients', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const ClientsPage()),
