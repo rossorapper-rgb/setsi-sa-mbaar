@@ -75,7 +75,7 @@ class MoutonCard extends StatelessWidget {
 
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.monitor_weight,
                           size: 18,
                           color: primary,
