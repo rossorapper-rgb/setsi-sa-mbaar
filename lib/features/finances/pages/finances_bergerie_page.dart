@@ -116,11 +116,12 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (type == FinanceEntryType.vente || categorie == 'Autre') ...[
+                if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie != 'Alimentation')) ...[
                   TextField(
                     controller: libelleController,
                     decoration: InputDecoration(
                       labelText: type == FinanceEntryType.depense ? 'Libellé' : 'Produit / mouton vendu',
+                      hintText: type == FinanceEntryType.depense ? 'Ex. Transport pour livraison' : null,
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -247,21 +248,19 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
 
                 if (montant == null || montant <= 0) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Veuillez renseigner un montant valide.'),
-                    ),
+                    const SnackBar(content: Text('Veuillez renseigner un montant valide.')),
                   );
                   return;
                 }
 
-                if (type != FinanceEntryType.depense || categorie == 'Autre') {
+                if (type != FinanceEntryType.depense || (type == FinanceEntryType.depense && categorie != 'Alimentation')) {
                   if (libelle.isEmpty) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
                       SnackBar(
                         content: Text(
                           type == FinanceEntryType.vente
                               ? 'Veuillez renseigner le produit ou le mouton vendu.'
-                              : 'Veuillez renseigner le libellé.',
+                              : 'Veuillez renseigner le libellé de la dépense.',
                         ),
                       ),
                     );
@@ -275,17 +274,13 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                   );
                   if (alimentController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Veuillez renseigner l’aliment.'),
-                      ),
+                      const SnackBar(content: Text('Veuillez renseigner l’aliment.')),
                     );
                     return;
                   }
                   if (quantite == null || quantite <= 0) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Veuillez renseigner une quantité valide.'),
-                      ),
+                      const SnackBar(content: Text('Veuillez renseigner une quantité valide.')),
                     );
                     return;
                   }
@@ -335,15 +330,11 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       observationController.dispose();
       alimentController.dispose();
       quantiteController.dispose();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Veuillez renseigner un montant valide.')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez renseigner un montant valide.')));
       return;
     }
 
-    if (type == FinanceEntryType.vente || categorie == 'Autre') {
+    if (type == FinanceEntryType.vente || (type == FinanceEntryType.depense && categorie != 'Alimentation')) {
       if (libelle.isEmpty) {
         libelleController.dispose();
         montantController.dispose();
@@ -356,7 +347,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
               content: Text(
                 type == FinanceEntryType.vente
                     ? 'Veuillez renseigner le produit ou le mouton vendu.'
-                    : 'Veuillez renseigner le libellé.',
+                    : 'Veuillez renseigner le libellé de la dépense.',
               ),
             ),
           );
@@ -382,7 +373,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       } else {
         await _repository.ajouter(
           type: type,
-          libelle: libelle,
+          libelle: type == FinanceEntryType.depense ? _libelleCategorie(categorie, libelle) : libelle,
           montant: montant,
           date: date,
           observation: observationController.text,
@@ -392,11 +383,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              type == FinanceEntryType.depense
-                  ? 'Dépense enregistrée avec succès.'
-                  : 'Vente enregistrée avec succès.',
-            ),
+            content: Text(type == FinanceEntryType.depense ? 'Dépense enregistrée avec succès.' : 'Vente enregistrée avec succès.'),
           ),
         );
       }
@@ -410,6 +397,28 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       observationController.dispose();
       alimentController.dispose();
       quantiteController.dispose();
+    }
+  }
+
+  String _libelleCategorie(String categorie, String libelle) {
+    if (libelle.isNotEmpty) return libelle;
+    switch (categorie) {
+      case 'Sante':
+        return 'Santé / vétérinaire';
+      case 'Entretien':
+        return 'Entretien / nettoyage';
+      case 'Transport':
+        return 'Transport';
+      case 'Salaires':
+        return 'Salaires / main-d’œuvre';
+      case 'Materiel':
+        return 'Matériel / équipement';
+      case 'EauElectricite':
+        return 'Électricité / eau';
+      case 'Autre':
+        return 'Autres';
+      default:
+        return categorie;
     }
   }
 
@@ -447,17 +456,11 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           onPressed: () => context.go('/dashboard/bergerie'),
         ),
         title: const Text('Finances'),
-        actions: [
-          IconButton(onPressed: _charger, icon: const Icon(Icons.refresh_rounded)),
-        ],
+        actions: [IconButton(onPressed: _charger, icon: const Icon(Icons.refresh_rounded))],
       ),
       floatingActionButton: _loading || (!_canEditDepenses && !_canEditVentes)
           ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _choisirAction(),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Ajouter'),
-            ),
+          : FloatingActionButton.extended(onPressed: () => _choisirAction(), icon: const Icon(Icons.add_rounded), label: const Text('Ajouter')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -472,96 +475,32 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
                           padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_month_rounded),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  moisLabel[0].toUpperCase() + moisLabel.substring(1),
-                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-                                ),
-                              ),
-                              const Icon(Icons.keyboard_arrow_down_rounded),
-                            ],
-                          ),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                          child: Row(children: [const Icon(Icons.calendar_month_rounded), const SizedBox(width: 10), Expanded(child: Text(moisLabel[0].toUpperCase() + moisLabel.substring(1), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))), const Icon(Icons.keyboard_arrow_down_rounded)]),
                         ),
                       ),
                       const SizedBox(height: 14),
                       if (!_canViewFinance)
-                        const Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(18),
-                            child: Row(
-                              children: [
-                                Icon(Icons.lock_outline),
-                                SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Vous pouvez enregistrer des opérations autorisées, mais les montants financiers ne sont pas visibles avec votre niveau d’accès.',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
+                        const Card(child: Padding(padding: EdgeInsets.all(18), child: Row(children: [Icon(Icons.lock_outline), SizedBox(width: 10), Expanded(child: Text('Vous pouvez enregistrer des opérations autorisées, mais les montants financiers ne sont pas visibles avec votre niveau d’accès.'))])))
                       else ...[
-                        if (_canViewVentes)
-                          _SummaryCard(
-                            title: 'Ventes',
-                            value: '${_money.format(_ventes)} FCFA',
-                            icon: Icons.trending_up_rounded,
-                            color: Colors.green,
-                          ),
+                        if (_canViewVentes) _SummaryCard(title: 'Ventes', value: '${_money.format(_ventes)} FCFA', icon: Icons.trending_up_rounded, color: Colors.green),
                         if (_canViewDepenses) ...[
                           const SizedBox(height: 10),
-                          _SummaryCard(
-                            title: 'Dépenses',
-                            value: '${_money.format(_depenses)} FCFA',
-                            subtitle: 'Alimentation : ${_money.format(_alimentationMois)} FCFA',
-                            icon: Icons.trending_down_rounded,
-                            color: Colors.red,
-                          ),
+                          _SummaryCard(title: 'Dépenses', value: '${_money.format(_depenses)} FCFA', subtitle: 'Alimentation : ${_money.format(_alimentationMois)} FCFA', icon: Icons.trending_down_rounded, color: Colors.red),
                         ],
                         if (_canViewVentes && _canViewDepenses) ...[
                           const SizedBox(height: 10),
-                          _SummaryCard(
-                            title: 'Solde',
-                            value: '${_money.format(solde)} FCFA',
-                            icon: Icons.account_balance_wallet_rounded,
-                            color: solde >= 0 ? Colors.green : Colors.red,
-                          ),
+                          _SummaryCard(title: 'Solde', value: '${_money.format(solde)} FCFA', icon: Icons.account_balance_wallet_rounded, color: solde >= 0 ? Colors.green : Colors.red),
                         ],
                       ],
                       const SizedBox(height: 22),
                       const Text('Historique', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 10),
-                      if (_entries.where((e) => _dansMois(e.date)).isEmpty && _alimentationMois == 0)
-                        const Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(22),
-                            child: Text('Aucune opération enregistrée pour ce mois.'),
-                          ),
-                        )
+                      if (_entries.where((e) => _dansMois(e.date)).isEmpty && _alimentations.where((e) => _dansMois(e.date)).isEmpty)
+                        const Card(child: Padding(padding: EdgeInsets.all(22), child: Text('Aucune opération enregistrée pour ce mois.')))
                       else ...[
-                        ..._alimentations.where((e) => _dansMois(e.date)).map(
-                              (e) => _AlimentationFinanceTile(
-                                alimentation: e,
-                                dateFormat: _dateFormat,
-                              ),
-                            ),
-                        ..._entries.where((e) => _dansMois(e.date)).map(
-                              (e) => _FinanceTile(
-                                entry: e,
-                                dateFormat: _dateFormat,
-                                money: _money,
-                                onDelete: () => _supprimer(e),
-                              ),
-                            ),
+                        ..._alimentations.where((e) => _dansMois(e.date)).map((e) => _AlimentationFinanceTile(alimentation: e, dateFormat: _dateFormat)),
+                        ..._entries.where((e) => _dansMois(e.date)).map((e) => _FinanceTile(entry: e, dateFormat: _dateFormat, money: _money, onDelete: () => _supprimer(e))),
                       ],
                     ],
                   ),
@@ -575,18 +514,8 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
       builder: (context) => SafeArea(
         child: Wrap(
           children: [
-            if (_canEditDepenses)
-              ListTile(
-                leading: const Icon(Icons.trending_down_rounded, color: Colors.red),
-                title: const Text('Ajouter une dépense'),
-                onTap: () => Navigator.pop(context, FinanceEntryType.depense),
-              ),
-            if (_canEditVentes)
-              ListTile(
-                leading: const Icon(Icons.trending_up_rounded, color: Colors.green),
-                title: const Text('Ajouter une vente'),
-                onTap: () => Navigator.pop(context, FinanceEntryType.vente),
-              ),
+            if (_canEditDepenses) ListTile(leading: const Icon(Icons.trending_down_rounded, color: Colors.red), title: const Text('Ajouter une dépense'), onTap: () => Navigator.pop(context, FinanceEntryType.depense)),
+            if (_canEditVentes) ListTile(leading: const Icon(Icons.trending_up_rounded, color: Colors.green), title: const Text('Ajouter une vente'), onTap: () => Navigator.pop(context, FinanceEntryType.vente)),
           ],
         ),
       ),
@@ -604,35 +533,7 @@ class _SummaryCard extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Card(
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: color.withValues(alpha: .12),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(color: Colors.black54)),
-                    const SizedBox(height: 3),
-                    Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color)),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(subtitle!, style: const TextStyle(fontSize: 11, color: Colors.black54)),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+  Widget build(BuildContext context) => Card(elevation: 0, child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [CircleAvatar(backgroundColor: color.withValues(alpha: .12), child: Icon(icon, color: color)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Colors.black54)), const SizedBox(height: 3), Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color)), if (subtitle != null) ...[const SizedBox(height: 2), Text(subtitle!, style: const TextStyle(fontSize: 11, color: Colors.black54))]]))])));
 }
 
 class _FinanceTile extends StatelessWidget {
@@ -645,27 +546,7 @@ class _FinanceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vente = entry.type == FinanceEntryType.vente;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(vente ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: vente ? Colors.green : Colors.red),
-        title: Text(entry.libelle, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text('${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}'),
-        isThreeLine: entry.observation.isNotEmpty,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('${money.format(entry.montant)} FCFA', style: TextStyle(fontWeight: FontWeight.w800, color: vente ? Colors.green : Colors.red)),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'delete') onDelete();
-              },
-              itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer'))],
-            ),
-          ],
-        ),
-      ),
-    );
+    return Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(vente ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: vente ? Colors.green : Colors.red), title: Text(entry.libelle, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text('${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}'), isThreeLine: entry.observation.isNotEmpty, trailing: Row(mainAxisSize: MainAxisSize.min, children: [Text('${money.format(entry.montant)} FCFA', style: TextStyle(fontWeight: FontWeight.w800, color: vente ? Colors.green : Colors.red)), PopupMenuButton<String>(onSelected: (value) { if (value == 'delete') onDelete(); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer'))])])));
   }
 }
 
@@ -675,13 +556,5 @@ class _AlimentationFinanceTile extends StatelessWidget {
   final DateFormat dateFormat;
 
   @override
-  Widget build(BuildContext context) => Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: ListTile(
-          leading: const Icon(Icons.grass_rounded, color: Colors.orange),
-          title: Text('Alimentation · ${alimentation.aliment}', style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text('${dateFormat.format(alimentation.date)} · ${alimentation.quantite} ${alimentation.unite}'),
-          trailing: Text('${alimentation.prix.toStringAsFixed(0)} FCFA', style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.orange)),
-        ),
-      );
+  Widget build(BuildContext context) => Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: const Icon(Icons.grass_rounded, color: Colors.orange), title: Text('Alimentation · ${alimentation.aliment}', style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text('${dateFormat.format(alimentation.date)} · ${alimentation.quantite} ${alimentation.unite}'), trailing: Text('${alimentation.prix.toStringAsFixed(0)} FCFA', style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.orange))));
 }
