@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/current_bergerie_config.dart';
+import '../../../core/config/public_bergerie_config.dart';
 import '../../../core/config/firebase_bergerie_config_repository.dart';
 import '../../../core/services/cloudinary_image_service.dart';
 import '../../../core/session/current_user_service.dart';
@@ -239,6 +240,7 @@ class _PersonnalisationBergeriePageState
 
     try {
       await FirebaseBergerieConfigRepository().save(updated);
+      await PublicBergerieConfigService.instance.save(updated);
       CurrentBergerieConfig.instance.setConfig(updated);
 
       if (!mounted) return;
