@@ -31,6 +31,8 @@ class _PersonnalisationBergeriePageState
   late Color _couleurSecondaire;
   String? _logo;
   Uint8List? _logoPreview;
+  String? _imageAccueil;
+  Uint8List? _imageAccueilPreview;
   bool _saving = false;
   bool _uploadingLogo = false;
 
@@ -61,6 +63,7 @@ class _PersonnalisationBergeriePageState
     _couleurPrimaire = _config.couleurPrimaire;
     _couleurSecondaire = _config.couleurSecondaire;
     _logo = _config.logo;
+    _imageAccueil = _config.imageAccueil;
     _sloganController.text = _config.slogan ?? '';
   }
 
@@ -106,6 +109,48 @@ class _PersonnalisationBergeriePageState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Impossible de charger le logo : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _uploadingLogo = false);
+    }
+  }
+
+  Future<void> _choisirImageAccueil() async {
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: 1600,
+    );
+    if (image == null) return;
+
+    setState(() => _uploadingLogo = true);
+
+    try {
+      final bytes = await image.readAsBytes();
+      final bergerieId = CurrentUserService.instance.bergerieId?.trim();
+
+      if (bergerieId == null || bergerieId.isEmpty) {
+        throw Exception('Bergerie introuvable pour cet utilisateur.');
+      }
+
+      final url = await _cloudinary.uploadBergerieImageAccueil(
+        bytes: bytes,
+        bergerieId: bergerieId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _imageAccueilPreview = bytes;
+        _imageAccueil = url;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image d’accueil chargée avec succès.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible de charger l’image : $e')),
       );
     } finally {
       if (mounted) setState(() => _uploadingLogo = false);
@@ -186,6 +231,7 @@ class _PersonnalisationBergeriePageState
     final updated = _config.copyWith(
       bergerieId: bergerieId,
       logo: _logo,
+      imageAccueil: _imageAccueil,
       couleurPrimaire: _couleurPrimaire,
       couleurSecondaire: _couleurSecondaire,
       slogan: _sloganController.text.trim(),
@@ -323,6 +369,51 @@ class _PersonnalisationBergeriePageState
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'Image d’accueil',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    height: 190,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      color: primary.withValues(alpha: .08),
+                    ),
+                    child: _imageAccueilPreview != null
+                        ? Image.memory(_imageAccueilPreview!, fit: BoxFit.cover)
+                        : (_imageAccueil != null && _imageAccueil!.isNotEmpty)
+                            ? Image.network(
+                                _imageAccueil!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    size: 52,
+                                    color: primary,
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  size: 52,
+                                  color: primary,
+                                ),
+                              ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: _uploadingLogo ? null : _choisirImageAccueil,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Choisir l’image d’accueil'),
                   ),
                   const SizedBox(height: 22),
                   const Text(
