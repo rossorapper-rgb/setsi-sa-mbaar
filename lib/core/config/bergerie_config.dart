@@ -5,6 +5,7 @@ class BergerieConfig {
   final String nomBergerie;
   final String nomApplication;
   final String? logo;
+  final String? imageAccueil;
   final Color couleurPrimaire;
   final Color couleurSecondaire;
   final Color couleurFond;
@@ -19,6 +20,7 @@ class BergerieConfig {
     required this.nomBergerie,
     required this.nomApplication,
     this.logo,
+    this.imageAccueil,
     required this.couleurPrimaire,
     required this.couleurSecondaire,
     this.couleurFond = Colors.white,
@@ -56,6 +58,7 @@ class BergerieConfig {
     String? nomBergerie,
     String? nomApplication,
     String? logo,
+    String? imageAccueil,
     Color? couleurPrimaire,
     Color? couleurSecondaire,
     Color? couleurFond,
@@ -69,6 +72,7 @@ class BergerieConfig {
         nomBergerie: nomBergerie ?? this.nomBergerie,
         nomApplication: nomApplication ?? this.nomApplication,
         logo: logo ?? this.logo,
+        imageAccueil: imageAccueil ?? this.imageAccueil,
         couleurPrimaire: couleurPrimaire ?? this.couleurPrimaire,
         couleurSecondaire: couleurSecondaire ?? this.couleurSecondaire,
         couleurFond: couleurFond ?? this.couleurFond,
@@ -84,6 +88,7 @@ class BergerieConfig {
         'nomBergerie': nomBergerie,
         'nomApplication': nomApplication,
         'logo': logo,
+        'imageAccueil': imageAccueil,
         'couleurPrimaire': couleurPrimaire.value,
         'couleurSecondaire': couleurSecondaire.value,
         'couleurFond': couleurFond.value,
@@ -99,6 +104,7 @@ class BergerieConfig {
         nomBergerie: map['nomBergerie'] as String? ?? '',
         nomApplication: map['nomApplication'] as String? ?? '',
         logo: map['logo'] as String?,
+        imageAccueil: map['imageAccueil'] as String?,
         couleurPrimaire: _colorFromMap(map['couleurPrimaire'], const Color(0xFF1597B7)),
         couleurSecondaire: _colorFromMap(map['couleurSecondaire'], const Color(0xFFF59A00)),
         couleurFond: _colorFromMap(map['couleurFond'], Colors.white),
