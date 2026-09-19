@@ -228,7 +228,7 @@ return ListTile(
 dense: true,
 contentPadding:
 EdgeInsets.zero,
-leading: const Icon(
+leading: Icon(
 Icons.pets,
 color: primary,
 ),
