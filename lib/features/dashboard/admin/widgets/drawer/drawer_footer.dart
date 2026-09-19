@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/current_bergerie_config.dart';
-import '../../../../core/session/current_user_service.dart';
+import '../../../../../core/config/current_bergerie_config.dart';
+import '../../../../../core/session/current_user_service.dart';
 
 class DrawerFooter extends StatelessWidget {
   const DrawerFooter({
