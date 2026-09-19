@@ -30,7 +30,7 @@ class DashboardChart extends StatelessWidget {
                   child: Icon(
                     Icons.bar_chart,
                     size: 90,
-                    color: Colors.green.shade400,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
