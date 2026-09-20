@@ -100,8 +100,24 @@ Future<void> main() async {
       }
     }
   } else {
-    CurrentUserService.instance.clear();
-    CurrentBergerieConfig.instance.clear();
+    // Firebase Auth peut ne pas restituer immédiatement l'utilisateur
+    // lorsque le navigateur est hors connexion. La session applicative
+    // locale devient alors notre secours pour une session déjà ouverte.
+    final utilisateurLocal = await localSession.loadUtilisateur();
+
+    if (utilisateurLocal != null && utilisateurLocal.actif) {
+      CurrentUserService.instance.setCurrentUser(utilisateurLocal);
+
+      final configLocale = await localSession.loadBergerieConfig();
+      if (configLocale != null) {
+        CurrentBergerieConfig.instance.setConfig(configLocale);
+      } else {
+        CurrentBergerieConfig.instance.clear();
+      }
+    } else {
+      CurrentUserService.instance.clear();
+      CurrentBergerieConfig.instance.clear();
+    }
   }
 
   runApp(
