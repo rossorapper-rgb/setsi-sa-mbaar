@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_session_service.dart';
 import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
 import '../../moutons/repository/firebase_mouton_repository.dart';
@@ -212,6 +213,7 @@ class BergerieDrawer extends StatelessWidget {
 
                 CurrentUserService.instance.clear();
                 CurrentBergerieConfig.instance.clear();
+                await LocalSessionService.instance.clear();
                 await FirebaseAuth.instance.signOut();
 
                 if (!context.mounted) return;
