@@ -46,13 +46,24 @@ String? _loginBergerieId(GoRouterState state) {
     return fromRoute;
   }
 
-  // En Flutter Web avec une URL de type #/login?bergerie=..., le
-  // paramètre peut se retrouver dans le fragment du navigateur.
   final fragment = Uri.base.fragment;
-  if (fragment.isEmpty) return null;
+  if (fragment.isNotEmpty) {
+    final fragmentUri = Uri.tryParse(fragment);
+    final fromFragment = fragmentUri?.queryParameters['bergerie']?.trim();
+    if (fromFragment != null && fromFragment.isNotEmpty) {
+      return fromFragment;
+    }
+  }
 
-  final fragmentUri = Uri.tryParse(fragment);
-  return fragmentUri?.queryParameters['bergerie']?.trim();
+  // Certains navigateurs/extensions peuvent placer des paramètres avant
+  // le fragment Flutter (#). On vérifie également l'URL complète.
+  final fullUri = Uri.base;
+  final fromFullUri = fullUri.queryParameters['bergerie']?.trim();
+  if (fromFullUri != null && fromFullUri.isNotEmpty) {
+    return fromFullUri;
+  }
+
+  return null;
 }
 
 String? _permissionRedirect(String permission) {
