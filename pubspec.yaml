@@ -43,6 +43,7 @@ dependencies:
     intl: ^0.20.2
     uuid: ^4.5.1
     url_launcher: ^6.3.2
+    shared_preferences: ^2.5.3
 
     # Graphiques
     fl_chart: ^1.0.0
