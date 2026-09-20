@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,22 +22,6 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // Sur le Web, Firestore n'active pas la persistance locale par défaut.
-  // On l'active avant toute lecture Firestore afin de pouvoir restaurer
-  // les données déjà utilisées par l'application lorsque le réseau est
-  // indisponible.
-  if (kIsWeb) {
-    try {
-      await FirebaseFirestore.instance.enablePersistence(
-        const PersistenceSettings(synchronizeTabs: true),
-      );
-    } catch (_) {
-      // La persistance peut échouer si le navigateur ne la supporte pas
-      // ou si une configuration de plusieurs onglets pose problème.
-      // Firestore reste utilisable normalement dans ce cas.
-    }
-  }
 
   // ------------------------------------------------------------
   // Restauration de la session Firebase
