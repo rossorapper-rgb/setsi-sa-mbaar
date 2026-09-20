@@ -48,6 +48,25 @@ class _LoginPageState extends State<LoginPage> {
         _brandingLoading = false;
       });
     } catch (_) {
+      // Hors connexion, le branding déjà utilisé par la bergerie peut
+      // être restauré depuis la session locale.
+      try {
+        final configLocale =
+            await LocalSessionService.instance.loadBergerieConfig();
+
+        if (configLocale != null &&
+            (widget.bergerieId == null ||
+                configLocale.bergerieId == widget.bergerieId)) {
+          if (!mounted) return;
+          setState(() {
+            _branding =
+                PublicBergerieConfig.fromBergerieConfig(configLocale);
+            _brandingLoading = false;
+          });
+          return;
+        }
+      } catch (_) {}
+
       if (!mounted) return;
       setState(() => _brandingLoading = false);
     }
