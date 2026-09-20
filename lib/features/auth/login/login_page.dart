@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/config/public_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_session_service.dart';
 import '../../utilisateurs/models/user_role.dart';
 import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 
@@ -153,6 +154,11 @@ class _LoginPageState extends State<LoginPage> {
       CurrentUserService.instance.setCurrentUser(utilisateur);
 
       await CurrentBergerieConfig.instance.load(utilisateur.bergerieId);
+
+      await LocalSessionService.instance.saveUtilisateur(utilisateur);
+      await LocalSessionService.instance.saveBergerieConfig(
+        CurrentBergerieConfig.instance.config,
+      );
 
       if (!mounted) return;
 
