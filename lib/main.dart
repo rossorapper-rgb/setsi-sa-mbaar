@@ -52,8 +52,7 @@ Future<void> main() async {
   }
 
   final firebaseUser =
-      firebaseAuth.currentUser ??
-          await firebaseAuth.authStateChanges().first;
+      await firebaseAuth.authStateChanges().first;
 
   if (firebaseUser != null) {
     try {
@@ -80,10 +79,11 @@ Future<void> main() async {
         CurrentBergerieConfig.instance.clear();
       }
     } catch (_) {
-      // En cas d'erreur de récupération du profil ou de la
-      // configuration, l'application démarre avec la configuration
-      // par défaut et le routeur pourra rediriger vers /login.
-      CurrentUserService.instance.clear();
+      // Une erreur réseau ne doit pas transformer une session Firebase
+      // encore valide en déconnexion applicative.
+      //
+      // Le profil local peut être restauré lors d'une prochaine
+      // connexion réseau. On conserve donc ici l'état Firebase Auth.
       CurrentBergerieConfig.instance.clear();
     }
   } else {
