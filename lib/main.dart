@@ -12,6 +12,7 @@ import 'app.dart';
 import 'firebase_options.dart';
 import 'core/config/current_bergerie_config.dart';
 import 'core/session/current_user_service.dart';
+import 'core/session/local_session_service.dart';
 import 'features/utilisateurs/repository/firebase_utilisateur_repository.dart';
 
 Future<void> main() async {
@@ -54,6 +55,8 @@ Future<void> main() async {
   final firebaseUser =
       await firebaseAuth.authStateChanges().first;
 
+  final localSession = LocalSessionService.instance;
+
   if (firebaseUser != null) {
     try {
       final utilisateur = await FirebaseUtilisateurRepository()
@@ -62,31 +65,42 @@ Future<void> main() async {
       if (utilisateur != null && utilisateur.actif) {
         CurrentUserService.instance.setCurrentUser(utilisateur);
 
-        // --------------------------------------------------------
-        // Chargement de la configuration de la bergerie
-        // --------------------------------------------------------
-        //
-        // Le bergerieId du compte connecté devient la clé de
-        // recherche de la configuration personnalisée dans
-        // Firestore.
-        // --------------------------------------------------------
         await CurrentBergerieConfig.instance.load(
           utilisateur.bergerieId,
         );
-      } else if (utilisateur == null || !utilisateur.actif) {
+
+        await localSession.saveUtilisateur(utilisateur);
+        await localSession.saveBergerieConfig(
+          CurrentBergerieConfig.instance.config,
+        );
+      } else {
         await firebaseAuth.signOut();
         CurrentUserService.instance.clear();
         CurrentBergerieConfig.instance.clear();
+        await localSession.clear();
       }
     } catch (_) {
-      // Une erreur réseau ne doit pas transformer une session Firebase
-      // encore valide en déconnexion applicative.
-      //
-      // Le profil local peut être restauré lors d'une prochaine
-      // connexion réseau. On conserve donc ici l'état Firebase Auth.
-      CurrentBergerieConfig.instance.clear();
+      // Firestore peut être momentanément inaccessible hors connexion.
+      // Dans ce cas, on restaure le profil et le branding déjà enregistrés
+      // localement lors d'une précédente connexion réussie.
+      final utilisateurLocal = await localSession.loadUtilisateur();
+
+      if (utilisateurLocal != null && utilisateurLocal.actif) {
+        CurrentUserService.instance.setCurrentUser(utilisateurLocal);
+
+        final configLocale = await localSession.loadBergerieConfig();
+        if (configLocale != null) {
+          CurrentBergerieConfig.instance.setConfig(configLocale);
+        } else {
+          CurrentBergerieConfig.instance.clear();
+        }
+      } else {
+        CurrentUserService.instance.clear();
+        CurrentBergerieConfig.instance.clear();
+      }
     }
   } else {
+    CurrentUserService.instance.clear();
     CurrentBergerieConfig.instance.clear();
   }
 
