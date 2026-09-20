@@ -112,10 +112,20 @@ class PublicBergerieConfigService {
       return PublicBergerieConfig.defaut();
     }
 
-    final snapshot = await _firestore
-        .collection('bergerie_public_config')
-        .doc(id)
-        .get(const GetOptions(source: Source.server));
+    DocumentSnapshot<Map<String, dynamic>> snapshot;
+
+    try {
+      snapshot = await _firestore
+          .collection('bergerie_public_config')
+          .doc(id)
+          .get(const GetOptions(source: Source.server));
+    } catch (_) {
+      // Hors connexion, on utilise le cache Firestore déjà constitué.
+      snapshot = await _firestore
+          .collection('bergerie_public_config')
+          .doc(id)
+          .get(const GetOptions(source: Source.cache));
+    }
 
     if (!snapshot.exists || snapshot.data() == null) {
       return id == PublicBergerieConfig.defaut().bergerieId
