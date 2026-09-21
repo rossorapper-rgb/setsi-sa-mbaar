@@ -14,6 +14,31 @@ import 'core/session/current_user_service.dart';
 import 'core/session/local_session_service.dart';
 import 'features/utilisateurs/repository/firebase_utilisateur_repository.dart';
 
+Future<void> _restoreLocalSession(
+  LocalSessionService localSession,
+) async {
+  final utilisateurLocal = await localSession
+      .loadUtilisateur()
+      .timeout(const Duration(seconds: 3));
+
+  if (utilisateurLocal != null && utilisateurLocal.actif) {
+    CurrentUserService.instance.setCurrentUser(utilisateurLocal);
+
+    final configLocale = await localSession
+        .loadBergerieConfig()
+        .timeout(const Duration(seconds: 3));
+
+    if (configLocale != null) {
+      CurrentBergerieConfig.instance.setConfig(configLocale);
+    } else {
+      CurrentBergerieConfig.instance.clear();
+    }
+  } else {
+    CurrentUserService.instance.clear();
+    CurrentBergerieConfig.instance.clear();
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -23,122 +48,76 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ------------------------------------------------------------
-  // Restauration de la session
-  // ------------------------------------------------------------
-
   final firebaseAuth = FirebaseAuth.instance;
   final localSession = LocalSessionService.instance;
 
-  // Sur le Web, on demande à Firebase Auth de conserver
-  // la session localement dans le navigateur.
+  // Sur le Web, Firebase Auth conserve la session dans le navigateur.
+  // Le délai évite qu'un navigateur bloque le démarrage de l'application.
   if (kIsWeb) {
     try {
-      await firebaseAuth.setPersistence(Persistence.LOCAL);
+      await firebaseAuth
+          .setPersistence(Persistence.LOCAL)
+          .timeout(const Duration(seconds: 3));
     } catch (_) {
-      // Si le navigateur refuse la persistance Firebase,
-      // LocalSessionService pourra toujours servir de secours.
+      // La session locale SET'S I reste le mécanisme de secours.
     }
   }
 
-  // ------------------------------------------------------------
-  // 1. Vérification de la session Firebase
-  // ------------------------------------------------------------
+  try {
+    final firebaseUser = firebaseAuth.currentUser;
 
-  final firebaseUser = firebaseAuth.currentUser;
+    if (firebaseUser != null) {
+      try {
+        final utilisateur = await FirebaseUtilisateurRepository()
+            .getCurrentUtilisateur(firebaseUser.uid)
+            .timeout(const Duration(seconds: 5));
 
-  if (firebaseUser != null) {
-    try {
-      final utilisateur = await FirebaseUtilisateurRepository()
-          .getCurrentUtilisateur(firebaseUser.uid);
+        if (utilisateur != null && utilisateur.actif) {
+          CurrentUserService.instance.setCurrentUser(utilisateur);
 
-      if (utilisateur != null && utilisateur.actif) {
-        CurrentUserService.instance.setCurrentUser(utilisateur);
+          await CurrentBergerieConfig.instance
+              .load(utilisateur.bergerieId)
+              .timeout(const Duration(seconds: 5));
 
-        await CurrentBergerieConfig.instance.load(
-          utilisateur.bergerieId,
-        );
+          await localSession
+              .saveUtilisateur(utilisateur)
+              .timeout(const Duration(seconds: 3));
 
-        // On actualise la copie locale avec les dernières
-        // informations récupérées depuis Firebase.
-        await localSession.saveUtilisateur(utilisateur);
-
-        await localSession.saveBergerieConfig(
-          CurrentBergerieConfig.instance.config,
-        );
-      } else {
-        await firebaseAuth.signOut();
-
-        CurrentUserService.instance.clear();
-        CurrentBergerieConfig.instance.clear();
-        await localSession.clear();
-      }
-    } catch (_) {
-      // ----------------------------------------------------------
-      // Firebase est inaccessible.
-      // On utilise la dernière session locale connue.
-      // ----------------------------------------------------------
-
-      final utilisateurLocal =
-          await localSession.loadUtilisateur();
-
-      if (utilisateurLocal != null && utilisateurLocal.actif) {
-        CurrentUserService.instance.setCurrentUser(
-          utilisateurLocal,
-        );
-
-        final configLocale =
-            await localSession.loadBergerieConfig();
-
-        if (configLocale != null) {
-          CurrentBergerieConfig.instance.setConfig(
-            configLocale,
-          );
+          await localSession
+              .saveBergerieConfig(CurrentBergerieConfig.instance.config)
+              .timeout(const Duration(seconds: 3));
         } else {
+          await firebaseAuth.signOut();
+          await localSession.clear();
+          CurrentUserService.instance.clear();
           CurrentBergerieConfig.instance.clear();
         }
-      } else {
+      } catch (_) {
+        // Firebase indisponible ou trop lent : restauration locale.
+        try {
+          await _restoreLocalSession(localSession);
+        } catch (_) {
+          CurrentUserService.instance.clear();
+          CurrentBergerieConfig.instance.clear();
+        }
+      }
+    } else {
+      // Cas important pour le Web hors connexion :
+      // Firebase peut ne pas exposer immédiatement currentUser après
+      // une réouverture du navigateur. On utilise alors la session locale.
+      try {
+        await _restoreLocalSession(localSession);
+      } catch (_) {
         CurrentUserService.instance.clear();
         CurrentBergerieConfig.instance.clear();
       }
     }
-  } else {
-    // ------------------------------------------------------------
-    // 2. Aucun utilisateur Firebase disponible.
-    //
-    // Cela peut arriver notamment lorsque le navigateur est
-    // rouvert hors connexion.
-    //
-    // On tente alors directement la dernière session locale.
-    // ------------------------------------------------------------
-
-    final utilisateurLocal =
-        await localSession.loadUtilisateur();
-
-    if (utilisateurLocal != null && utilisateurLocal.actif) {
-      CurrentUserService.instance.setCurrentUser(
-        utilisateurLocal,
-      );
-
-      final configLocale =
-          await localSession.loadBergerieConfig();
-
-      if (configLocale != null) {
-        CurrentBergerieConfig.instance.setConfig(
-          configLocale,
-        );
-      } else {
-        CurrentBergerieConfig.instance.clear();
-      }
-    } else {
-      CurrentUserService.instance.clear();
-      CurrentBergerieConfig.instance.clear();
-    }
+  } catch (_) {
+    // Une erreur de restauration ne doit jamais empêcher Flutter
+    // d'afficher l'application et sa page de connexion.
+    CurrentUserService.instance.clear();
+    CurrentBergerieConfig.instance.clear();
   }
-
-  // ------------------------------------------------------------
-  // Lancement de l'application
-  // ------------------------------------------------------------
 
   runApp(
     const ProviderScope(
