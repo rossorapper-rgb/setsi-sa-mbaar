@@ -1,12 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../models/gestation_model.dart';
 
 class FirebaseGestationRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collection = 'gestations';
   static const String _statutGestante = 'Gestante';
+  final LocalBusinessCacheService _cache = LocalBusinessCacheService.instance;
+
+  String? get _cacheKey {
+    final id = _bergerieIdSession;
+    return id == null ? null : 'gestations_$id';
+  }
 
   CollectionReference<Map<String, dynamic>> get _gestations => _firestore.collection(_collection);
 
@@ -18,16 +25,52 @@ class FirebaseGestationRepository {
   bool get _isAdmin => CurrentUserService.instance.isAdmin;
 
   Future<List<GestationModel>> getGestations() async {
-    Query<Map<String, dynamic>> query = _gestations;
-    if (!_isAdmin) {
-      final bergerieId = _bergerieIdSession;
-      if (bergerieId == null) return [];
-      query = query.where('bergerieId', isEqualTo: bergerieId);
+    try {
+      Query<Map<String, dynamic>> query = _gestations;
+      if (!_isAdmin) {
+        final bergerieId = _bergerieIdSession;
+        if (bergerieId == null) return [];
+        query = query.where('bergerieId', isEqualTo: bergerieId);
+      }
+
+      final snapshot = await query.get();
+      final result = snapshot.docs
+          .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+
+      final key = _cacheKey;
+      if (key != null) {
+        await _cache.saveList(
+          key,
+          result.map((gestation) => {
+            'id': gestation.id,
+            ...gestation.toMap(),
+          }).toList(),
+        );
+      }
+
+      return result;
+    } catch (_) {
+      final key = _cacheKey;
+      if (key == null) return [];
+
+      final cached = await _cache.loadList(key);
+      if (cached == null) return [];
+
+      final result = cached
+          .map((map) => GestationModel.fromMap(
+                map,
+                map['id']?.toString() ?? '',
+              ))
+          .where((gestation) =>
+              _isAdmin || gestation.bergerieId == _bergerieIdSession)
+          .toList();
+
+      result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+      return result;
     }
-    final snapshot = await query.get();
-    final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
-    result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
-    return result;
   }
 
   Stream<List<GestationModel>> watchGestations() {
@@ -83,16 +126,8 @@ class FirebaseGestationRepository {
   }
 
   Future<List<GestationModel>> getGestationsEnCours() async {
-    Query<Map<String, dynamic>> query = _gestations.where('statut', isEqualTo: _statutGestante);
-    if (!_isAdmin) {
-      final bergerieId = _bergerieIdSession;
-      if (bergerieId == null) return [];
-      query = query.where('bergerieId', isEqualTo: bergerieId);
-    }
-    final snapshot = await query.get();
-    final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
-    result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
-    return result;
+    final gestations = await getGestations();
+    return gestations.where((gestation) => gestation.statut == _statutGestante).toList();
   }
 
   Future<List<GestationModel>> getGestationsParBergerie(String bergerieId) async {
