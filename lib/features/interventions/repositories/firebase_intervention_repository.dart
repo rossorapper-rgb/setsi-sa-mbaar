@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../models/intervention_model.dart';
 
 class FirebaseInterventionRepository {
@@ -8,6 +9,9 @@ class FirebaseInterventionRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+  final LocalBusinessCacheService _cache = LocalBusinessCacheService.instance;
+
+  String _cacheKey(String bergerieId) => 'interventions_${bergerieId.trim()}';
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('interventions');
@@ -79,16 +83,45 @@ class FirebaseInterventionRepository {
   }
 
   Future<List<InterventionModel>> getParBergerie(String bergerieId) async {
-    final snapshot = await _collection
-        .where('bergerieId', isEqualTo: bergerieId)
-        .get();
+    final id = bergerieId.trim();
+    if (id.isEmpty) return [];
 
-    final liste = snapshot.docs
-        .map((doc) => InterventionModel.fromMap(doc.data()))
-        .toList();
+    try {
+      final snapshot = await _collection
+          .where('bergerieId', isEqualTo: id)
+          .get(const GetOptions(source: Source.server));
 
-    liste.sort((a, b) => b.date.compareTo(a.date));
-    return liste;
+      final liste = snapshot.docs
+          .map(
+            (doc) => InterventionModel.fromMap({
+              ...doc.data(),
+              'id': doc.id,
+            }),
+          )
+          .toList();
+
+      liste.sort((a, b) => b.date.compareTo(a.date));
+
+      await _cache.saveList(
+        _cacheKey(id),
+        liste
+            .map((intervention) => intervention.toMap())
+            .toList(),
+      );
+
+      return liste;
+    } catch (_) {
+      final cached = await _cache.loadList(_cacheKey(id));
+      if (cached == null) return [];
+
+      final liste = cached
+          .map(InterventionModel.fromMap)
+          .where((intervention) => intervention.bergerieId == id)
+          .toList();
+
+      liste.sort((a, b) => b.date.compareTo(a.date));
+      return liste;
+    }
   }
 
   // Compatibilite avec le dashboard admin historique.
