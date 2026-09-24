@@ -58,8 +58,9 @@ class _GestationsPageState extends State<GestationsPage> {
           throw Exception("Aucune bergerie n'est associée à votre compte.");
         }
 
-        gestationsFuture =
-            _repository.getGestationsParBergerie(bergerieIdSession);
+        // Utilise le cache principal des gestations : serveur en ligne,
+        // puis cache local hors ligne.
+        gestationsFuture = _repository.getGestations();
         moutonsFuture =
             _moutonRepository.getMoutonsByBergerie(bergerieIdSession);
       }
