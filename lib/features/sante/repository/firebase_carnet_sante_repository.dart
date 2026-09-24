@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_business_cache_service.dart';
 import '../models/carnet_sante_model.dart';
 
@@ -38,18 +37,29 @@ class FirebaseCarnetSanteRepository {
           .get(const GetOptions(source: Source.server));
 
       final result = snapshot.docs
-          .map((doc) => CarnetSanteModel.fromMap({
-                ...doc.data(),
-                'id': doc.id,
-              }))
+          .map(
+            (doc) => CarnetSanteModel.fromMap({
+              ...doc.data(),
+              'id': doc.id,
+            }),
+          )
           .toList();
 
       result.sort((a, b) => b.date.compareTo(a.date));
 
-      await _cache.saveList(
-        _cacheKey(id),
-        result.map((soin) => soin.toMap()..['id'] = soin.id).toList(),
-      );
+      try {
+        await _cache.saveList(
+          _cacheKey(id),
+          result
+              .map(
+                (soin) => {
+                  'id': soin.id,
+                  ...soin.toMap(),
+                },
+              )
+              .toList(),
+        );
+      } catch (_) {}
 
       return result;
     } catch (_) {
@@ -79,10 +89,12 @@ class FirebaseCarnetSanteRepository {
         .get();
 
     final result = snapshot.docs
-        .map((doc) => CarnetSanteModel.fromMap({
-              ...doc.data(),
-              'id': doc.id,
-            }))
+        .map(
+          (doc) => CarnetSanteModel.fromMap({
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
         .toList();
 
     result.sort((a, b) => b.date.compareTo(a.date));
