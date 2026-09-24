@@ -33,7 +33,9 @@ class FirebaseGestationRepository {
         query = query.where('bergerieId', isEqualTo: bergerieId);
       }
 
-      final snapshot = await query.get();
+      final snapshot = await query.get(
+        const GetOptions(source: Source.server),
+      );
       final result = snapshot.docs
           .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
           .toList();
