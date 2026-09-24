@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/session/local_business_cache_service.dart';
 import '../models/alimentation_model.dart';
 
 class FirebaseAlimentationRepository {
@@ -9,6 +10,9 @@ class FirebaseAlimentationRepository {
   final FirebaseFirestore _firestore;
 
   static const String _collection = 'alimentations';
+  final LocalBusinessCacheService _cache = LocalBusinessCacheService.instance;
+
+  String _cacheKey(String bergerieId) => 'alimentations_$bergerieId';
 
   Future<void> ajouter(AlimentationModel alimentation) async {
     await _firestore
@@ -29,19 +33,49 @@ class FirebaseAlimentationRepository {
   }
 
   Future<List<AlimentationModel>> getParBergerie(String bergerieId) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('bergerieId', isEqualTo: bergerieId)
-        .get();
+    final id = bergerieId.trim();
+    if (id.isEmpty) return [];
 
-    final result = snapshot.docs
-        .map((doc) => AlimentationModel.fromMap({
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('bergerieId', isEqualTo: id)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 4));
+
+      final result = snapshot.docs
+          .map(
+            (doc) => AlimentationModel.fromMap({
               ...doc.data(),
               'id': doc.id,
-            }))
-        .toList();
+            }),
+          )
+          .toList();
 
-    result.sort((a, b) => b.date.compareTo(a.date));
-    return result;
+      result.sort((a, b) => b.date.compareTo(a.date));
+
+      try {
+        await _cache.saveList(
+          _cacheKey(id),
+          result
+              .map(
+                (item) => {
+                  'id': item.id,
+                  ...item.toMap(),
+                },
+              )
+              .toList(),
+        );
+      } catch (_) {}
+
+      return result;
+    } catch (_) {
+      final cached = await _cache.loadList(_cacheKey(id));
+      if (cached == null) return [];
+
+      final result = cached.map(AlimentationModel.fromMap).toList();
+      result.sort((a, b) => b.date.compareTo(a.date));
+      return result;
+    }
   }
 }
