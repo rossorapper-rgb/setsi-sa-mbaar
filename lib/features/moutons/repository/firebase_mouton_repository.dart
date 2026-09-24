@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../../auth/services/auth_service.dart';
 import '../models/mouton_model.dart';
 
@@ -11,6 +12,9 @@ class FirebaseMoutonRepository {
   final FirebaseFirestore _firestore;
 
   static const String _collection = 'moutons';
+  final LocalBusinessCacheService _cache = LocalBusinessCacheService.instance;
+
+  String _cacheKey(String bergerieId) => 'moutons_$bergerieId';
 
   /// Ajouter un mouton
   Future<void> addMouton(MoutonModel mouton) async {
@@ -76,6 +80,32 @@ class FirebaseMoutonRepository {
       (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
     );
 
+    final bergerieId = CurrentUserService.instance.bergerieId?.trim();
+    if (bergerieId != null && bergerieId.isNotEmpty) {
+      await _cache.saveList(
+        _cacheKey(bergerieId),
+        moutons.map((mouton) => mouton.toMap()).toList(),
+      );
+    }
+
+    return moutons;
+  }
+
+  Future<List<MoutonModel>> _loadCachedMoutons(String bergerieId) async {
+    final cached = await _cache.loadList(_cacheKey(bergerieId));
+    if (cached == null) {
+      return [];
+    }
+
+    final moutons = cached
+        .map(MoutonModel.fromMap)
+        .where((mouton) => mouton.actif)
+        .toList();
+
+    moutons.sort(
+      (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
+    );
+
     return moutons;
   }
 
@@ -95,16 +125,21 @@ class FirebaseMoutonRepository {
 
   /// Tous les moutons d'une bergerie
   Future<List<MoutonModel>> getMoutonsByBergerie(String bergerieId) async {
-    if (bergerieId.trim().isEmpty) {
+    final id = bergerieId.trim();
+    if (id.isEmpty) {
       return [];
     }
 
-    return _getMoutonsFromQuery(
-      _firestore
-          .collection(_collection)
-          .where('bergerieId', isEqualTo: bergerieId)
-          .where('actif', isEqualTo: true),
-    );
+    try {
+      return await _getMoutonsFromQuery(
+        _firestore
+            .collection(_collection)
+            .where('bergerieId', isEqualTo: id)
+            .where('actif', isEqualTo: true),
+      );
+    } catch (_) {
+      return _loadCachedMoutons(id);
+    }
   }
 
   /// Tous les moutons d'un client.
