@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../models/carnet_sante_model.dart';
 
 class FirebaseCarnetSanteRepository {
@@ -9,6 +11,9 @@ class FirebaseCarnetSanteRepository {
   final FirebaseFirestore _firestore;
 
   static const String _collection = 'carnet_sante';
+  final LocalBusinessCacheService _cache = LocalBusinessCacheService.instance;
+
+  String _cacheKey(String bergerieId) => 'carnet_sante_$bergerieId';
 
   Future<void> ajouter(CarnetSanteModel soin) async {
     await _firestore.collection(_collection).doc(soin.id).set(soin.toMap());
@@ -23,16 +28,44 @@ class FirebaseCarnetSanteRepository {
   }
 
   Future<List<CarnetSanteModel>> getParBergerie(String bergerieId) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('bergerieId', isEqualTo: bergerieId)
-        .get();
+    final id = bergerieId.trim();
+    if (id.isEmpty) return [];
 
-    final result = snapshot.docs
-        .map((doc) => CarnetSanteModel.fromMap({
-              ...doc.data(),
-              'id': doc.id,
-            }))
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('bergerieId', isEqualTo: id)
+          .get(const GetOptions(source: Source.server));
+
+      final result = snapshot.docs
+          .map((doc) => CarnetSanteModel.fromMap({
+                ...doc.data(),
+                'id': doc.id,
+              }))
+          .toList();
+
+      result.sort((a, b) => b.date.compareTo(a.date));
+
+      await _cache.saveList(
+        _cacheKey(id),
+        result.map((soin) => soin.toMap()..['id'] = soin.id).toList(),
+      );
+
+      return result;
+    } catch (_) {
+      return _loadCachedParBergerie(id);
+    }
+  }
+
+  Future<List<CarnetSanteModel>> _loadCachedParBergerie(
+    String bergerieId,
+  ) async {
+    final cached = await _cache.loadList(_cacheKey(bergerieId));
+    if (cached == null) return [];
+
+    final result = cached
+        .map(CarnetSanteModel.fromMap)
+        .where((soin) => soin.bergerieId == bergerieId)
         .toList();
 
     result.sort((a, b) => b.date.compareTo(a.date));
