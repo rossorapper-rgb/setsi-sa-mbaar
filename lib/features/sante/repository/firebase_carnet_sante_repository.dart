@@ -34,7 +34,8 @@ class FirebaseCarnetSanteRepository {
       final snapshot = await _firestore
           .collection(_collection)
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server));
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 4));
 
       final result = snapshot.docs
           .map(
