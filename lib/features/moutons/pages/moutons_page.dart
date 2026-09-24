@@ -130,7 +130,10 @@ class _MoutonsPageState extends State<MoutonsPage> {
     final resultat = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MoutonDetailsPage(mouton: mouton),
+        builder: (_) => MoutonDetailsPage(
+            mouton: mouton,
+            bergerie: widget.bergerie,
+          ),
       ),
     );
 
