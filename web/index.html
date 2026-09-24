@@ -43,8 +43,20 @@
   -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/flutter_service_worker_v2.js').catch(() => {});
+      window.addEventListener('load', async () => {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(
+            registrations
+                .filter((registration) =>
+                    registration.scope === window.location.origin + '/' ||
+                    registration.active?.scriptURL.includes('flutter_service_worker')
+                )
+                .map((registration) => registration.unregister()),
+          );
+
+          await navigator.serviceWorker.register('/flutter_service_worker_v3.js');
+        } catch (_) {}
       });
     }
   </script>
