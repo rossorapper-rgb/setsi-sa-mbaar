@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../models/bergerie_model.dart';
 import 'bergerie_repository.dart';
 
@@ -9,6 +10,11 @@ class FirebaseBergerieRepository implements BergerieRepository {
       FirebaseFirestore.instance;
 
   final String _collection = 'bergeries';
+
+  final LocalBusinessCacheService _cache =
+      LocalBusinessCacheService.instance;
+
+  String _cacheKey(String id) => 'bergerie_$id';
 
   @override
   Future<void> addBergerie(
@@ -97,21 +103,55 @@ class FirebaseBergerieRepository implements BergerieRepository {
   Future<BergerieModel?> getBergerieById(
       String id,
       ) async {
-    final doc = await _firestore
-        .collection(_collection)
-        .doc(id)
-        .get();
-
-    if (!doc.exists) {
+    final trimmedId = id.trim();
+    if (trimmedId.isEmpty) {
       return null;
     }
 
-    return BergerieModel.fromMap({
-      ...doc.data()!,
-      'id': doc.id,
-    });
-  }
+    try {
+      final doc = await _firestore
+          .collection(_collection)
+          .doc(trimmedId)
+          .get(const GetOptions(source: Source.server));
 
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
+
+      final bergerie = BergerieModel.fromMap({
+        ...doc.data()!,
+        'id': doc.id,
+      });
+
+      try {
+        await _cache.saveList(
+          _cacheKey(trimmedId),
+          [
+            {
+              ...doc.data()!,
+              'id': doc.id,
+            },
+          ],
+        );
+      } catch (_) {}
+
+      return bergerie;
+    } catch (_) {
+      final cached = await _cache.loadList(_cacheKey(trimmedId));
+      if (cached == null || cached.isEmpty) {
+        return null;
+      }
+
+      try {
+        return BergerieModel.fromMap({
+          ...cached.first,
+          'id': cached.first['id']?.toString() ?? trimmedId,
+        });
+      } catch (_) {
+        return null;
+      }
+    }
+  }
   // ====================================================
   // BERGERIES D'UN CLIENT
   // ====================================================
