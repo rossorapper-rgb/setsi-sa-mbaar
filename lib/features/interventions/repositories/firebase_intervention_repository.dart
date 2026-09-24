@@ -117,9 +117,18 @@ class FirebaseInterventionRepository {
         }
       }
 
+      // Conserver les données Firestore brutes dans le cache afin de
+      // ne perdre aucun champ lors de la sérialisation hors ligne.
       await _cache.saveList(
         _cacheKey(id),
-        liste.map((intervention) => intervention.toMap()).toList(),
+        snapshot.docs
+            .map(
+              (doc) => {
+                ...doc.data(),
+                'id': doc.id,
+              },
+            )
+            .toList(),
       );
 
       return liste;
