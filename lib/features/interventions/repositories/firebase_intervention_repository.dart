@@ -102,11 +102,24 @@ class FirebaseInterventionRepository {
 
       liste.sort((a, b) => b.date.compareTo(a.date));
 
+      // Sur le Web, une lecture "server" peut parfois retourner une liste
+      // vide lorsque la connexion est coupée sans lever d'exception.
+      // Dans ce cas, ne remplaçons pas un cache existant par une liste vide.
+      if (liste.isEmpty) {
+        final cached = await _cache.loadList(_cacheKey(id));
+        if (cached != null && cached.isNotEmpty) {
+          final cachedListe = cached
+              .map(InterventionModel.fromMap)
+              .where((intervention) => intervention.bergerieId == id)
+              .toList();
+          cachedListe.sort((a, b) => b.date.compareTo(a.date));
+          if (cachedListe.isNotEmpty) return cachedListe;
+        }
+      }
+
       await _cache.saveList(
         _cacheKey(id),
-        liste
-            .map((intervention) => intervention.toMap())
-            .toList(),
+        liste.map((intervention) => intervention.toMap()).toList(),
       );
 
       return liste;
