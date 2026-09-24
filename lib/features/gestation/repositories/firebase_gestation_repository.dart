@@ -133,15 +133,48 @@ class FirebaseGestationRepository {
   }
 
   Future<List<GestationModel>> getGestationsParBergerie(String bergerieId) async {
-    if (!_isAdmin && _bergerieIdSession != bergerieId) return [];
+    final id = bergerieId.trim();
+    if (id.isEmpty) return [];
+    if (!_isAdmin && _bergerieIdSession != id) return [];
+
     try {
-      final snapshot = await _gestations.where('bergerieId', isEqualTo: bergerieId).get();
-      final result = snapshot.docs.map((doc) => GestationModel.fromMap(doc.data(), doc.id)).toList();
+      final snapshot = await _gestations
+          .where('bergerieId', isEqualTo: id)
+          .get(const GetOptions(source: Source.server));
+
+      final result = snapshot.docs
+          .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+
+      await _cache.saveList(
+        'gestations_$id',
+        result
+            .map((gestation) => {
+                  'id': gestation.id,
+                  ...gestation.toMap(),
+                })
+            .toList(),
+      );
+
+      return result;
+    } catch (_) {
+      final cached = await _cache.loadList('gestations_$id');
+      if (cached == null) return [];
+
+      final result = cached
+          .map(
+            (map) => GestationModel.fromMap(
+              map,
+              map['id']?.toString() ?? '',
+            ),
+          )
+          .where((gestation) => gestation.bergerieId == id)
+          .toList();
+
       result.sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
       return result;
-    } catch (e) {
-      print(e);
-      return [];
     }
   }
 
