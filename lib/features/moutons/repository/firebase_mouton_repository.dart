@@ -63,9 +63,14 @@ class FirebaseMoutonRepository {
   }
 
   Future<List<MoutonModel>> _getMoutonsFromQuery(
-    Query<Map<String, dynamic>> query,
-  ) async {
-    final snapshot = await query.get();
+    Query<Map<String, dynamic>> query, {
+    bool forceServer = false,
+  }) async {
+    final snapshot = await query.get(
+      forceServer
+          ? const GetOptions(source: Source.server)
+          : const GetOptions(),
+    );
 
     final moutons = snapshot.docs
         .map(
@@ -136,6 +141,7 @@ class FirebaseMoutonRepository {
             .collection(_collection)
             .where('bergerieId', isEqualTo: id)
             .where('actif', isEqualTo: true),
+        forceServer: true,
       );
     } catch (_) {
       return _loadCachedMoutons(id);
