@@ -40,8 +40,7 @@ class FirebaseAlimentationRepository {
       final snapshot = await _firestore
           .collection(_collection)
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server))
-          .timeout(const Duration(seconds: 4));
+          .get(const GetOptions(source: Source.server));
 
       final result = snapshot.docs
           .map(
@@ -54,19 +53,17 @@ class FirebaseAlimentationRepository {
 
       result.sort((a, b) => b.date.compareTo(a.date));
 
-      try {
-        await _cache.saveList(
-          _cacheKey(id),
-          result
-              .map(
-                (item) => {
-                  'id': item.id,
-                  ...item.toMap(),
-                },
-              )
-              .toList(),
-        );
-      } catch (_) {}
+      await _cache.saveList(
+        _cacheKey(id),
+        result
+            .map(
+              (item) => {
+                'id': item.id,
+                ...item.toMap(),
+              },
+            )
+            .toList(),
+      );
 
       return result;
     } catch (_) {
