@@ -75,7 +75,6 @@ class FirebaseCarnetSanteRepository {
 
     final result = cached
         .map(CarnetSanteModel.fromMap)
-        .where((soin) => soin.bergerieId == bergerieId)
         .toList();
 
     result.sort((a, b) => b.date.compareTo(a.date));
