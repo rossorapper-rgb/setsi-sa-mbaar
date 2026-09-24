@@ -75,10 +75,10 @@ class FirebaseVeterinaireRepository {
 
       final veterinaires = cached
           .map(
-            (map) => VeterinaireModel.fromMap(
-              map,
-              map['id']?.toString() ?? '',
-            ),
+            (map) => VeterinaireModel.fromMap({
+              ...map,
+              'id': map['id']?.toString() ?? '',
+            }),
           )
           .where((veterinaire) => veterinaire.bergerieId == id)
           .toList();
