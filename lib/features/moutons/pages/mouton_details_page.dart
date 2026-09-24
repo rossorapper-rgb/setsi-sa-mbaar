@@ -17,10 +17,12 @@ import '../repository/firebase_mouton_repository.dart';
 
 class MoutonDetailsPage extends StatefulWidget {
   final MoutonModel mouton;
+  final BergerieModel? bergerie;
 
   const MoutonDetailsPage({
     super.key,
     required this.mouton,
+    this.bergerie,
   });
 
   @override
@@ -58,42 +60,41 @@ class _MoutonDetailsPageState
   }
 
   Future<void> _chargerDonnees() async {
+    BergerieModel? bergerie = widget.bergerie;
+    ClientModel? client;
+
     try {
-      debugPrint("========== DIAGNOSTIC ==========");
-      debugPrint("Mouton id        : '${widget.mouton.id}'");
-      debugPrint("Bergerie id      : '${widget.mouton.bergerieId}'");
-
-      BergerieModel? bergerie;
-      ClientModel? client;
-
-      if (widget.mouton.bergerieId.trim().isNotEmpty) {
-        bergerie = await _bergerieRepository.getBergerieById(
-          widget.mouton.bergerieId,
-        );
-
-        if (bergerie != null && bergerie.clientId.trim().isNotEmpty) {
-          client = await _clientRepository.getClientById(
-            bergerie.clientId,
-          );
-        }
+      if (bergerie == null && widget.mouton.bergerieId.trim().isNotEmpty) {
+        try {
+          bergerie = await _bergerieRepository.getBergerieById(widget.mouton.bergerieId);
+        } catch (_) {}
       }
 
+      if (widget.mouton.clientId.trim().isNotEmpty) {
+        try {
+          client = await _clientRepository.getClientById(widget.mouton.clientId);
+        } catch (_) {}
+      }
+
+      if (!mounted) return;
       setState(() {
         _bergerie = bergerie;
         _client = client;
         _loading = false;
+        _error = null;
       });
     } catch (e, s) {
       debugPrint(e.toString());
       debugPrint(s.toString());
-
+      if (!mounted) return;
       setState(() {
+        _bergerie = bergerie;
+        _client = client;
         _loading = false;
-        _error = e.toString();
+        _error = null;
       });
     }
   }
-
   String _formatDate(DateTime? date) {
     if (date == null) {
       return "Non renseignée";
