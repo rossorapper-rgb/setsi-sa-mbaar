@@ -16,7 +16,6 @@ class _EntreeStockPageState extends State<EntreeStockPage> {
   bool _loading = true;
   String? _loadError;
   final _formKey = GlobalKey<FormState>();
-  final _repository = FirebaseStockRepository();
   final _quantiteController = TextEditingController();
   final _prixController = TextEditingController();
   final _motifController = TextEditingController();
