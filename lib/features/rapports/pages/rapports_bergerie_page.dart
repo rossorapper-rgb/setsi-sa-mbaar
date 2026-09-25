@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
@@ -222,6 +223,11 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
       appBar: AppBar(
         backgroundColor: config.couleurPrimaire,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          tooltip: 'Retour',
+          onPressed: () => context.go('/dashboard/bergerie'),
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: Text('Rapports - ${config.nomBergerie}'),
       ),
       body: _loading
