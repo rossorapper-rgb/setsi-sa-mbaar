@@ -322,31 +322,81 @@ class FirebaseStockRepository {
     required DateTime date,
   }) async {
     final bergerieId = _bergerieId;
-    if (quantite <= 0) throw ArgumentError('La quantité doit être supérieure à zéro.');
+    if (quantite <= 0) {
+      throw ArgumentError('La quantité doit être supérieure à zéro.');
+    }
+
     final produitRef = _collection.doc(produitId);
-    final interventionRef = _firestore.collection('interventions').doc(interventionId);
+    final interventionRef =
+        _firestore.collection('interventions').doc(interventionId);
     final mouvementRef = _firestore.collection('stock_mouvements').doc();
-    await _firestore.runTransaction((transaction) async {
+
+    // Sur Flutter Web, une exception lancée directement à l'intérieur du
+    // callback de runTransaction peut être transformée en message générique
+    // "Dart exception thrown from converted Future". On retourne donc le
+    // message de validation depuis la transaction, puis on lève l'erreur
+    // après la transaction.
+    final erreur = await _firestore.runTransaction<String?>((transaction) async {
       final produitSnap = await transaction.get(produitRef);
       final interventionSnap = await transaction.get(interventionRef);
-      if (!produitSnap.exists) throw StateError('Produit de stock introuvable.');
-      if (!interventionSnap.exists) throw StateError('Intervention introuvable.');
-      final produit = StockProduitModel.fromMap({...produitSnap.data()!, 'id': produitSnap.id});
-      final intervention = interventionSnap.data()!;
-      if (produit.bergerieId != bergerieId || intervention['bergerieId']?.toString() != bergerieId) {
-        throw StateError('Les données n’appartiennent pas à votre bergerie.');
+
+      if (!produitSnap.exists) {
+        return 'Produit de stock introuvable.';
       }
-      if (intervention['stockDeduit'] == true) throw StateError('Cette intervention a déjà été déduite du stock.');
-      if (quantite > produit.quantite) throw StateError('Stock insuffisant. Stock disponible : ${produit.quantite} ${produit.unite}.');
-      transaction.update(produitRef, {'quantite': produit.quantite - quantite});
-      transaction.set(mouvementRef, {
-        'bergerieId': bergerieId, 'produitId': produitId, 'type': 'sortie',
-        'quantite': quantite, 'date': Timestamp.fromDate(date), 'motif': motif.trim(),
-        'prix': produit.prixUnitaire, 'fournisseur': '',
-        'note': 'Source intervention : $interventionId', 'source': 'intervention', 'sourceId': interventionId,
+      if (!interventionSnap.exists) {
+        return 'Intervention introuvable.';
+      }
+
+      final produit = StockProduitModel.fromMap({
+        ...produitSnap.data()!,
+        'id': produitSnap.id,
       });
-      transaction.update(interventionRef, {'stockDeduit': true, 'stockMouvementId': mouvementRef.id});
+      final intervention = interventionSnap.data()!;
+
+      if (produit.bergerieId != bergerieId ||
+          intervention['bergerieId']?.toString() != bergerieId) {
+        return 'Les données n’appartiennent pas à votre bergerie.';
+      }
+
+      if (intervention['stockDeduit'] == true) {
+        return 'Cette intervention a déjà été déduite du stock.';
+      }
+
+      if (quantite > produit.quantite) {
+        return 'Stock insuffisant. Stock disponible : '
+            '\${produit.quantite} \${produit.unite}.';
+      }
+
+      transaction.update(produitRef, {
+        'quantite': produit.quantite - quantite,
+      });
+
+      transaction.set(mouvementRef, {
+        'bergerieId': bergerieId,
+        'produitId': produitId,
+        'type': 'sortie',
+        'quantite': quantite,
+        'date': Timestamp.fromDate(date),
+        'motif': motif.trim(),
+        'prix': produit.prixUnitaire,
+        'fournisseur': '',
+        'note': 'Source intervention : $interventionId',
+        'source': 'intervention',
+        'sourceId': interventionId,
+      });
+
+      transaction.update(interventionRef, {
+        'stockDeduit': true,
+        'stockMouvementId': mouvementRef.id,
+      });
+
+      return null;
     });
+
+    if (erreur != null) {
+      throw StateError(erreur);
+    }
+
     await getProduits();
     await getMouvements();
   }
