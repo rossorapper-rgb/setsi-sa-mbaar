@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
@@ -44,41 +43,8 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     _charger();
   }
 
-  String _cacheKey(String collection, String bergerieId) =>
-      'rapport_$collection_$bergerieId';
-
-  Future<List<Map<String, dynamic>>> _chargerCollection({
-    required String collection,
-    required String bergerieId,
-    bool actifsSeulement = false,
-  }) async {
-    try {
-      Query<Map<String, dynamic>> query = _firestore
-          .collection(collection)
-          .where('bergerieId', isEqualTo: bergerieId);
-
-      if (actifsSeulement) {
-        query = query.where('actif', isEqualTo: true);
-      }
-
-      final snapshot =
-          await query.get(const GetOptions(source: Source.server));
-
-      final data = snapshot.docs
-          .map((doc) => <String, dynamic>{
-                ...doc.data(),
-                'id': doc.id,
-              })
-          .toList();
-
-      await _cache.saveList(_cacheKey(collection, bergerieId), data);
-      return data;
-    } catch (_) {
-      final cached =
-          await _cache.loadList(_cacheKey(collection, bergerieId));
-      return cached ?? <Map<String, dynamic>>[];
-    }
-  }
+  String _reportCacheKey(String bergerieId) =>
+      'rapport_' + bergerieId + '_' + _mois.year.toString() + '_' + _mois.month.toString();
 
   Future<void> _charger() async {
     final bergerieId = _bergerieId;
@@ -100,54 +66,47 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
       final fin = DateTime(_mois.year, _mois.month + 1);
 
       final results = await Future.wait([
-        _chargerCollection(
-          collection: 'moutons',
-          bergerieId: bergerieId,
-          actifsSeulement: true,
-        ),
-        _chargerCollection(
-          collection: 'gestations',
-          bergerieId: bergerieId,
-        ),
-        _chargerCollection(
-          collection: 'carnet_sante',
-          bergerieId: bergerieId,
-        ),
-        _chargerCollection(
-          collection: 'alimentations',
-          bergerieId: bergerieId,
-        ),
-        _chargerCollection(
-          collection: 'interventions',
-          bergerieId: bergerieId,
-        ),
-        _chargerCollection(
-          collection: 'finance_entries',
-          bergerieId: bergerieId,
-        ),
+        _firestore.collection('moutons').where('bergerieId', isEqualTo: bergerieId).where('actif', isEqualTo: true).get(const GetOptions(source: Source.server)),
+        _firestore.collection('gestations').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
+        _firestore.collection('carnet_sante').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
+        _firestore.collection('alimentations').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
+        _firestore.collection('interventions').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
+        _firestore.collection('finance_entries').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
       ]);
 
-      final moutons = results[0];
-      final gestations = results[1];
-      final soins = results[2];
-      final alimentations = results[3];
-      final interventions = results[4];
-      final finances = results[5];
+      final gestations = results[1].docs;
+      final soins = results[2].docs;
+      final alimentations = results[3].docs;
+      final interventions = results[4].docs;
+      final finances = results[5].docs;
 
       int naissances = 0;
       int gestationsEnCours = 0;
-      for (final data in gestations) {
+
+      for (final doc in gestations) {
+        final data = doc.data();
         if (data['statut']?.toString() == 'Gestante') {
           gestationsEnCours++;
         }
-        final date = _dateFrom(data['dateMiseBas']);
+
+        final rawDate = data['dateMiseBas'];
+        DateTime? date;
+        if (rawDate is Timestamp) {
+          date = rawDate.toDate();
+        } else if (rawDate is int) {
+          date = DateTime.fromMillisecondsSinceEpoch(rawDate);
+        } else if (rawDate != null) {
+          date = DateTime.tryParse(rawDate.toString());
+        }
+
         if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
           naissances++;
         }
       }
 
       double alimentation = 0;
-      for (final data in alimentations) {
+      for (final doc in alimentations) {
+        final data = doc.data();
         final date = _dateFrom(data['date']);
         if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
           alimentation += (data['prix'] as num?)?.toDouble() ?? 0;
@@ -156,11 +115,13 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
 
       double ventes = 0;
       double depenses = alimentation;
-      for (final data in finances) {
+      for (final doc in finances) {
+        final data = doc.data();
         final date = _dateFrom(data['date']);
         if (date == null || date.isBefore(debut) || !date.isBefore(fin)) {
           continue;
         }
+
         final montant = (data['montant'] as num?)?.toDouble() ?? 0;
         if (data['type']?.toString() == 'vente') {
           ventes += montant;
@@ -169,29 +130,63 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
         }
       }
 
+      final soinsMois = soins.where((d) {
+        final date = _dateFrom(d.data()['date']);
+        return date != null && !date.isBefore(debut) && date.isBefore(fin);
+      }).length;
+
+      final interventionsMois = interventions.where((d) {
+        final date = _dateFrom(d.data()['date']);
+        return date != null && !date.isBefore(debut) && date.isBefore(fin);
+      }).length;
+
+      final report = <String, dynamic>{
+        'moutons': results[0].docs.length,
+        'gestations': gestationsEnCours,
+        'naissances': naissances,
+        'soins': soinsMois,
+        'interventions': interventionsMois,
+        'alimentation': alimentation,
+        'ventes': ventes,
+        'depenses': depenses,
+      };
+
+      await _cache.saveList(_reportCacheKey(bergerieId), [report]);
+
+      if (!mounted) return;
       setState(() {
-        _moutons = moutons.length;
-        _gestations = gestationsEnCours;
-        _naissances = naissances;
-        _soins = soins.where((data) {
-          final date = _dateFrom(data['date']);
-          return date != null &&
-              !date.isBefore(debut) &&
-              date.isBefore(fin);
-        }).length;
-        _interventions = interventions.where((data) {
-          final date = _dateFrom(data['date']);
-          return date != null &&
-              !date.isBefore(debut) &&
-              date.isBefore(fin);
-        }).length;
-        _alimentation = alimentation;
-        _ventes = ventes;
-        _depenses = depenses;
+        _moutons = report['moutons'] as int;
+        _gestations = report['gestations'] as int;
+        _naissances = report['naissances'] as int;
+        _soins = report['soins'] as int;
+        _interventions = report['interventions'] as int;
+        _alimentation = (report['alimentation'] as num).toDouble();
+        _ventes = (report['ventes'] as num).toDouble();
+        _depenses = (report['depenses'] as num).toDouble();
         _loading = false;
       });
-      });
-    } catch (e) {
+    } catch (_) {
+      final cached = await _cache.loadList(_reportCacheKey(bergerieId));
+
+      if (cached != null && cached.isNotEmpty) {
+        final report = cached.first;
+        if (!mounted) return;
+
+        setState(() {
+          _moutons = (report['moutons'] as num?)?.toInt() ?? 0;
+          _gestations = (report['gestations'] as num?)?.toInt() ?? 0;
+          _naissances = (report['naissances'] as num?)?.toInt() ?? 0;
+          _soins = (report['soins'] as num?)?.toInt() ?? 0;
+          _interventions = (report['interventions'] as num?)?.toInt() ?? 0;
+          _alimentation = (report['alimentation'] as num?)?.toDouble() ?? 0;
+          _ventes = (report['ventes'] as num?)?.toDouble() ?? 0;
+          _depenses = (report['depenses'] as num?)?.toDouble() ?? 0;
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
+
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -223,15 +218,10 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     final solde = _ventes - _depenses;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF5F8FC),
       appBar: AppBar(
         backgroundColor: config.couleurPrimaire,
         foregroundColor: Colors.white,
-        leading: IconButton(
-          tooltip: 'Retour',
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard/bergerie'),
-        ),
         title: Text('Rapports - ${config.nomBergerie}'),
       ),
       body: _loading
@@ -257,13 +247,13 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                       const SizedBox(height: 24),
                       const Text('Finances du mois', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      _financeCard('Ventes', _ventes, Icons.trending_up, config.couleurPrimaire),
+                      _financeCard('Ventes', _ventes, Icons.trending_up, Colors.green),
                       const SizedBox(height: 10),
-                      _financeCard('Dépenses', _depenses, Icons.trending_down, config.couleurSecondaire),
+                      _financeCard('Dépenses', _depenses, Icons.trending_down, Colors.red),
                       const SizedBox(height: 10),
                       _financeCard('Dont alimentation', _alimentation, Icons.restaurant, config.couleurSecondaire),
                       const SizedBox(height: 10),
-                      _financeCard('Solde', solde, Icons.account_balance_wallet, solde >= 0 ? config.couleurPrimaire : config.couleurSecondaire),
+                      _financeCard('Solde', solde, Icons.account_balance_wallet, solde >= 0 ? Colors.green : Colors.red),
                     ],
                   ),
                 ),
