@@ -177,7 +177,7 @@ class BergerieDrawer extends StatelessWidget {
                   _section('ALIMENTATION'),
                   if (session.hasPermission('alimentation.view'))
                     _menu(context, Icons.grass_rounded, 'Alimentation', '/alimentation'),
-                  _soon(context, Icons.inventory_2_rounded, 'Stocks'),
+                  _menu(context, Icons.inventory_2_rounded, 'Stocks', '/stock'),
                   _section('ACTIVITÉS'),
                   if (session.hasPermission('interventions.view'))
                     _menu(context, Icons.assignment_rounded, 'Interventions', '/interventions'),
