@@ -35,6 +35,7 @@ import '../features/stock/pages/ajouter_produit_page.dart';
 import '../features/stock/pages/entree_stock_page.dart';
 import '../features/stock/pages/sortie_stock_page.dart';
 import '../features/stock/pages/historique_stock_page.dart';
+import '../features/stock/models/stock_produit_model.dart';
 import '../features/utilisateurs/pages/utilisateurs_page.dart';
 import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
