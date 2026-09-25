@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/session/current_user_service.dart';
 import '../models/alimentation_model.dart';
 import '../repository/firebase_alimentation_repository.dart';
+import '../../stock/models/stock_produit_model.dart';
+import '../../stock/repository/firebase_stock_repository.dart';
 
 class AlimentationPage extends StatefulWidget {
   const AlimentationPage({super.key});
@@ -17,6 +19,7 @@ class AlimentationPage extends StatefulWidget {
 class _AlimentationPageState extends State<AlimentationPage> {
   final _repository = FirebaseAlimentationRepository();
   final _uuid = const Uuid();
+  final _stockRepository = FirebaseStockRepository();
 
   bool _loading = true;
   String? _erreur;
@@ -94,6 +97,36 @@ class _AlimentationPageState extends State<AlimentationPage> {
     if (resultat == true) await _charger();
   }
 
+  bool get _canDeduirStock {
+    final user = CurrentUserService.instance;
+    return user.isAdmin || user.isResponsable ||
+        (user.isTechnicien && user.hasPermission('alimentation.edit'));
+  }
+
+  Future<void> _deduireDuStock(AlimentationModel alimentation) async {
+    if (alimentation.stockDeduit) return;
+    try {
+      final produits = (await _stockRepository.getProduits()).where((p) => p.actif && p.quantite > 0).toList();
+      if (!mounted) return;
+      if (produits.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aucun produit disponible dans le stock.')));
+        return;
+      }
+      final choix = await showDialog<_StockDeductionChoice>(
+        context: context,
+        builder: (_) => _StockDeductionDialog(alimentation: alimentation, produits: produits),
+      );
+      if (choix == null) return;
+      await _stockRepository.deduireDepuisAlimentation(alimentationId: alimentation.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Consommation alimentation - ' + alimentation.aliment, date: alimentation.date);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock déduit avec succès.')));
+        await _charger();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de déduire le stock : $e')));
+    }
+  }
   Future<void> _supprimer(AlimentationModel alimentation) async {
     final confirmer = await showDialog<bool>(
       context: context,
@@ -320,12 +353,17 @@ class _AlimentationPageState extends State<AlimentationPage> {
         isThreeLine: item.observation.trim().isNotEmpty,
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
+            if (value == 'stock') _deduireDuStock(item);
             if (value == 'edit') _ouvrirFormulaire(alimentation: item);
             if (value == 'delete') _supprimer(item);
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Modifier')),
-            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+          itemBuilder: (_) => [
+            if (_canDeduirStock && !item.stockDeduit)
+              const PopupMenuItem(value: 'stock', child: Text('Déduire du stock')),
+            if (item.stockDeduit)
+              const PopupMenuItem(enabled: false, value: 'stock_done', child: Text('Stock déjà déduit')),
+            const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
           ],
         ),
       ),
@@ -541,6 +579,45 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
               : const Icon(Icons.save),
           label: Text(_saving ? 'Enregistrement…' : 'Enregistrer'),
         ),
+      ],
+    );
+  }
+}
+
+class _StockDeductionChoice {
+  const _StockDeductionChoice({required this.produit, required this.quantite});
+  final StockProduitModel produit;
+  final double quantite;
+}
+
+class _StockDeductionDialog extends StatefulWidget {
+  const _StockDeductionDialog({required this.alimentation, required this.produits});
+  final AlimentationModel alimentation;
+  final List<StockProduitModel> produits;
+  @override State<_StockDeductionDialog> createState() => _StockDeductionDialogState();
+}
+
+class _StockDeductionDialogState extends State<_StockDeductionDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late String _produitId;
+  late TextEditingController _quantiteController;
+  @override void initState() { super.initState(); _produitId = widget.produits.first.id; _quantiteController = TextEditingController(text: widget.alimentation.quantite.toString()); }
+  @override void dispose() { _quantiteController.dispose(); super.dispose(); }
+  double? _parse(String value) => double.tryParse(value.trim().replaceAll(',', '.'));
+  @override Widget build(BuildContext context) {
+    final produit = widget.produits.where((p) => p.id == _produitId).first;
+    return AlertDialog(
+      title: const Text('Déduire du stock'),
+      content: SizedBox(width: 500, child: Form(key: _formKey, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text('Alimentation : ' + widget.alimentation.aliment),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit stock', prefixIcon: Icon(Icons.inventory_2_rounded)), items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite))).toList(), onChanged: (value) { if (value != null) setState(() => _produitId = value); }),
+        const SizedBox(height: 14),
+        TextFormField(controller: _quantiteController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Quantité à déduire', suffixText: produit.unite), validator: (value) { final n = _parse(value ?? ''); if (n == null || n <= 0) return 'Quantité invalide.'; if (n > produit.quantite) return 'La quantité dépasse le stock disponible.'; return null; }),
+      ]))),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        FilledButton.icon(onPressed: () { if (!_formKey.currentState!.validate()) return; Navigator.pop(context, _StockDeductionChoice(produit: produit, quantite: _parse(_quantiteController.text)!)); }, icon: const Icon(Icons.remove_circle_outline_rounded), label: const Text('Déduire')),
       ],
     );
   }
