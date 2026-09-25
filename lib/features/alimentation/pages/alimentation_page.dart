@@ -99,8 +99,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
 
   bool get _canDeduirStock {
     final user = CurrentUserService.instance;
-    return user.isAdmin || user.isResponsable ||
-        (user.isTechnicien && user.hasPermission('alimentation.edit'));
+    return user.isAdmin || user.isResponsable || user.isTechnicien;
   }
 
   Future<void> _deduireDuStock(AlimentationModel alimentation) async {
