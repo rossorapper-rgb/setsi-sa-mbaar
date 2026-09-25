@@ -228,6 +228,56 @@ class FirebaseStockRepository {
     await getProduits();
     await getMouvements();
   }
+  Future<void> deduireDepuisAlimentation({
+    required String alimentationId,
+    required String produitId,
+    required double quantite,
+    required String motif,
+    required DateTime date,
+  }) async {
+    final bergerieId = _bergerieId;
+    if (quantite <= 0) throw ArgumentError('La quantité doit être supérieure à zéro.');
+    final produitRef = _collection.doc(produitId);
+    final alimentationRef = _firestore.collection('alimentations').doc(alimentationId);
+    final mouvementRef = _firestore.collection('stock_mouvements').doc();
+    await _firestore.runTransaction((transaction) async {
+      final produitSnap = await transaction.get(produitRef);
+      final alimentationSnap = await transaction.get(alimentationRef);
+      if (!produitSnap.exists) throw StateError('Produit de stock introuvable.');
+      if (!alimentationSnap.exists) throw StateError('Enregistrement d’alimentation introuvable.');
+      final produit = StockProduitModel.fromMap({...produitSnap.data()!, 'id': produitSnap.id});
+      final alimentation = alimentationSnap.data()!;
+      if (produit.bergerieId != bergerieId || alimentation['bergerieId']?.toString() != bergerieId) {
+        throw StateError('Les données n’appartiennent pas à votre bergerie.');
+      }
+      if (alimentation['stockDeduit'] == true) {
+        throw StateError('Cette alimentation a déjà été déduite du stock.');
+      }
+      if (quantite > produit.quantite) {
+        throw StateError('Stock insuffisant. Stock disponible : ${produit.quantite} ${produit.unite}.');
+      }
+      transaction.update(produitRef, {'quantite': produit.quantite - quantite});
+      transaction.set(mouvementRef, {
+        'bergerieId': bergerieId,
+        'produitId': produitId,
+        'type': 'sortie',
+        'quantite': quantite,
+        'date': Timestamp.fromDate(date),
+        'motif': motif.trim(),
+        'prix': produit.prixUnitaire,
+        'fournisseur': '',
+        'note': 'Source alimentation : $alimentationId',
+        'source': 'alimentation',
+        'sourceId': alimentationId,
+      });
+      transaction.update(alimentationRef, {
+        'stockDeduit': true,
+        'stockMouvementId': mouvementRef.id,
+      });
+    });
+    await getProduits();
+    await getMouvements();
+  }
   Future<void> modifierProduit(StockProduitModel produit) async {
     final bergerieId = _bergerieId;
 
