@@ -22,6 +22,11 @@ class FirebaseAlimentationRepository {
   }
 
   Future<void> modifier(AlimentationModel alimentation) async {
+    if (alimentation.stockDeduit) {
+      throw StateError(
+        'Cette alimentation est déjà liée à une sortie de stock et ne peut plus être modifiée.',
+      );
+    }
     await _firestore
         .collection(_collection)
         .doc(alimentation.id)
@@ -29,6 +34,13 @@ class FirebaseAlimentationRepository {
   }
 
   Future<void> supprimer(String id) async {
+    final doc = await _firestore.collection(_collection).doc(id).get();
+    if (!doc.exists) return;
+    if (doc.data()?['stockDeduit'] == true) {
+      throw StateError(
+        'Cette alimentation est déjà liée à une sortie de stock et ne peut pas être supprimée.',
+      );
+    }
     await _firestore.collection(_collection).doc(id).delete();
   }
 
