@@ -44,25 +44,44 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.go('/dashboard/bergerie')),
         title: const Text('Stock'),
         actions: [
-          IconButton(
-            tooltip: 'Entrée de stock',
-            onPressed: _loading || _produits.isEmpty ? null : () async {
-              final saved = await context.push<bool>('/stock/entree');
-              if (saved == true && mounted) await _charger();
-            },
-            icon: const Icon(Icons.add_box_rounded),
+        IconButton(onPressed: _loading ? null : _charger, tooltip: 'Actualiser', icon: const Icon(Icons.refresh_rounded)),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(54),
+        child: SizedBox(
+          height: 54,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _loading || _produits.isEmpty ? null : () async {
+                    final saved = await context.push<bool>('/stock/entree');
+                    if (saved == true && mounted) await _charger();
+                  },
+                  icon: const Icon(Icons.add_box_rounded, size: 19),
+                  label: const Text('Entrée de stock'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _loading || _produits.isEmpty ? null : () async {
+                    final saved = await context.push<bool>('/stock/sortie');
+                    if (saved == true && mounted) await _charger();
+                  },
+                  icon: const Icon(Icons.remove_circle_outline_rounded, size: 19),
+                  label: const Text('Sortie de stock'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _loading ? null : () => context.push('/stock/historique'),
+                  icon: const Icon(Icons.history_rounded, size: 19),
+                  label: const Text('Historique'),
+                ),
+              ],
+            ),
           ),
-          IconButton(
-            tooltip: 'Sortie de stock',
-            onPressed: _loading || _produits.isEmpty ? null : () async {
-              final saved = await context.push<bool>('/stock/sortie');
-              if (saved == true && mounted) await _charger();
-            },
-            icon: const Icon(Icons.remove_circle_outline_rounded),
-          ),
-          IconButton(tooltip: 'Historique', onPressed: _loading ? null : () => context.push('/stock/historique'), icon: const Icon(Icons.history_rounded)),
-          IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded)),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
