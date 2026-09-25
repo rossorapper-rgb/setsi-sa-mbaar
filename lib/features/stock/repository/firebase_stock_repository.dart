@@ -314,6 +314,42 @@ class FirebaseStockRepository {
     await getProduits();
     await getMouvements();
   }
+  Future<void> deduireDepuisIntervention({
+    required String interventionId,
+    required String produitId,
+    required double quantite,
+    required String motif,
+    required DateTime date,
+  }) async {
+    final bergerieId = _bergerieId;
+    if (quantite <= 0) throw ArgumentError('La quantité doit être supérieure à zéro.');
+    final produitRef = _collection.doc(produitId);
+    final interventionRef = _firestore.collection('interventions').doc(interventionId);
+    final mouvementRef = _firestore.collection('stock_mouvements').doc();
+    await _firestore.runTransaction((transaction) async {
+      final produitSnap = await transaction.get(produitRef);
+      final interventionSnap = await transaction.get(interventionRef);
+      if (!produitSnap.exists) throw StateError('Produit de stock introuvable.');
+      if (!interventionSnap.exists) throw StateError('Intervention introuvable.');
+      final produit = StockProduitModel.fromMap({...produitSnap.data()!, 'id': produitSnap.id});
+      final intervention = interventionSnap.data()!;
+      if (produit.bergerieId != bergerieId || intervention['bergerieId']?.toString() != bergerieId) {
+        throw StateError('Les données n’appartiennent pas à votre bergerie.');
+      }
+      if (intervention['stockDeduit'] == true) throw StateError('Cette intervention a déjà été déduite du stock.');
+      if (quantite > produit.quantite) throw StateError('Stock insuffisant. Stock disponible : ${produit.quantite} ${produit.unite}.');
+      transaction.update(produitRef, {'quantite': produit.quantite - quantite});
+      transaction.set(mouvementRef, {
+        'bergerieId': bergerieId, 'produitId': produitId, 'type': 'sortie',
+        'quantite': quantite, 'date': Timestamp.fromDate(date), 'motif': motif.trim(),
+        'prix': produit.prixUnitaire, 'fournisseur': '',
+        'note': 'Source intervention : $interventionId', 'source': 'intervention', 'sourceId': interventionId,
+      });
+      transaction.update(interventionRef, {'stockDeduit': true, 'stockMouvementId': mouvementRef.id});
+    });
+    await getProduits();
+    await getMouvements();
+  }
   Future<void> modifierProduit(StockProduitModel produit) async {
     final bergerieId = _bergerieId;
 
