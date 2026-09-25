@@ -7,6 +7,8 @@ class AlimentationModel {
   final double prix;
   final DateTime date;
   final String observation;
+  final bool stockDeduit;
+  final String stockMouvementId;
 
   const AlimentationModel({
     required this.id,
@@ -17,6 +19,8 @@ class AlimentationModel {
     required this.prix,
     required this.date,
     this.observation = '',
+    this.stockDeduit = false,
+    this.stockMouvementId = '',
   });
 
   AlimentationModel copyWith({
@@ -28,6 +32,8 @@ class AlimentationModel {
     double? prix,
     DateTime? date,
     String? observation,
+    bool? stockDeduit,
+    String? stockMouvementId,
   }) {
     return AlimentationModel(
       id: id ?? this.id,
@@ -38,6 +44,8 @@ class AlimentationModel {
       prix: prix ?? this.prix,
       date: date ?? this.date,
       observation: observation ?? this.observation,
+      stockDeduit: stockDeduit ?? this.stockDeduit,
+      stockMouvementId: stockMouvementId ?? this.stockMouvementId,
     );
   }
 
@@ -50,6 +58,8 @@ class AlimentationModel {
       'prix': prix,
       'date': date.millisecondsSinceEpoch,
       'observation': observation,
+      'stockDeduit': stockDeduit,
+      'stockMouvementId': stockMouvementId,
     };
   }
 
@@ -68,6 +78,8 @@ class AlimentationModel {
       prix: (map['prix'] as num?)?.toDouble() ?? 0,
       date: date,
       observation: map['observation']?.toString() ?? '',
+      stockDeduit: map['stockDeduit'] == true,
+      stockMouvementId: map['stockMouvementId']?.toString() ?? '',
     );
   }
 }
