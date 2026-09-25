@@ -205,6 +205,17 @@ class _ProduitCard extends StatelessWidget {
                   'Stock : ' + produit.quantite.toString() + ' ' + produit.unite,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  'Seuil minimum : ' +
+                      produit.seuilMinimum.toString() +
+                      ' ' +
+                      produit.unite,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
                 if (alert)
                   const Text(
                     'Stock sous le seuil minimum',
