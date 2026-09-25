@@ -43,7 +43,19 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.go('/dashboard/bergerie')),
         title: const Text('Stock'),
-        actions: [IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(
+            tooltip: 'Entrée de stock',
+            onPressed: _loading || _produits.isEmpty
+                ? null
+                : () async {
+                    final saved = await context.push<bool>('/stock/entree');
+                    if (saved == true && mounted) await _charger();
+                  },
+            icon: const Icon(Icons.add_box_rounded),
+          ),
+          IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
