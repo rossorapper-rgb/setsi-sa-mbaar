@@ -99,6 +99,59 @@ class FirebaseStockRepository {
     return produit;
   }
 
+  Future<void> enregistrerEntree({
+    required String produitId,
+    required double quantite,
+    required String motif,
+    required DateTime date,
+    required double prix,
+    String fournisseur = '',
+    String note = '',
+  }) async {
+    final bergerieId = _bergerieId;
+    if (quantite <= 0) {
+      throw ArgumentError('La quantité doit être supérieure à zéro.');
+    }
+
+    final produitRef = _collection.doc(produitId);
+    final mouvementRef = _firestore.collection('stock_mouvements').doc();
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(produitRef);
+      if (!snapshot.exists) {
+        throw StateError('Produit introuvable.');
+      }
+
+      final produit = StockProduitModel.fromMap({
+        ...snapshot.data()!,
+        'id': snapshot.id,
+      });
+      if (produit.bergerieId != bergerieId) {
+        throw StateError('Ce produit n’appartient pas à votre bergerie.');
+      }
+
+      transaction.update(produitRef, {
+        'quantite': produit.quantite + quantite,
+      });
+      transaction.set(
+        mouvementRef,
+        {
+          'bergerieId': bergerieId,
+          'produitId': produitId,
+          'type': 'entree',
+          'quantite': quantite,
+          'date': Timestamp.fromDate(date),
+          'motif': motif.trim(),
+          'prix': prix,
+          'fournisseur': fournisseur.trim(),
+          'note': note.trim(),
+        },
+      );
+    });
+
+    await getProduits();
+  }
+
   Future<void> modifierProduit(StockProduitModel produit) async {
     final bergerieId = _bergerieId;
 
