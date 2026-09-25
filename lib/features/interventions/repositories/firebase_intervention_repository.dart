@@ -51,6 +51,11 @@ class FirebaseInterventionRepository {
     if (intervention.bergerieId != bergerieId) {
       throw StateError('Cette intervention n’appartient pas à votre bergerie.');
     }
+    if (intervention.stockDeduit) {
+      throw StateError(
+        'Cette intervention est déjà liée à une sortie de stock et ne peut plus être modifiée.',
+      );
+    }
 
     await _collection.doc(intervention.id).update(intervention.toMap());
   }
@@ -67,6 +72,11 @@ class FirebaseInterventionRepository {
     final intervention = InterventionModel.fromMap(doc.data()!);
     if (intervention.bergerieId != bergerieId) {
       throw StateError('Cette intervention n’appartient pas à votre bergerie.');
+    }
+    if (intervention.stockDeduit) {
+      throw StateError(
+        'Cette intervention est déjà liée à une sortie de stock et ne peut pas être supprimée.',
+      );
     }
 
     await _collection.doc(id).delete();
