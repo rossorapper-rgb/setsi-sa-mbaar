@@ -242,7 +242,24 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/alimentation', redirect: (context, state) => _alimentationRedirect(), builder: (context, state) => const AlimentationPage()),
     GoRoute(path: '/finances', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const FinancesBergeriePage()),
     GoRoute(path: '/stock', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const StockBergeriePage()),
-    GoRoute(path: '/stock/ajouter', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const AjouterProduitPage()),
+    GoRoute(
+      path: '/stock/ajouter',
+      redirect: (context, state) => _sessionRedirect(),
+      builder: (context, state) => const AjouterProduitPage(),
+    ),
+    GoRoute(
+      path: '/stock/modifier',
+      redirect: (context, state) => _sessionRedirect(),
+      builder: (context, state) {
+        final produit = state.extra;
+        if (produit is! StockProduitModel) {
+          return const Scaffold(
+            body: Center(child: Text('Produit introuvable.')),
+          );
+        }
+        return AjouterProduitPage(produit: produit);
+      },
+    ),
     GoRoute(path: '/stock/entree', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const EntreeStockPage()),
     GoRoute(path: '/stock/sortie', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const SortieStockPage()),
     GoRoute(path: '/stock/historique', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const HistoriqueStockPage()),
