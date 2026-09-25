@@ -74,6 +74,8 @@ class FirebaseStockRepository {
 
   Future<List<StockMouvementModel>> getMouvements() async {
     final bergerieId = _bergerieId;
+    final cacheKey = 'stock_mouvements_$bergerieId';
+
     try {
       final snapshot = await _firestore
           .collection('stock_mouvements')
@@ -81,15 +83,39 @@ class FirebaseStockRepository {
           .get(const GetOptions(source: Source.server));
 
       final mouvements = snapshot.docs
-          .map((doc) => StockMouvementModel.fromMap({
-                ...doc.data(),
-                'id': doc.id,
-              }))
+          .map(
+            (doc) => StockMouvementModel.fromMap({
+              ...doc.data(),
+              'id': doc.id,
+            }),
+          )
           .toList();
+
       mouvements.sort((a, b) => b.date.compareTo(a.date));
+
+      await _cache.saveList(
+        cacheKey,
+        mouvements
+            .map(
+              (mouvement) => {
+                'id': mouvement.id,
+                ...mouvement.toMap(),
+              },
+            )
+            .toList(),
+      );
+
       return mouvements;
     } catch (_) {
-      return [];
+      final cached = await _cache.loadList(cacheKey);
+      if (cached == null) return [];
+
+      final mouvements = cached
+          .map(StockMouvementModel.fromMap)
+          .toList();
+
+      mouvements.sort((a, b) => b.date.compareTo(a.date));
+      return mouvements;
     }
   }
 
