@@ -24,6 +24,7 @@ service cloud.firestore {
     function canViewVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['ventes.view'] == true)); }
     function canEditVentes() { return isAdmin() || (signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.permissions['ventes.edit'] == true)); }
 
+    function canManageStock() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien'); }
     function canManageFinance() { return signedIn() && currentUser().data.actif == true && (currentUser().data.role == 'responsable' || currentUser().data.role == 'technicien' || currentUser().data.role == 'client'); }
     function belongsToMouton(moutonId) { return signedIn() && currentUser().data.actif == true && exists(/databases/$(database)/documents/moutons/$(moutonId)) && get(/databases/$(database)/documents/moutons/$(moutonId)).data.bergerieId == currentUser().data.bergerieId; }
 
@@ -149,6 +150,13 @@ service cloud.firestore {
       allow create: if isAdmin() || (canManageInterventions() && belongsToBergerie(request.resource.data.bergerieId));
       allow update: if isAdmin() || (canManageInterventions() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId);
       allow delete: if isAdmin() || (canManageInterventions() && belongsToBergerie(resource.data.bergerieId));
+    }
+
+    match /stock_produits/{produitId} {
+      allow read: if isAdmin() || belongsToBergerie(resource.data.bergerieId);
+      allow create: if isAdmin() || (canManageStock() && belongsToBergerie(request.resource.data.bergerieId));
+      allow update: if isAdmin() || (canManageStock() && belongsToBergerie(resource.data.bergerieId) && request.resource.data.bergerieId == resource.data.bergerieId);
+      allow delete: if isAdmin() || (canManageStock() && belongsToBergerie(resource.data.bergerieId));
     }
 
     match /finance_entries/{entryId} {
