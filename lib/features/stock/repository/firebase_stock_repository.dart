@@ -144,6 +144,7 @@ class FirebaseStockRepository {
     );
 
     await doc.set(produit.toMap());
+    await getProduits();
     return produit;
   }
 
@@ -408,6 +409,7 @@ class FirebaseStockRepository {
     }
 
     await _collection.doc(produit.id).update(produit.toMap());
+    await getProduits();
   }
 
   Future<void> supprimerProduit(String id) async {
@@ -426,5 +428,6 @@ class FirebaseStockRepository {
     }
 
     await _collection.doc(id).delete();
+    await getProduits();
   }
 }
