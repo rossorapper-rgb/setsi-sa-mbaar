@@ -60,6 +60,7 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
             },
             icon: const Icon(Icons.remove_circle_outline_rounded),
           ),
+          IconButton(tooltip: 'Historique', onPressed: _loading ? null : () => context.push('/stock/historique'), icon: const Icon(Icons.history_rounded)),
           IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
