@@ -1,0 +1,108 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../models/stock_produit_model.dart';
+import '../repository/firebase_stock_repository.dart';
+
+class StockBergeriePage extends StatefulWidget {
+  const StockBergeriePage({super.key});
+  @override
+  State<StockBergeriePage> createState() => _StockBergeriePageState();
+}
+
+class _StockBergeriePageState extends State<StockBergeriePage> {
+  final _repository = FirebaseStockRepository();
+  final _money = NumberFormat('#,##0', 'fr_FR');
+  List<StockProduitModel> _produits = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() { super.initState(); _charger(); }
+
+  Future<void> _charger() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final produits = await _repository.getProduits();
+      if (!mounted) return;
+      setState(() { _produits = produits; _loading = false; });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  double get _valeurStock => _produits.fold(0, (t, p) => t + p.valeurStock);
+  int get _alertes => _produits.where((p) => p.actif && p.estEnAlerte).length;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F8FC),
+      appBar: AppBar(
+        leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.go('/dashboard/bergerie')),
+        title: const Text('Stock'),
+        actions: [IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded))],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('L’ajout de produit sera disponible à l’étape suivante.'))),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Produit'),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Impossible de charger le stock.'), const SizedBox(height: 12), FilledButton(onPressed: _charger, child: const Text('Réessayer'))]))
+              : RefreshIndicator(
+                  onRefresh: _charger,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    children: [
+                      Row(children: [
+                        Expanded(child: _ResumeCard(icon: Icons.inventory_2_rounded, title: 'Produits', value: _produits.length.toString())),
+                        const SizedBox(width: 10),
+                        Expanded(child: _ResumeCard(icon: Icons.payments_rounded, title: 'Valeur', value: _money.format(_valeurStock) + ' F')),
+                        const SizedBox(width: 10),
+                        Expanded(child: _ResumeCard(icon: Icons.warning_amber_rounded, title: 'Alertes', value: _alertes.toString(), alert: _alertes > 0)),
+                      ]),
+                      const SizedBox(height: 22),
+                      const Text('Produits en stock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 10),
+                      if (_produits.isEmpty)
+                        const _StockVide()
+                      else
+                        ..._produits.map((p) => _ProduitCard(produit: p)),
+                    ],
+                  ),
+                ),
+    );
+  }
+}
+
+class _ResumeCard extends StatelessWidget {
+  const _ResumeCard({required this.icon, required this.title, required this.value, this.alert = false});
+  final IconData icon; final String title; final String value; final bool alert;
+  @override
+  Widget build(BuildContext context) {
+    final color = alert ? Colors.orange : Theme.of(context).colorScheme.primary;
+    return Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: color), const SizedBox(height: 7), Text(title, style: const TextStyle(fontSize: 11, color: Colors.black54)), const SizedBox(height: 2), Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800))]));
+  }
+}
+
+class _ProduitCard extends StatelessWidget {
+  const _ProduitCard({required this.produit});
+  final StockProduitModel produit;
+  @override
+  Widget build(BuildContext context) {
+    final alert = produit.actif && produit.estEnAlerte;
+    final color = alert ? Colors.orange : Theme.of(context).colorScheme.primary;
+    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: alert ? Border.all(color: Colors.orange.withValues(alpha: .45)) : null), child: Row(children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .10), borderRadius: BorderRadius.circular(11)), child: Icon(alert ? Icons.warning_amber_rounded : Icons.inventory_2_rounded, color: color)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(produit.nom.isEmpty ? 'Produit sans nom' : produit.nom, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(produit.categorie.isEmpty ? produit.unite : produit.categorie + ' • ' + produit.unite, style: const TextStyle(fontSize: 12, color: Colors.black54)), const SizedBox(height: 6), Text('Stock : ' + produit.quantite.toString() + ' ' + produit.unite, style: const TextStyle(fontWeight: FontWeight.w600)), if (alert) const Text('Stock sous le seuil minimum', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w700))])), const SizedBox(width: 8), Text(NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock) + ' F', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12))]));
+  }
+}
+
+class _StockVide extends StatelessWidget {
+  const _StockVide();
+  @override
+  Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(40), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: const Column(children: [Icon(Icons.inventory_2_outlined, size: 48, color: Colors.black38), SizedBox(height: 12), Text('Aucun produit en stock', style: TextStyle(fontWeight: FontWeight.w700)), SizedBox(height: 5), Text('Ajoutez vos premiers produits pour commencer la gestion du stock.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54))]));
+}
