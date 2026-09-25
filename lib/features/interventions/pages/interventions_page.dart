@@ -110,6 +110,7 @@ class InterventionsPage extends ConsumerWidget {
                     }
                   },
                   onDelete: () => _supprimer(context, ref, intervention),
+                  onStock: () => _deduireDuStock(context, intervention, ref),
                 );
               },
             );
@@ -122,6 +123,7 @@ class InterventionsPage extends ConsumerWidget {
   Future<void> _deduireDuStock(
     BuildContext context,
     InterventionModel intervention,
+    WidgetRef ref,
   ) async {
     if (intervention.stockDeduit) return;
     try {
@@ -210,12 +212,14 @@ class _InterventionCard extends StatelessWidget {
     required this.primary,
     required this.onEdit,
     required this.onDelete,
+    required this.onStock,
   });
 
   final InterventionModel intervention;
   final Color primary;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onStock;
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +275,7 @@ class _InterventionCard extends StatelessWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'stock') _deduireDuStock(context, intervention);
+                if (value == 'stock') onStock();
                 if (value == 'edit') onEdit();
                 if (value == 'delete') onDelete();
               },
