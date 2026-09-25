@@ -241,7 +241,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/finances', redirect: (context, state) => _financeBergerieRedirect(), builder: (context, state) => const FinancesBergeriePage()),
     GoRoute(path: '/stock', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const StockBergeriePage()),
     GoRoute(path: '/stock/ajouter', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const AjouterProduitPage()),
-    GoRoute(path: '/stock/entree', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const EntreeStockPage(produits: [])),
+    GoRoute(path: '/stock/entree', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const EntreeStockPage()),
     GoRoute(path: '/abonnements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AbonnementsPage()),
     GoRoute(path: '/finances-admin', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const FinancesHomePage()),
     GoRoute(path: '/paiements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const PaiementsPage()),
