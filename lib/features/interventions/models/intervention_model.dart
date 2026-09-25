@@ -6,6 +6,8 @@ class InterventionModel {
   final String? moutonId;
   final String? moutonNom;
   final String observation;
+  final bool stockDeduit;
+  final String stockMouvementId;
 
   const InterventionModel({
     required this.id,
@@ -15,6 +17,8 @@ class InterventionModel {
     this.moutonId,
     this.moutonNom,
     this.observation = '',
+    this.stockDeduit = false,
+    this.stockMouvementId = '',
   });
 
   // Compatibilite avec les anciens composants du dashboard admin.
@@ -34,6 +38,8 @@ class InterventionModel {
     String? moutonId,
     String? moutonNom,
     String? observation,
+    bool? stockDeduit,
+    String? stockMouvementId,
   }) {
     return InterventionModel(
       id: id ?? this.id,
@@ -43,6 +49,8 @@ class InterventionModel {
       moutonId: moutonId ?? this.moutonId,
       moutonNom: moutonNom ?? this.moutonNom,
       observation: observation ?? this.observation,
+      stockDeduit: stockDeduit ?? this.stockDeduit,
+      stockMouvementId: stockMouvementId ?? this.stockMouvementId,
     );
   }
 
@@ -55,6 +63,8 @@ class InterventionModel {
       'moutonId': moutonId,
       'moutonNom': moutonNom,
       'observation': observation,
+      'stockDeduit': stockDeduit,
+      'stockMouvementId': stockMouvementId,
     };
   }
 
@@ -72,6 +82,8 @@ class InterventionModel {
       moutonId: map['moutonId']?.toString(),
       moutonNom: map['moutonNom']?.toString(),
       observation: map['observation']?.toString() ?? '',
+      stockDeduit: map['stockDeduit'] == true,
+      stockMouvementId: map['stockMouvementId']?.toString() ?? '',
     );
   }
 }
