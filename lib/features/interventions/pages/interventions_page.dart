@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import '../models/intervention_model.dart';
 import '../providers/intervention_provider.dart';
 import 'add_intervention_page.dart';
+import '../../stock/models/stock_produit_model.dart';
+import '../../stock/repository/firebase_stock_repository.dart';
+import '../../../core/session/current_user_service.dart';
 
 class InterventionsPage extends ConsumerWidget {
   const InterventionsPage({super.key});
@@ -116,6 +119,51 @@ class InterventionsPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _deduireDuStock(
+    BuildContext context,
+    InterventionModel intervention,
+  ) async {
+    if (intervention.stockDeduit) return;
+    try {
+      final repository = FirebaseStockRepository();
+      final produits = (await repository.getProduits())
+          .where((p) => p.actif && p.quantite > 0)
+          .toList();
+      if (!context.mounted) return;
+      if (produits.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aucun produit disponible dans le stock.')),
+        );
+        return;
+      }
+      final choix = await showDialog<_StockInterventionChoice>(
+        context: context,
+        builder: (_) => _StockInterventionDialog(
+          intervention: intervention,
+          produits: produits,
+        ),
+      );
+      if (choix == null || !context.mounted) return;
+      await repository.deduireDepuisIntervention(
+        interventionId: intervention.id,
+        produitId: choix.produit.id,
+        quantite: choix.quantite,
+        motif: 'Intervention - ' + intervention.type,
+        date: intervention.date,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Stock déduit avec succès.')),
+      );
+      await ref.read(interventionProvider.notifier).rafraichir();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible de déduire le stock : $e')),
+      );
+    }
+  }
+
   Future<void> _supprimer(
     BuildContext context,
     WidgetRef ref,
@@ -223,17 +271,157 @@ class _InterventionCard extends StatelessWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
+                if (value == 'stock') _deduireDuStock(context, intervention);
                 if (value == 'edit') onEdit();
                 if (value == 'delete') onDelete();
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+              itemBuilder: (_) => [
+                if ((CurrentUserService.instance.isAdmin ||
+                        CurrentUserService.instance.isResponsable ||
+                        CurrentUserService.instance.isTechnicien) &&
+                    !intervention.stockDeduit)
+                  const PopupMenuItem(
+                    value: 'stock',
+                    child: Text('Déduire du stock'),
+                  ),
+                if (intervention.stockDeduit)
+                  const PopupMenuItem(
+                    enabled: false,
+                    value: 'stock_done',
+                    child: Text('Stock déjà déduit'),
+                  ),
+                const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+                const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _StockInterventionChoice {
+  const _StockInterventionChoice({
+    required this.produit,
+    required this.quantite,
+  });
+  final StockProduitModel produit;
+  final double quantite;
+}
+
+class _StockInterventionDialog extends StatefulWidget {
+  const _StockInterventionDialog({
+    required this.intervention,
+    required this.produits,
+  });
+  final InterventionModel intervention;
+  final List<StockProduitModel> produits;
+
+  @override
+  State<_StockInterventionDialog> createState() =>
+      _StockInterventionDialogState();
+}
+
+class _StockInterventionDialogState
+    extends State<_StockInterventionDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late String _produitId;
+  late final TextEditingController _quantiteController;
+
+  @override
+  void initState() {
+    super.initState();
+    _produitId = widget.produits.first.id;
+    _quantiteController = TextEditingController(text: '1');
+  }
+
+  @override
+  void dispose() {
+    _quantiteController.dispose();
+    super.dispose();
+  }
+
+  double? _parse(String value) =>
+      double.tryParse(value.trim().replaceAll(',', '.'));
+
+  @override
+  Widget build(BuildContext context) {
+    final produit = widget.produits.firstWhere((p) => p.id == _produitId);
+
+    return AlertDialog(
+      title: const Text('Déduire du stock'),
+      content: SizedBox(
+        width: 500,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Intervention : ' + widget.intervention.type),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: _produitId,
+                decoration: const InputDecoration(
+                  labelText: 'Produit stock',
+                  prefixIcon: Icon(Icons.inventory_2_rounded),
+                ),
+                items: widget.produits
+                    .map(
+                      (p) => DropdownMenuItem(
+                        value: p.id,
+                        child: Text(
+                          p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => _produitId = value);
+                },
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _quantiteController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Quantité à déduire',
+                  suffixText: produit.unite,
+                ),
+                validator: (value) {
+                  final n = _parse(value ?? '');
+                  if (n == null || n <= 0) return 'Quantité invalide.';
+                  if (n > produit.quantite) {
+                    return 'La quantité dépasse le stock disponible.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton.icon(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            Navigator.pop(
+              context,
+              _StockInterventionChoice(
+                produit: produit,
+                quantite: _parse(_quantiteController.text)!,
+              ),
+            );
+          },
+          icon: const Icon(Icons.remove_circle_outline_rounded),
+          label: const Text('Déduire'),
+        ),
+      ],
     );
   }
 }
