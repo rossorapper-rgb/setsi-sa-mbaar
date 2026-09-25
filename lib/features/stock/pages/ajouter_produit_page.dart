@@ -197,7 +197,7 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
                     enabled: !_isEditing,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      labelText: _isEditing ? 'Quantité actuelle' : 'Quantité initiale',
+                      labelText: 'Quantité',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.numbers_rounded),
                     ),
