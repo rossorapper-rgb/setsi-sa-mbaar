@@ -33,6 +33,7 @@ import '../features/finances/pages/rapports_financiers_page.dart';
 import '../features/stock/pages/stock_bergerie_page.dart';
 import '../features/stock/pages/ajouter_produit_page.dart';
 import '../features/stock/pages/entree_stock_page.dart';
+import '../features/stock/pages/sortie_stock_page.dart';
 import '../features/utilisateurs/pages/utilisateurs_page.dart';
 import '../features/utilisateurs/pages/add_utilisateur_page.dart';
 import '../features/utilisateurs/pages/utilisateur_details_page.dart';
@@ -242,6 +243,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/stock', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const StockBergeriePage()),
     GoRoute(path: '/stock/ajouter', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const AjouterProduitPage()),
     GoRoute(path: '/stock/entree', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const EntreeStockPage()),
+    GoRoute(path: '/stock/sortie', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const SortieStockPage()),
     GoRoute(path: '/abonnements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const AbonnementsPage()),
     GoRoute(path: '/finances-admin', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const FinancesHomePage()),
     GoRoute(path: '/paiements', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const PaiementsPage()),
