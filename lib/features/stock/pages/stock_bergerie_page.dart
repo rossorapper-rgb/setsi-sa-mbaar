@@ -131,7 +131,7 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
                       if (_produits.isEmpty)
                         const _StockVide()
                       else
-                        ..._produits.map((p) => _ProduitCard(produit: p)),
+                        ..._produits.map((p) => _ProduitCard(produit: p, onChanged: _charger)),
                     ],
                   ),
                 ),
@@ -150,13 +150,149 @@ class _ResumeCard extends StatelessWidget {
 }
 
 class _ProduitCard extends StatelessWidget {
-  const _ProduitCard({required this.produit});
+  const _ProduitCard({required this.produit, required this.onChanged});
+
   final StockProduitModel produit;
+  final Future<void> Function() onChanged;
+
   @override
   Widget build(BuildContext context) {
     final alert = produit.actif && produit.estEnAlerte;
     final color = alert ? Colors.orange : Theme.of(context).colorScheme.primary;
-    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: alert ? Border.all(color: Colors.orange.withValues(alpha: .45)) : null), child: Row(children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .10), borderRadius: BorderRadius.circular(11)), child: Icon(alert ? Icons.warning_amber_rounded : Icons.inventory_2_rounded, color: color)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(produit.nom.isEmpty ? 'Produit sans nom' : produit.nom, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(produit.categorie.isEmpty ? produit.unite : produit.categorie + ' • ' + produit.unite, style: const TextStyle(fontSize: 12, color: Colors.black54)), const SizedBox(height: 6), Text('Stock : ' + produit.quantite.toString() + ' ' + produit.unite, style: const TextStyle(fontWeight: FontWeight.w600)), if (alert) const Text('Stock sous le seuil minimum', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w700))])), const SizedBox(width: 8), Text(NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock) + ' F', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12))]));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: alert
+            ? Border.all(color: Colors.orange.withValues(alpha: .45))
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(
+              alert ? Icons.warning_amber_rounded : Icons.inventory_2_rounded,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  produit.nom.isEmpty ? 'Produit sans nom' : produit.nom,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  produit.categorie.isEmpty
+                      ? produit.unite
+                      : produit.categorie + ' • ' + produit.unite,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Stock : ' + produit.quantite.toString() + ' ' + produit.unite,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                if (alert)
+                  const Text(
+                    'Stock sous le seuil minimum',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock) + ' F',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Actions du produit',
+            onSelected: (value) async {
+              if (value == 'modifier') {
+                final changed = await context.push<bool>(
+                  '/stock/modifier',
+                  extra: produit,
+                );
+                if (changed == true) await onChanged();
+                return;
+              }
+
+              if (value == 'supprimer') {
+                final confirmer = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Supprimer le produit ?'),
+                    content: Text(
+                      'Le produit « ' + produit.nom + ' » sera définitivement supprimé.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: const Text('Annuler'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        child: const Text('Supprimer'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmer != true || !context.mounted) return;
+
+                try {
+                  await FirebaseStockRepository().supprimerProduit(produit.id);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Produit supprimé.')),
+                  );
+                  await onChanged();
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Impossible de supprimer le produit : ' + e.toString())),
+                  );
+                }
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'modifier',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.edit_rounded),
+                  title: Text('Modifier'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'supprimer',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.delete_outline_rounded),
+                  title: Text('Supprimer'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
