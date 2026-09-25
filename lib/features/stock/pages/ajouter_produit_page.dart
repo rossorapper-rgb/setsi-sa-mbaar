@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/stock_produit_model.dart';
+
 import '../repository/firebase_stock_repository.dart';
 
 class AjouterProduitPage extends StatefulWidget {
-  const AjouterProduitPage({super.key});
+  const AjouterProduitPage({super.key, this.produit});
+
+  final StockProduitModel? produit;
 
   @override
   State<AjouterProduitPage> createState() => _AjouterProduitPageState();
@@ -23,7 +27,24 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
   bool _actif = true;
   bool _saving = false;
 
+  bool get _isEditing => widget.produit != null;
+
   static const _unites = ['unité', 'kg', 'litre', 'sac', 'flacon', 'boîte'];
+
+  @override
+  void initState() {
+    super.initState();
+    final produit = widget.produit;
+    if (produit != null) {
+      _nomController.text = produit.nom;
+      _categorieController.text = produit.categorie;
+      _quantiteController.text = produit.quantite.toString();
+      _seuilController.text = produit.seuilMinimum.toString();
+      _prixController.text = produit.prixUnitaire.toString();
+      _unite = produit.unite;
+      _actif = produit.actif;
+    }
+  }
 
   @override
   void dispose() {
@@ -58,19 +79,33 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
 
     setState(() => _saving = true);
     try {
-      await _repository.ajouterProduit(
-        nom: _nomController.text.trim(),
-        categorie: _categorieController.text.trim(),
-        unite: _unite,
-        quantite: _nombre(_quantiteController.text)!,
-        seuilMinimum: _nombre(_seuilController.text)!,
-        prixUnitaire: _nombre(_prixController.text)!,
-        actif: _actif,
-      );
+      if (_isEditing) {
+        final produit = widget.produit!;
+        await _repository.modifierProduit(
+          produit.copyWith(
+            nom: _nomController.text.trim(),
+            categorie: _categorieController.text.trim(),
+            unite: _unite,
+            seuilMinimum: _nombre(_seuilController.text)!,
+            prixUnitaire: _nombre(_prixController.text)!,
+            actif: _actif,
+          ),
+        );
+      } else {
+        await _repository.ajouterProduit(
+          nom: _nomController.text.trim(),
+          categorie: _categorieController.text.trim(),
+          unite: _unite,
+          quantite: _nombre(_quantiteController.text)!,
+          seuilMinimum: _nombre(_seuilController.text)!,
+          prixUnitaire: _nombre(_prixController.text)!,
+          actif: _actif,
+        );
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Produit ajouté avec succès.')),
+        SnackBar(content: Text(_isEditing ? 'Produit modifié avec succès.' : 'Produit ajouté avec succès.')),
       );
       context.pop(true);
     } catch (e) {
@@ -91,7 +126,7 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: _saving ? null : () => context.pop(),
         ),
-        title: const Text('Ajouter un produit'),
+        title: Text(_isEditing ? 'Modifier le produit' : 'Ajouter un produit'),
       ),
       body: Form(
         key: _formKey,
@@ -159,9 +194,10 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
                 children: [
                   TextFormField(
                     controller: _quantiteController,
+                    enabled: !_isEditing,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      labelText: 'Quantité initiale',
+                      labelText: _isEditing ? 'Quantité actuelle' : 'Quantité initiale',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.numbers_rounded),
                     ),
@@ -214,7 +250,7 @@ class _AjouterProduitPageState extends State<AjouterProduitPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(_saving ? 'Enregistrement...' : 'Enregistrer le produit'),
+              label: Text(_saving ? 'Enregistrement...' : (_isEditing ? 'Enregistrer les modifications' : 'Enregistrer le produit')),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
               ),
