@@ -8,6 +8,8 @@ import '../../moutons/models/mouton_model.dart';
 import '../../moutons/repository/firebase_mouton_repository.dart';
 import '../models/carnet_sante_model.dart';
 import '../repository/firebase_carnet_sante_repository.dart';
+import '../../stock/models/stock_produit_model.dart';
+import '../../stock/repository/firebase_stock_repository.dart';
 
 class CarnetSantePage extends StatefulWidget {
   const CarnetSantePage({super.key});
@@ -20,6 +22,7 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
   final _repository = FirebaseCarnetSanteRepository();
   final _moutonRepository = FirebaseMoutonRepository();
   final _uuid = const Uuid();
+  final _stockRepository = FirebaseStockRepository();
 
   bool _loading = true;
   String? _erreur;
@@ -93,6 +96,29 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
     if (resultat == true) await _charger();
   }
 
+  bool get _canDeduirStock {
+    final user = CurrentUserService.instance;
+    return user.isAdmin || user.isResponsable || user.isTechnicien;
+  }
+
+  Future<void> _deduireDuStock(CarnetSanteModel soin) async {
+    if (soin.stockDeduit) return;
+    try {
+      final produits = (await _stockRepository.getProduits()).where((p) => p.actif && p.quantite > 0).toList();
+      if (!mounted) return;
+      if (produits.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aucun produit disponible dans le stock.')));
+        return;
+      }
+      final choix = await showDialog<_StockSoinChoice>(context: context, builder: (_) => _StockSoinDialog(soin: soin, produits: produits));
+      if (choix == null) return;
+      await _stockRepository.deduireDepuisCarnetSante(soinId: soin.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Soin - ' + soin.problemeSoin, date: soin.date);
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock déduit avec succès.'))); await _charger(); }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de déduire le stock : $e')));
+    }
+  }
   Future<void> _supprimer(CarnetSanteModel soin) async {
     final confirmer = await showDialog<bool>(
       context: context,
@@ -267,12 +293,17 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
         isThreeLine: soin.observation.trim().isNotEmpty,
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
+            if (value == 'stock') _deduireDuStock(soin);
             if (value == 'edit') _ouvrirFormulaire(soin: soin);
             if (value == 'delete') _supprimer(soin);
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Modifier')),
-            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+          itemBuilder: (_) => [
+            if (_canDeduirStock && !soin.stockDeduit)
+              const PopupMenuItem(value: 'stock', child: Text('Déduire du stock')),
+            if (soin.stockDeduit)
+              const PopupMenuItem(enabled: false, value: 'stock_done', child: Text('Stock déjà déduit')),
+            const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
           ],
         ),
       ),
@@ -436,6 +467,77 @@ class _CarnetSanteFormDialogState extends State<_CarnetSanteFormDialog> {
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.save),
           label: Text(_saving ? 'Enregistrement…' : 'Enregistrer'),
+        ),
+      ],
+    );
+  }
+}
+
+class _StockSoinChoice {
+  const _StockSoinChoice({required this.produit, required this.quantite});
+  final StockProduitModel produit;
+  final double quantite;
+}
+
+class _StockSoinDialog extends StatefulWidget {
+  const _StockSoinDialog({required this.soin, required this.produits});
+  final CarnetSanteModel soin;
+  final List<StockProduitModel> produits;
+  @override State<_StockSoinDialog> createState() => _StockSoinDialogState();
+}
+
+class _StockSoinDialogState extends State<_StockSoinDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late String _produitId;
+  late TextEditingController _quantiteController;
+  @override void initState() {
+    super.initState();
+    _produitId = widget.produits.first.id;
+    _quantiteController = TextEditingController(text: '1');
+  }
+  @override void dispose() { _quantiteController.dispose(); super.dispose(); }
+  double? _parse(String value) => double.tryParse(value.trim().replaceAll(',', '.'));
+  @override Widget build(BuildContext context) {
+    final produit = widget.produits.where((p) => p.id == _produitId).first;
+    return AlertDialog(
+      title: const Text('Déduire du stock'),
+      content: SizedBox(
+        width: 500,
+        child: Form(
+          key: _formKey,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text('Soin : ' + widget.soin.problemeSoin),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: _produitId,
+              decoration: const InputDecoration(labelText: 'Produit stock', prefixIcon: Icon(Icons.inventory_2_rounded)),
+              items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite))).toList(),
+              onChanged: (value) { if (value != null) setState(() => _produitId = value); },
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _quantiteController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(labelText: 'Quantité à déduire', suffixText: produit.unite),
+              validator: (value) {
+                final n = _parse(value ?? '');
+                if (n == null || n <= 0) return 'Quantité invalide.';
+                if (n > produit.quantite) return 'La quantité dépasse le stock disponible.';
+                return null;
+              },
+            ),
+          ]),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        FilledButton.icon(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            Navigator.pop(context, _StockSoinChoice(produit: produit, quantite: _parse(_quantiteController.text)!));
+          },
+          icon: const Icon(Icons.remove_circle_outline_rounded),
+          label: const Text('Déduire'),
         ),
       ],
     );
