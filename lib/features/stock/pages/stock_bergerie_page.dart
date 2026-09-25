@@ -56,6 +56,10 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
             child: Row(
               children: [
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.white,
+                  ),
                   onPressed: _loading || _produits.isEmpty ? null : () async {
                     final saved = await context.push<bool>('/stock/entree');
                     if (saved == true && mounted) await _charger();
@@ -65,6 +69,10 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.white,
+                  ),
                   onPressed: _loading || _produits.isEmpty ? null : () async {
                     final saved = await context.push<bool>('/stock/sortie');
                     if (saved == true && mounted) await _charger();
@@ -74,6 +82,10 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.white,
+                  ),
                   onPressed: _loading ? null : () => context.push('/stock/historique'),
                   icon: const Icon(Icons.history_rounded, size: 19),
                   label: const Text('Historique'),
