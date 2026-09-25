@@ -83,6 +83,7 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
           ),
         ),
       ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final added = await context.push<bool>('/stock/ajouter');
