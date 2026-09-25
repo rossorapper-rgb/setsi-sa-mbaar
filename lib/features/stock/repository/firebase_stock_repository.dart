@@ -198,6 +198,7 @@ class FirebaseStockRepository {
     });
 
     await getProduits();
+    await getMouvements();
   }
 
   Future<void> enregistrerSortie({
@@ -225,6 +226,7 @@ class FirebaseStockRepository {
       });
     });
     await getProduits();
+    await getMouvements();
   }
   Future<void> modifierProduit(StockProduitModel produit) async {
     final bergerieId = _bergerieId;
