@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../../alimentation/models/alimentation_model.dart';
 import '../../alimentation/repository/firebase_alimentation_repository.dart';
 import '../models/finance_entry_model.dart';
@@ -10,6 +11,8 @@ class FirebaseFinanceRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+  final LocalBusinessCacheService _cache =
+      LocalBusinessCacheService.instance;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('finance_entries');
@@ -22,16 +25,48 @@ class FirebaseFinanceRepository {
     return id;
   }
 
-  Future<List<FinanceEntryModel>> getEntries() async {
-    final snapshot = await _collection
-        .where('bergerieId', isEqualTo: _bergerieId)
-        .get();
+  String _cacheKey(String bergerieId) => 'finances_$bergerieId';
 
-    final entries = snapshot.docs
-        .map((doc) => FinanceEntryModel.fromMap(doc.data()))
-        .toList();
-    entries.sort((a, b) => b.date.compareTo(a.date));
-    return entries;
+  Future<List<FinanceEntryModel>> getEntries() async {
+    final bergerieId = _bergerieId;
+
+    try {
+      final snapshot = await _collection
+          .where('bergerieId', isEqualTo: bergerieId)
+          .get(const GetOptions(source: Source.server));
+
+      final entries = snapshot.docs
+          .map(
+            (doc) => FinanceEntryModel.fromMap({
+              ...doc.data(),
+              'id': doc.id,
+            }),
+          )
+          .toList();
+
+      entries.sort((a, b) => b.date.compareTo(a.date));
+
+      await _cache.saveList(
+        _cacheKey(bergerieId),
+        entries
+            .map(
+              (entry) => {
+                'id': entry.id,
+                ...entry.toMap(),
+              },
+            )
+            .toList(),
+      );
+
+      return entries;
+    } catch (_) {
+      final cached = await _cache.loadList(_cacheKey(bergerieId));
+      if (cached == null) return [];
+
+      final entries = cached.map(FinanceEntryModel.fromMap).toList();
+      entries.sort((a, b) => b.date.compareTo(a.date));
+      return entries;
+    }
   }
 
   Future<FinanceEntryModel> ajouter({
