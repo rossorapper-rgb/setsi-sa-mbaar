@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_business_cache_service.dart';
 import '../models/stock_produit_model.dart';
+import '../models/stock_mouvement_model.dart';
 
 class FirebaseStockRepository {
   FirebaseStockRepository({FirebaseFirestore? firestore})
@@ -68,6 +69,27 @@ class FirebaseStockRepository {
         (a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()),
       );
       return produits;
+    }
+  }
+
+  Future<List<StockMouvementModel>> getMouvements() async {
+    final bergerieId = _bergerieId;
+    try {
+      final snapshot = await _firestore
+          .collection('stock_mouvements')
+          .where('bergerieId', isEqualTo: bergerieId)
+          .get(const GetOptions(source: Source.server));
+
+      final mouvements = snapshot.docs
+          .map((doc) => StockMouvementModel.fromMap({
+                ...doc.data(),
+                'id': doc.id,
+              }))
+          .toList();
+      mouvements.sort((a, b) => b.date.compareTo(a.date));
+      return mouvements;
+    } catch (_) {
+      return [];
     }
   }
 
