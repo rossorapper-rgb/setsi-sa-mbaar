@@ -46,7 +46,12 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
         actions: [IconButton(onPressed: _loading ? null : _charger, icon: const Icon(Icons.refresh_rounded))],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('L’ajout de produit sera disponible à l’étape suivante.'))),
+        onPressed: () async {
+          final added = await context.push<bool>('/stock/ajouter');
+          if (added == true && mounted) {
+            await _charger();
+          }
+        },
         icon: const Icon(Icons.add_rounded),
         label: const Text('Produit'),
       ),
