@@ -5,6 +5,8 @@ class CarnetSanteModel {
   final String problemeSoin;
   final DateTime date;
   final String observation;
+  final bool stockDeduit;
+  final String stockMouvementId;
 
   const CarnetSanteModel({
     required this.id,
@@ -13,6 +15,8 @@ class CarnetSanteModel {
     required this.problemeSoin,
     required this.date,
     this.observation = '',
+    this.stockDeduit = false,
+    this.stockMouvementId = '',
   });
 
   CarnetSanteModel copyWith({
@@ -22,6 +26,8 @@ class CarnetSanteModel {
     String? problemeSoin,
     DateTime? date,
     String? observation,
+    bool? stockDeduit,
+    String? stockMouvementId,
   }) {
     return CarnetSanteModel(
       id: id ?? this.id,
@@ -30,6 +36,8 @@ class CarnetSanteModel {
       problemeSoin: problemeSoin ?? this.problemeSoin,
       date: date ?? this.date,
       observation: observation ?? this.observation,
+      stockDeduit: stockDeduit ?? this.stockDeduit,
+      stockMouvementId: stockMouvementId ?? this.stockMouvementId,
     );
   }
 
@@ -40,6 +48,8 @@ class CarnetSanteModel {
       'problemeSoin': problemeSoin,
       'date': date.millisecondsSinceEpoch,
       'observation': observation,
+      'stockDeduit': stockDeduit,
+      'stockMouvementId': stockMouvementId,
     };
   }
 
@@ -59,6 +69,8 @@ class CarnetSanteModel {
       problemeSoin: map['problemeSoin'] ?? '',
       date: date,
       observation: map['observation'] ?? '',
+      stockDeduit: map['stockDeduit'] == true,
+      stockMouvementId: map['stockMouvementId']?.toString() ?? '',
     );
   }
 }
