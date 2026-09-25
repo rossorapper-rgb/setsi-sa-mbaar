@@ -90,7 +90,10 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
                         const SizedBox(width: 10),
                         Expanded(child: _ResumeCard(icon: Icons.warning_amber_rounded, title: 'Alertes', value: _alertes.toString(), alert: _alertes > 0)),
                       ]),
-                      const SizedBox(height: 22),
+                      if (_alertes > 0) ...[
+                        _AlertesStock(produits: _produits.where((p) => p.actif && p.estEnAlerte).toList()),
+                        const SizedBox(height: 20),
+                      ],
                       const Text('Produits en stock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 10),
                       if (_produits.isEmpty)
@@ -122,6 +125,34 @@ class _ProduitCard extends StatelessWidget {
     final alert = produit.actif && produit.estEnAlerte;
     final color = alert ? Colors.orange : Theme.of(context).colorScheme.primary;
     return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: alert ? Border.all(color: Colors.orange.withValues(alpha: .45)) : null), child: Row(children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .10), borderRadius: BorderRadius.circular(11)), child: Icon(alert ? Icons.warning_amber_rounded : Icons.inventory_2_rounded, color: color)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(produit.nom.isEmpty ? 'Produit sans nom' : produit.nom, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(produit.categorie.isEmpty ? produit.unite : produit.categorie + ' • ' + produit.unite, style: const TextStyle(fontSize: 12, color: Colors.black54)), const SizedBox(height: 6), Text('Stock : ' + produit.quantite.toString() + ' ' + produit.unite, style: const TextStyle(fontWeight: FontWeight.w600)), if (alert) const Text('Stock sous le seuil minimum', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w700))])), const SizedBox(width: 8), Text(NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock) + ' F', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12))]));
+  }
+}
+
+class _AlertesStock extends StatelessWidget {
+  const _AlertesStock({required this.produits});
+  final List<StockProduitModel> produits;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.withValues(alpha: .35)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Row(children: [Icon(Icons.warning_amber_rounded, color: Colors.orange), SizedBox(width: 8), Text('Alertes de stock', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))]),
+        const SizedBox(height: 10),
+        ...produits.map((produit) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            const Icon(Icons.circle, color: Colors.orange, size: 8),
+            const SizedBox(width: 8),
+            Expanded(child: Text('${produit.nom} : ${produit.quantite} ${produit.unite} (seuil ${produit.seuilMinimum} ${produit.unite})', style: const TextStyle(fontWeight: FontWeight.w600))),
+          ]),
+        )),
+      ]),
+    );
   }
 }
 
