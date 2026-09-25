@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 
 class RapportsBergeriePage extends StatefulWidget {
   const RapportsBergeriePage({super.key});
@@ -15,6 +16,7 @@ class RapportsBergeriePage extends StatefulWidget {
 
 class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
   final _firestore = FirebaseFirestore.instance;
+  final _cache = LocalBusinessCacheService.instance;
   final _money = NumberFormat('#,##0', 'fr_FR');
   final _dateFormat = DateFormat('MMMM yyyy', 'fr_FR');
 
@@ -42,6 +44,42 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     _charger();
   }
 
+  String _cacheKey(String collection, String bergerieId) =>
+      'rapport_$collection_$bergerieId';
+
+  Future<List<Map<String, dynamic>>> _chargerCollection({
+    required String collection,
+    required String bergerieId,
+    bool actifsSeulement = false,
+  }) async {
+    try {
+      Query<Map<String, dynamic>> query = _firestore
+          .collection(collection)
+          .where('bergerieId', isEqualTo: bergerieId);
+
+      if (actifsSeulement) {
+        query = query.where('actif', isEqualTo: true);
+      }
+
+      final snapshot =
+          await query.get(const GetOptions(source: Source.server));
+
+      final data = snapshot.docs
+          .map((doc) => <String, dynamic>{
+                ...doc.data(),
+                'id': doc.id,
+              })
+          .toList();
+
+      await _cache.saveList(_cacheKey(collection, bergerieId), data);
+      return data;
+    } catch (_) {
+      final cached =
+          await _cache.loadList(_cacheKey(collection, bergerieId));
+      return cached ?? <Map<String, dynamic>>[];
+    }
+  }
+
   Future<void> _charger() async {
     final bergerieId = _bergerieId;
     if (bergerieId == null) {
@@ -62,44 +100,54 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
       final fin = DateTime(_mois.year, _mois.month + 1);
 
       final results = await Future.wait([
-        _firestore.collection('moutons').where('bergerieId', isEqualTo: bergerieId).where('actif', isEqualTo: true).get(),
-        _firestore.collection('gestations').where('bergerieId', isEqualTo: bergerieId).get(),
-        _firestore.collection('carnet_sante').where('bergerieId', isEqualTo: bergerieId).get(),
-        _firestore.collection('alimentations').where('bergerieId', isEqualTo: bergerieId).get(),
-        _firestore.collection('interventions').where('bergerieId', isEqualTo: bergerieId).get(),
-        _firestore.collection('finance_entries').where('bergerieId', isEqualTo: bergerieId).get(),
+        _chargerCollection(
+          collection: 'moutons',
+          bergerieId: bergerieId,
+          actifsSeulement: true,
+        ),
+        _chargerCollection(
+          collection: 'gestations',
+          bergerieId: bergerieId,
+        ),
+        _chargerCollection(
+          collection: 'carnet_sante',
+          bergerieId: bergerieId,
+        ),
+        _chargerCollection(
+          collection: 'alimentations',
+          bergerieId: bergerieId,
+        ),
+        _chargerCollection(
+          collection: 'interventions',
+          bergerieId: bergerieId,
+        ),
+        _chargerCollection(
+          collection: 'finance_entries',
+          bergerieId: bergerieId,
+        ),
       ]);
 
-      final gestations = results[1].docs;
-      final soins = results[2].docs;
-      final alimentations = results[3].docs;
-      final interventions = results[4].docs;
-      final finances = results[5].docs;
+      final moutons = results[0];
+      final gestations = results[1];
+      final soins = results[2];
+      final alimentations = results[3];
+      final interventions = results[4];
+      final finances = results[5];
 
       int naissances = 0;
       int gestationsEnCours = 0;
-      for (final doc in gestations) {
-        final data = doc.data();
+      for (final data in gestations) {
         if (data['statut']?.toString() == 'Gestante') {
           gestationsEnCours++;
         }
-        final rawDate = data['dateMiseBas'];
-        DateTime? date;
-        if (rawDate is Timestamp) {
-          date = rawDate.toDate();
-        } else if (rawDate is int) {
-          date = DateTime.fromMillisecondsSinceEpoch(rawDate);
-        } else if (rawDate != null) {
-          date = DateTime.tryParse(rawDate.toString());
-        }
+        final date = _dateFrom(data['dateMiseBas']);
         if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
           naissances++;
         }
       }
 
       double alimentation = 0;
-      for (final doc in alimentations) {
-        final data = doc.data();
+      for (final data in alimentations) {
         final date = _dateFrom(data['date']);
         if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
           alimentation += (data['prix'] as num?)?.toDouble() ?? 0;
@@ -108,10 +156,11 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
 
       double ventes = 0;
       double depenses = alimentation;
-      for (final doc in finances) {
-        final data = doc.data();
+      for (final data in finances) {
         final date = _dateFrom(data['date']);
-        if (date == null || date.isBefore(debut) || !date.isBefore(fin)) continue;
+        if (date == null || date.isBefore(debut) || !date.isBefore(fin)) {
+          continue;
+        }
         final montant = (data['montant'] as num?)?.toDouble() ?? 0;
         if (data['type']?.toString() == 'vente') {
           ventes += montant;
@@ -120,6 +169,27 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
         }
       }
 
+      setState(() {
+        _moutons = moutons.length;
+        _gestations = gestationsEnCours;
+        _naissances = naissances;
+        _soins = soins.where((data) {
+          final date = _dateFrom(data['date']);
+          return date != null &&
+              !date.isBefore(debut) &&
+              date.isBefore(fin);
+        }).length;
+        _interventions = interventions.where((data) {
+          final date = _dateFrom(data['date']);
+          return date != null &&
+              !date.isBefore(debut) &&
+              date.isBefore(fin);
+        }).length;
+        _alimentation = alimentation;
+        _ventes = ventes;
+        _depenses = depenses;
+        _loading = false;
+      });
       if (!mounted) return;
       setState(() {
         _moutons = results[0].docs.length;
