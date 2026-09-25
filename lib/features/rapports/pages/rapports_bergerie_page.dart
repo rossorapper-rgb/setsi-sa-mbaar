@@ -190,23 +190,6 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
         _depenses = depenses;
         _loading = false;
       });
-      if (!mounted) return;
-      setState(() {
-        _moutons = results[0].docs.length;
-        _gestations = gestationsEnCours;
-        _naissances = naissances;
-        _soins = soins.where((d) {
-          final date = _dateFrom(d.data()['date']);
-          return date != null && !date.isBefore(debut) && date.isBefore(fin);
-        }).length;
-        _interventions = interventions.where((d) {
-          final date = _dateFrom(d.data()['date']);
-          return date != null && !date.isBefore(debut) && date.isBefore(fin);
-        }).length;
-        _alimentation = alimentation;
-        _ventes = ventes;
-        _depenses = depenses;
-        _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
