@@ -278,6 +278,42 @@ class FirebaseStockRepository {
     await getProduits();
     await getMouvements();
   }
+  Future<void> deduireDepuisCarnetSante({
+    required String soinId,
+    required String produitId,
+    required double quantite,
+    required String motif,
+    required DateTime date,
+  }) async {
+    final bergerieId = _bergerieId;
+    if (quantite <= 0) throw ArgumentError('La quantité doit être supérieure à zéro.');
+    final produitRef = _collection.doc(produitId);
+    final soinRef = _firestore.collection('carnet_sante').doc(soinId);
+    final mouvementRef = _firestore.collection('stock_mouvements').doc();
+    await _firestore.runTransaction((transaction) async {
+      final produitSnap = await transaction.get(produitRef);
+      final soinSnap = await transaction.get(soinRef);
+      if (!produitSnap.exists) throw StateError('Produit de stock introuvable.');
+      if (!soinSnap.exists) throw StateError('Soin introuvable.');
+      final produit = StockProduitModel.fromMap({...produitSnap.data()!, 'id': produitSnap.id});
+      final soin = soinSnap.data()!;
+      if (produit.bergerieId != bergerieId || soin['bergerieId']?.toString() != bergerieId) {
+        throw StateError('Les données n’appartiennent pas à votre bergerie.');
+      }
+      if (soin['stockDeduit'] == true) throw StateError('Ce soin a déjà été déduit du stock.');
+      if (quantite > produit.quantite) throw StateError('Stock insuffisant. Stock disponible : ${produit.quantite} ${produit.unite}.');
+      transaction.update(produitRef, {'quantite': produit.quantite - quantite});
+      transaction.set(mouvementRef, {
+        'bergerieId': bergerieId, 'produitId': produitId, 'type': 'sortie',
+        'quantite': quantite, 'date': Timestamp.fromDate(date), 'motif': motif.trim(),
+        'prix': produit.prixUnitaire, 'fournisseur': '',
+        'note': 'Source carnet de santé : $soinId', 'source': 'carnet_sante', 'sourceId': soinId,
+      });
+      transaction.update(soinRef, {'stockDeduit': true, 'stockMouvementId': mouvementRef.id});
+    });
+    await getProduits();
+    await getMouvements();
+  }
   Future<void> modifierProduit(StockProduitModel produit) async {
     final bergerieId = _bergerieId;
 
