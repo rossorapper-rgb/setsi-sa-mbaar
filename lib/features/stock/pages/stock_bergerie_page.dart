@@ -207,10 +207,7 @@ class _ProduitCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Seuil minimum : ' +
-                      produit.seuilMinimum.toString() +
-                      ' ' +
-                      produit.unite,
+                  'Seuil minimum : ${produit.seuilMinimum} ${produit.unite}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black54,
