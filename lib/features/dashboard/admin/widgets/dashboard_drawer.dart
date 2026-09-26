@@ -9,7 +9,7 @@ import '../models/drawer_menu_item.dart';
 import '../services/drawer_menu_service.dart';
 
 class DashboardDrawer extends StatelessWidget {
-  DashboardDrawer({
+  const DashboardDrawer({
     super.key,
     required this.selectedIndex,
   });
