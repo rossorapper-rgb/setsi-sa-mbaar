@@ -228,8 +228,11 @@ class _MoutonsPageState extends State<MoutonsPage> {
             );
           }
 
-          if (snapshot.hasData && !identical(snapshot.data, _moutons)) {
-            _moutons = snapshot.data!;
+          // Le FutureBuilder peut encore restituer une ancienne valeur
+          // après un retour de AddMoutonPage. Ne jamais écraser une liste
+          // locale déjà mise à jour immédiatement par une ancienne lecture.
+          if (_moutons.isEmpty && snapshot.hasData) {
+            _moutons = List<MoutonModel>.from(snapshot.data!);
             _moutonsFiltres = List.from(_moutons);
 
             if (_searchController.text.isNotEmpty) {
