@@ -180,8 +180,9 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
         ),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _chargementPhoto = false);
+      if (mounted) {
+        setState(() => _chargementPhoto = false);
+      }
     }
   }
 
@@ -438,8 +439,9 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
         ),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
