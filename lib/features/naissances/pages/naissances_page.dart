@@ -368,6 +368,7 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
           ),
         ),
       ),
+      ),
     );
   }
 }
