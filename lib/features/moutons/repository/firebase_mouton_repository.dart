@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_business_cache_service.dart';
@@ -18,18 +20,44 @@ class FirebaseMoutonRepository {
 
   /// Ajouter un mouton
   Future<void> addMouton(MoutonModel mouton) async {
-    await _firestore
-        .collection(_collection)
-        .doc(mouton.id)
-        .set(mouton.toMap());
+    final cached = await _cache.loadList(_cacheKey(mouton.bergerieId)) ?? [];
+    await _cache.saveList(
+      _cacheKey(mouton.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != mouton.id),
+        mouton.toMap(),
+      ],
+    );
+
+    // L'écriture est conservée localement par Firestore puis synchronisée
+    // dès que la connexion revient. Ne pas attendre le serveur hors ligne.
+    unawaited(
+      _firestore
+          .collection(_collection)
+          .doc(mouton.id)
+          .set(mouton.toMap()),
+    );
   }
 
   /// Modifier un mouton
   Future<void> updateMouton(MoutonModel mouton) async {
-    await _firestore
-        .collection(_collection)
-        .doc(mouton.id)
-        .update(mouton.toMap());
+    final cached = await _cache.loadList(_cacheKey(mouton.bergerieId)) ?? [];
+    await _cache.saveList(
+      _cacheKey(mouton.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != mouton.id),
+        mouton.toMap(),
+      ],
+    );
+
+    // set() permet aussi de fonctionner hors ligne si le document n'est
+    // pas encore présent dans le cache local.
+    unawaited(
+      _firestore
+          .collection(_collection)
+          .doc(mouton.id)
+          .set(mouton.toMap()),
+    );
   }
 
   /// Archiver un mouton
