@@ -347,15 +347,13 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       return widget.bergerie!.clientId;
     }
 
-    final bergeries = await _bergerieRepository.getAllBergeries();
-    final correspondante = bergeries.where((item) => item.id == bergerieId);
-
-    if (correspondante.isEmpty ||
-        correspondante.first.clientId.trim().isEmpty) {
+    final correspondante = await _bergerieRepository.getBergerieById(bergerieId);
+    if (correspondante == null || correspondante.clientId.trim().isEmpty) {
       throw Exception('Client propriétaire de la bergerie introuvable.');
     }
 
-    return correspondante.first.clientId;
+    return correspondante.clientId;
+
   }
 
   Future<void> _enregistrer() async {
