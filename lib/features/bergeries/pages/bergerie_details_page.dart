@@ -68,8 +68,8 @@ bergerie: widget.bergerie,
 ),
 );
 
-if (result == true && context.mounted) {
-Navigator.pop(context, true);
+if (result is BergerieModel && context.mounted) {
+Navigator.pop(context, result);
 }
 },
 ),
