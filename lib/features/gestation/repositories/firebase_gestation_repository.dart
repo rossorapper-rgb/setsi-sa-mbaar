@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
@@ -110,8 +112,40 @@ class FirebaseGestationRepository {
     return GestationModel.fromMap(doc.data(), doc.id);
   }
 
-  Future<void> addGestation(GestationModel gestation) async => _gestations.doc(gestation.id).set(gestation.toMap());
-  Future<void> updateGestation(GestationModel gestation) async => _gestations.doc(gestation.id).update(gestation.toMap());
+  Future<void> addGestation(GestationModel gestation) async {
+    final key = _cacheKey;
+    if (key != null) {
+      final cached = await _cache.loadList(key) ?? [];
+      final updated = [
+        ...cached.where((item) => item['id']?.toString() != gestation.id),
+        {'id': gestation.id, ...gestation.toMap()},
+      ];
+      await _cache.saveList(key, updated);
+    }
+
+    // Firestore Web conserve l'écriture localement et la synchronise dès
+    // que la connexion revient. On ne bloque pas l'interface sur le réseau.
+    unawaited(
+      _gestations.doc(gestation.id).set(gestation.toMap()),
+    );
+  }
+
+  Future<void> updateGestation(GestationModel gestation) async {
+    final key = _cacheKey;
+    if (key != null) {
+      final cached = await _cache.loadList(key) ?? [];
+      final updated = [
+        ...cached.where((item) => item['id']?.toString() != gestation.id),
+        {'id': gestation.id, ...gestation.toMap()},
+      ];
+      await _cache.saveList(key, updated);
+    }
+
+    // Même comportement en modification : ne pas attendre le réseau.
+    unawaited(
+      _gestations.doc(gestation.id).set(gestation.toMap()),
+    );
+  }
   Future<void> deleteGestation(String id) async => _gestations.doc(id).delete();
 
   Future<List<GestationModel>> getGestationsByMouton(String brebisId) async {
