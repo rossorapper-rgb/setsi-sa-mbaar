@@ -431,7 +431,7 @@ class _AddGestationPageState extends State<AddGestationPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<MoutonModel>(
+            _ControlledDropdown<MoutonModel>(
               value: _brebisSelectionnee,
               decoration: const InputDecoration(
                 labelText: "Sélectionner une femelle",
@@ -487,7 +487,7 @@ class _AddGestationPageState extends State<AddGestationPage> {
               ),
             ),
             if (_typeBelier == TypeBelier.troupeau) ...[
-              DropdownButtonFormField<MoutonModel>(
+              _ControlledDropdown<MoutonModel>(
                 value: _belierSelectionne,
                 decoration: const InputDecoration(
                   labelText: "Sélectionner un bélier",
@@ -594,5 +594,33 @@ class _AddGestationPageState extends State<AddGestationPage> {
     _nomBelierController.dispose();
     _proprietaireController.dispose();
     super.dispose();
+  }
+}
+
+
+class _ControlledDropdown<T> extends StatelessWidget {
+  final T? value;
+  final InputDecoration decoration;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? Function(T?)? validator;
+
+  const _ControlledDropdown({
+    required this.value,
+    required this.decoration,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      decoration: decoration,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+    );
   }
 }
