@@ -20,12 +20,16 @@ class AddMoutonPage extends StatefulWidget {
   final BergerieModel? bergerie;
   final MoutonModel? mouton;
   final ValueChanged<MoutonModel>? onSaved;
+  final String? initialSexe;
+  final DateTime? initialDateNaissance;
 
   const AddMoutonPage({
     super.key,
     this.bergerie,
     this.mouton,
     this.onSaved,
+    this.initialSexe,
+    this.initialDateNaissance,
   });
 
   @override
@@ -77,6 +81,10 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       _chargerMouton();
     } else {
       _numeroController.text = _genererNumeroIdentification();
+      if (widget.initialSexe != null && sexes.any((item) => item.value == widget.initialSexe)) {
+        _sexe = widget.initialSexe!;
+      }
+      _dateNaissance = widget.initialDateNaissance;
     }
   }
 
