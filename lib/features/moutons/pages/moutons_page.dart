@@ -136,40 +136,34 @@ class _MoutonsPageState extends State<MoutonsPage> {
     setState(_filtrerMoutonsSansSetState);
   }
 
-  Future<void> _ajouterMouton() async {
-    final resultat = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddMoutonPage(bergerie: widget.bergerie),
-      ),
-    );
-
+  void _appliquerMoutonLocalement(MoutonModel mouton) {
     if (!mounted) return;
 
-    if (resultat is MoutonModel) {
-      final mouton = resultat;
+    _localVersion++;
 
-      _localVersion++;
+    setState(() {
+      _moutons = [
+        ..._moutons.where((item) => item.id != mouton.id),
+        mouton,
+      ];
 
-      setState(() {
-        _moutons = [
-          ..._moutons.where((item) => item.id != mouton.id),
-          mouton,
-        ];
+      _cacheParBergerie[widget.bergerie.id] =
+          List<MoutonModel>.from(_moutons);
 
-        _cacheParBergerie[widget.bergerie.id] =
-            List<MoutonModel>.from(_moutons);
+      _filtrerMoutonsSansSetState();
+    });
+  }
 
-        _filtrerMoutonsSansSetState();
-      });
-
-      // La synchronisation Firebase continue en arrière-plan si nécessaire.
-      // La liste n'attend donc pas un aller-retour réseau pour s'actualiser.
-    } else if (resultat == true) {
-      // Compatibilité avec un retour booléen éventuel.
-      _cacheParBergerie.remove(widget.bergerie.id);
-      await _actualiserEnArrierePlan();
-    }
+  Future<void> _ajouterMouton() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddMoutonPage(
+          bergerie: widget.bergerie,
+          onSaved: _appliquerMoutonLocalement,
+        ),
+      ),
+    );
   }
 
   Future<void> _ouvrirDetails(MoutonModel mouton) async {
