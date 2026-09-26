@@ -146,6 +146,66 @@ class FirebaseGestationRepository {
       _gestations.doc(gestation.id).set(gestation.toMap()),
     );
   }
+  Future<GestationModel> enregistrerAgneauAjoute({
+    required String gestationId,
+    required String moutonId,
+  }) async {
+    final key = _cacheKey;
+    final now = DateTime.now();
+
+    if (key != null) {
+      final cached = await _cache.loadList(key);
+      if (cached != null) {
+        final index = cached.indexWhere(
+          (item) => item['id']?.toString() == gestationId,
+        );
+        if (index >= 0) {
+          final current = Map<String, dynamic>.from(cached[index]);
+          final ids = ((current['agneauMoutonIds'] as List?) ?? const [])
+              .map((e) => e.toString())
+              .toSet();
+          ids.add(moutonId);
+          current['agneauMoutonIds'] = ids.toList();
+          current['dateModification'] = Timestamp.fromDate(now);
+          final updated = [...cached];
+          updated[index] = current;
+          await _cache.saveList(key, updated);
+
+          unawaited(_gestations.doc(gestationId).update({
+            'agneauMoutonIds': ids.toList(),
+            'dateModification': Timestamp.fromDate(now),
+          }));
+          return GestationModel.fromMap(current, gestationId);
+        }
+      }
+    }
+
+    final doc = await _gestations.doc(gestationId).get();
+    if (!doc.exists || doc.data() == null) {
+      throw StateError('Naissance introuvable.');
+    }
+
+    final data = Map<String, dynamic>.from(doc.data()!);
+    final ids = ((data['agneauMoutonIds'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .toSet();
+    ids.add(moutonId);
+    data['agneauMoutonIds'] = ids.toList();
+    data['dateModification'] = Timestamp.fromDate(now);
+
+    if (key != null) {
+      final cached = await _cache.loadList(key) ?? [];
+      final updated = [
+        ...cached.where((item) => item['id']?.toString() != gestationId),
+        {'id': gestationId, ...data},
+      ];
+      await _cache.saveList(key, updated);
+    }
+
+    unawaited(_gestations.doc(gestationId).set(data));
+    return GestationModel.fromMap(data, gestationId);
+  }
+
   Future<void> deleteGestation(String id) async {
     final key = _cacheKey;
     if (key != null) {
