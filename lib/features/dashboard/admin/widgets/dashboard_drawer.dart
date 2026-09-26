@@ -83,7 +83,7 @@ class DashboardDrawer extends StatelessWidget {
                   vertical: 4,
                 ),
                 itemCount: menus.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                separatorBuilder: (_, _) => const SizedBox(height: 4),
                 itemBuilder: (context, index) {
                   final DrawerMenuItem item = menus[index];
                   final bool selected = selectedIndex == index;
