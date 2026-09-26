@@ -504,7 +504,7 @@ class _MoutonDetailsPageState
                         ),
                       );
 
-                      if (!mounted) return;
+                      if (!context.mounted) return;
 
                       if (resultat == true) {
                         Navigator.pop(context, true);
@@ -545,7 +545,7 @@ class _MoutonDetailsPageState
                     try {
                       await _moutonRepository.deleteMouton(widget.mouton.id);
 
-                      if (!mounted) return;
+                      if (!context.mounted) return;
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
