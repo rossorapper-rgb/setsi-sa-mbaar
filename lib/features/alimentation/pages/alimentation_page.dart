@@ -162,7 +162,6 @@ class _AlimentationPageState extends State<AlimentationPage> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
     final compact = MediaQuery.of(context).size.width < 700;
-    final canView = CurrentUserService.instance.hasPermission('alimentation.view');
     final canEdit = CurrentUserService.instance.hasPermission('alimentation.edit');
 
     return Scaffold(
