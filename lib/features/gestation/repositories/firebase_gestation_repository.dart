@@ -146,7 +146,22 @@ class FirebaseGestationRepository {
       _gestations.doc(gestation.id).set(gestation.toMap()),
     );
   }
-  Future<void> deleteGestation(String id) async => _gestations.doc(id).delete();
+  Future<void> deleteGestation(String id) async {
+    final key = _cacheKey;
+    if (key != null) {
+      final cached = await _cache.loadList(key);
+      if (cached != null) {
+        final updated = cached
+            .where((item) => item['id']?.toString() != id)
+            .toList();
+        await _cache.saveList(key, updated);
+      }
+    }
+
+    // La suppression locale est immédiate. Firestore synchronisera
+    // la suppression dès que la connexion est disponible.
+    unawaited(_gestations.doc(id).delete());
+  }
 
   Future<List<GestationModel>> getGestationsByMouton(String brebisId) async {
     Query<Map<String, dynamic>> query = _gestations.where('brebisId', isEqualTo: brebisId);
