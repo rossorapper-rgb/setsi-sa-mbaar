@@ -71,7 +71,7 @@ class _BergerieLogo extends StatelessWidget {
       return Image.network(
         logo!,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             Icon(Icons.home_work_rounded, color: color, size: 44),
       );
     }
@@ -79,7 +79,7 @@ class _BergerieLogo extends StatelessWidget {
     return Image.asset(
       logo!,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
+      errorBuilder: (_, _, _) =>
           Icon(Icons.home_work_rounded, color: color, size: 44),
     );
   }
@@ -380,7 +380,7 @@ class _DashboardContentState extends State<_DashboardContent> {
                       width: imageWidth,
                       height: imageHeight,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         width: imageWidth,
                         height: imageHeight,
                         color: Colors.white.withValues(alpha: .12),
