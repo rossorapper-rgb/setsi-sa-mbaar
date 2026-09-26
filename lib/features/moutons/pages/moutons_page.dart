@@ -51,9 +51,9 @@ class _MoutonsPageState extends State<MoutonsPage> {
       _moutonsFiltres = List<MoutonModel>.from(cache);
       _chargementInitial = false;
 
-      // Actualisation en arrière-plan : l'utilisateur ne reste pas bloqué
-      // pendant la nouvelle lecture Firestore.
-      _actualiserEnArrierePlan();
+      // Le cache est la source immédiate d'affichage.
+      // Pas de lecture concurrente ici : une ancienne réponse Firestore
+      // ne doit jamais écraser une opération locale.
     } else {
       _initialiser();
     }
@@ -168,9 +168,7 @@ class _MoutonsPageState extends State<MoutonsPage> {
     } else if (resultat == true) {
       // Compatibilité avec un retour booléen éventuel.
       _cacheParBergerie.remove(widget.bergerie.id);
-      setState(() {
-        _actualiserEnArrierePlan();
-      });
+      await _actualiserEnArrierePlan();
     }
   }
 
@@ -194,6 +192,8 @@ class _MoutonsPageState extends State<MoutonsPage> {
   }
 
   Future<void> _rafraichir() async {
+    _localVersion++;
+
     try {
       final moutons = await _chargerMoutons();
 
