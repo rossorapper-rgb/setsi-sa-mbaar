@@ -489,7 +489,7 @@ bergerie;
 
 const SizedBox(height: 20),
   DropdownButtonFormField<TypePrestation>(
-    value: _typePrestation,
+    initialValue: _typePrestation,
     decoration: const InputDecoration(
       labelText: "Type de prestation",
       border: OutlineInputBorder(),
@@ -580,7 +580,7 @@ const SizedBox(height: 20),
 
   DropdownButtonFormField<
       ModePaiement>(
-    value: _modePaiement,
+    initialValue: _modePaiement,
     decoration:
     const InputDecoration(
       labelText:
