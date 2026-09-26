@@ -123,7 +123,7 @@ child: Text(
 return ListView.separated(
 padding: const EdgeInsets.all(16),
 itemCount: liste.length,
-separatorBuilder: (_, __) =>
+separatorBuilder: (_, _) =>
 const SizedBox(height: 12),
 itemBuilder: (context, index) {
 final UtilisateurModel utilisateur =
