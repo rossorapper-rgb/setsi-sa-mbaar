@@ -405,7 +405,7 @@ padding:
 const EdgeInsets.all(16),
 children: [
 
-DropdownButtonFormField<ClientModel>(
+_ControlledDropdown<ClientModel>(
 value:
 _clientSelectionne,
 decoration:
@@ -458,7 +458,7 @@ liste;
 
 const SizedBox(height: 20),
 
-DropdownButtonFormField<BergerieModel>(
+_ControlledDropdown<BergerieModel>(
 value:
 _bergerieSelectionnee,
 decoration:
@@ -743,4 +743,34 @@ const SizedBox(height: 20),
 ),
 );
 }
+}
+
+class _ControlledDropdown<T> extends StatelessWidget {
+  final T? value;
+  final bool isExpanded;
+  final InputDecoration decoration;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? Function(T?)? validator;
+
+  const _ControlledDropdown({
+    required this.value,
+    this.isExpanded = false,
+    required this.decoration,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      isExpanded: isExpanded,
+      decoration: decoration,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
 }
