@@ -61,6 +61,7 @@ class GestationFemelleSection extends StatelessWidget {
 class _ControlledDropdown<T> extends StatelessWidget {
   final T? value;
   final bool isExpanded;
+  final Widget? hint;
   final InputDecoration decoration;
   final List<DropdownMenuItem<T>> items;
   final ValueChanged<T?>? onChanged;
@@ -69,6 +70,7 @@ class _ControlledDropdown<T> extends StatelessWidget {
   const _ControlledDropdown({
     required this.value,
     this.isExpanded = false,
+    this.hint,
     required this.decoration,
     required this.items,
     required this.onChanged,
@@ -80,6 +82,7 @@ class _ControlledDropdown<T> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       initialValue: value,
       isExpanded: isExpanded,
+      hint: hint,
       decoration: decoration,
       items: items,
       onChanged: onChanged,
