@@ -36,7 +36,7 @@ class DashboardQuickActions extends ConsumerWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: bergeries.length,
-                separatorBuilder: (_, __) => const Divider(),
+                separatorBuilder: (_, _) => const Divider(),
                 itemBuilder: (_, index) {
                   final item = bergeries[index];
                   return ListTile(
