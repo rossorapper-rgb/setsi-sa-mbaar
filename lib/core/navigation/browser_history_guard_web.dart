@@ -25,6 +25,6 @@ void _redirectIfLoggedOut() {
       web.window.location.pathname != '/login') {
     // When Back restores an authenticated route, bounce forward to the
     // current login entry instead of replacing the restored document.
-    html.window.history.forward();
+    web.window.history.forward();
   }
 }
