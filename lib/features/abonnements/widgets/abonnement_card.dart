@@ -30,7 +30,7 @@ class AbonnementCard extends StatelessWidget {
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _statusColor().withOpacity(0.15),
+          backgroundColor: _statusColor().withValues(alpha: 0.15),
           child: Icon(Icons.card_membership, color: _statusColor()),
         ),
         title: Text(
