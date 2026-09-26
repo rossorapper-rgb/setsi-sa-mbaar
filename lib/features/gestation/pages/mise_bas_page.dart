@@ -149,7 +149,7 @@ class _MiseBasPageState extends State<MiseBasPage> {
         );
       }
 
-      await _repository.enregistrerMiseBas(
+      final updatedGestation = await _repository.enregistrerMiseBas(
         gestationId: widget.gestation.id,
         dateMiseBas: _dateMiseBas,
         nombreAgneaux: total,
@@ -161,7 +161,7 @@ class _MiseBasPageState extends State<MiseBasPage> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context, true);
+      Navigator.pop(context, updatedGestation);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible d’enregistrer la naissance : $e')));
