@@ -423,7 +423,9 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
         ),
       );
 
-      Navigator.pop(context, true);
+      // Retourne directement le modèle créé afin que la liste des moutons
+      // puisse être mise à jour immédiatement, même hors connexion.
+      Navigator.pop(context, mouton);
     } catch (e) {
       if (!mounted) return;
 
