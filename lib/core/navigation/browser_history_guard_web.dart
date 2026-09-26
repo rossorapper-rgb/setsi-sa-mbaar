@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:html' as html;
+import 'dart:js_interop';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:web/web.dart' as web;
 
-StreamSubscription<html.PopStateEvent>? _subscription;
+StreamSubscription<web.PopStateEvent>? _subscription;
 
 void installBrowserHistoryGuard() {
   _subscription?.cancel();
