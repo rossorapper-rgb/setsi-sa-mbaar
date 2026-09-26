@@ -331,13 +331,8 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       throw Exception('Ce mouton n’appartient pas à votre bergerie.');
     }
 
-    final bergeries = await _bergerieRepository.getAllBergeries();
-    final existe = bergeries.any((item) => item.id == bergerieId);
-
-    if (!existe) {
-      throw Exception('Bergerie introuvable pour ce compte.');
-    }
-
+    // Le bergerieId de la session locale suffit pour enregistrer hors ligne.
+    // Les règles Firestore restent la protection finale côté serveur.
     return bergerieId;
   }
 
