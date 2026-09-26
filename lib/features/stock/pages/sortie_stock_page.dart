@@ -60,8 +60,8 @@ class _SortieStockPageState extends State<SortieStockPage> {
         key: _formKey,
         child: ListView(padding: const EdgeInsets.fromLTRB(16,16,16,30), children: [
           _Section(title: 'Produit', child: Column(children: [
-            DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit', border: OutlineInputBorder(), prefixIcon: Icon(Icons.inventory_2_rounded)), items: _produits.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' (' + p.unite + ')'))).toList(), onChanged: _saving ? null : (v) => setState(() => _produitId = v), validator: (v) => v == null ? 'Sélectionnez un produit.' : null),
-            if (selected != null) ...[const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: Text('Stock disponible : ' + selected.quantite.toString() + ' ' + selected.unite, style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600)))],
+            DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit', border: OutlineInputBorder(), prefixIcon: Icon(Icons.inventory_2_rounded)), items: _produits.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.nom} (${p.unite})'))).toList(), onChanged: _saving ? null : (v) => setState(() => _produitId = v), validator: (v) => v == null ? 'Sélectionnez un produit.' : null),
+            if (selected != null) ...[const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: Text('Stock disponible : ${selected.quantite} ${selected.unite}', style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600)))],
           ])),
           const SizedBox(height: 14),
           _Section(title: 'Détails de la sortie', child: Column(children: [
