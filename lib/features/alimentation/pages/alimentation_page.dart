@@ -116,7 +116,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
         builder: (_) => _StockDeductionDialog(alimentation: alimentation, produits: produits),
       );
       if (choix == null) return;
-      await _stockRepository.deduireDepuisAlimentation(alimentationId: alimentation.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Consommation alimentation - ' + alimentation.aliment, date: alimentation.date);
+      await _stockRepository.deduireDepuisAlimentation(alimentationId: alimentation.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Consommation alimentation - ${alimentation.aliment}', date: alimentation.date);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock déduit avec succès.')));
         await _charger();
@@ -607,9 +607,9 @@ class _StockDeductionDialogState extends State<_StockDeductionDialog> {
     return AlertDialog(
       title: const Text('Déduire du stock'),
       content: SizedBox(width: 500, child: Form(key: _formKey, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('Alimentation : ' + widget.alimentation.aliment),
+        Text('Alimentation : ${widget.alimentation.aliment}'),
         const SizedBox(height: 16),
-        DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit stock', prefixIcon: Icon(Icons.inventory_2_rounded)), items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite))).toList(), onChanged: (value) { if (value != null) setState(() => _produitId = value); }),
+        DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit stock', prefixIcon: Icon(Icons.inventory_2_rounded)), items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.nom} — ${p.quantite} ${p.unite}'))).toList(), onChanged: (value) { if (value != null) setState(() => _produitId = value); }),
         const SizedBox(height: 14),
         TextFormField(controller: _quantiteController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Quantité à déduire', suffixText: produit.unite), validator: (value) { final n = _parse(value ?? ''); if (n == null || n <= 0) return 'Quantité invalide.'; if (n > produit.quantite) return 'La quantité dépasse le stock disponible.'; return null; }),
       ]))),
