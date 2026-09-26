@@ -270,7 +270,7 @@ class _AddUtilisateurPageState
                         );
 
                         return DropdownButtonFormField<String>(
-                          value: selectedStillExists ? _bergerieId : null,
+                          initialValue: selectedStillExists ? _bergerieId : null,
                           isExpanded: true,
                           decoration: InputDecoration(
                             labelText: "Bergerie associée",
