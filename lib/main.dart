@@ -50,17 +50,18 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Sur le Web, Firestore n'active pas la persistance hors ligne par défaut.
-    // On l'active pour permettre la lecture du cache et la mise en file des
-    // écritures lorsque la connexion est absente.
+    // Sur le Web, active la persistance Firestore afin de conserver
+    // les données en cache et de mettre les écritures en attente hors ligne.
+    // Cette API est compatible avec la version cloud_firestore utilisée
+    // actuellement par le projet.
     if (kIsWeb) {
       try {
-        await FirebaseFirestore.instance.enablePersistence(
-          const PersistenceSettings(synchronizeTabs: true),
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: true,
         );
       } catch (_) {
         // L'application reste utilisable même si le navigateur ne permet pas
-        // la persistance ou si une ancienne instance est déjà active.
+        // la persistance.
       }
     }
 
