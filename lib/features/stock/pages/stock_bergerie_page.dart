@@ -229,7 +229,7 @@ class _ProduitCard extends StatelessWidget {
             ),
           ),
           Text(
-            '''${NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock)} F''',
+            '${NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock)} F',
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
           ),
           PopupMenuButton<String>(
