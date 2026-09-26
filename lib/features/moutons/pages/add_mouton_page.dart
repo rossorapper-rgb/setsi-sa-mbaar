@@ -337,6 +337,8 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
   }
 
   Future<String> _resoudreClientId(String bergerieId) async {
+    // Dans l'application dédiée à une bergerie, le clientId est optionnel.
+    // Si l'information est déjà disponible localement, on la conserve.
     if (widget.mouton != null && widget.mouton!.clientId.trim().isNotEmpty) {
       return widget.mouton!.clientId;
     }
@@ -347,13 +349,9 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
       return widget.bergerie!.clientId;
     }
 
-    final correspondante = await _bergerieRepository.getBergerieById(bergerieId);
-    if (correspondante == null || correspondante.clientId.trim().isEmpty) {
-      throw Exception('Client propriétaire de la bergerie introuvable.');
-    }
-
-    return correspondante.clientId;
-
+    // Ne pas bloquer la création d'un mouton hors ligne pour retrouver une
+    // information héritée de l'ancien modèle multi-clients.
+    return '';
   }
 
   Future<void> _enregistrer() async {
