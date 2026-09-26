@@ -301,39 +301,66 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
   Widget _buildMoutonsList() {
     return Column(
       children: _moutons.map((mouton) {
-        final couleur = _couleurSexe(mouton.sexe);
-
         return Card(
           margin: const EdgeInsets.only(bottom: 14),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
+              horizontal: 14,
               vertical: 8,
             ),
-            leading: CircleAvatar(
-              backgroundColor: couleur.withValues(alpha: 0.12),
-              child: Icon(
-                _iconeSexe(mouton.sexe),
-                color: couleur,
-              ),
-            ),
+            leading: _buildPhotoMouton(mouton),
             title: Text(
               mouton.nom,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Text(
-                '${mouton.numeroIdentification}\n'
-                '${mouton.race}${mouton.poids > 0 ? ' • ${mouton.poids.toStringAsFixed(1)} kg' : ''}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
-            isThreeLine: true,
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _ouvrirDetails(mouton),
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildPhotoMouton(MoutonModel mouton) {
+    final photoUrl = mouton.photoUrl.trim();
+
+    if (photoUrl.isEmpty) {
+      return Container(
+        width: 58,
+        height: 58,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey.shade100,
+        ),
+        child: Icon(
+          Icons.pets,
+          color: Colors.grey.shade500,
+          size: 28,
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        photoUrl,
+        width: 58,
+        height: 58,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: 58,
+          height: 58,
+          color: Colors.grey.shade100,
+          child: Icon(
+            Icons.pets,
+            color: Colors.grey.shade500,
+            size: 28,
+          ),
+        ),
+      ),
     );
   }
 }
