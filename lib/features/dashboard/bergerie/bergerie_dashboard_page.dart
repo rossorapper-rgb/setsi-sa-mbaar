@@ -269,14 +269,6 @@ class BergerieDrawer extends StatelessWidget {
     );
   }
 
-  Widget _soon(BuildContext context, IconData icon, String text) => ListTile(
-        dense: true,
-        leading: Icon(icon, color: Colors.white54, size: 21),
-        title: Text(text, style: const TextStyle(color: Colors.white70)),
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$text sera disponible prochainement.')),
-        ),
-      );
 }
 
 class _DashboardContent extends StatefulWidget {
@@ -405,8 +397,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
-                  backgroundImage: photoUrl != null && photoUrl!.isNotEmpty
-                      ? NetworkImage(photoUrl!)
+                  backgroundImage: photoUrl.isNotEmpty
+                      ? NetworkImage(photoUrl)
                       : null,
                   child: photoUrl == null || photoUrl!.isEmpty
                       ? Icon(Icons.person_rounded, color: primary)
