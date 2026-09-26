@@ -68,7 +68,7 @@ bergerie: widget.bergerie,
 ),
 );
 
-if (result == true && mounted) {
+if (result == true && context.mounted) {
 Navigator.pop(context, true);
 }
 },
