@@ -72,7 +72,9 @@ class _GestationsPageState extends State<GestationsPage> {
         moutonsFuture,
       ]);
 
-      final gestations = results[0] as List<GestationModel>;
+      final gestations = (results[0] as List<GestationModel>)
+          .where((gestation) => gestation.statut == 'Gestante')
+          .toList();
       final moutons = results[1] as List<MoutonModel>;
 
       final gestationsUniques = <String, GestationModel>{};
@@ -154,7 +156,7 @@ class _GestationsPageState extends State<GestationsPage> {
     if (!mounted || result == null) return;
     setState(() {
       _gestations = _gestations
-          .map((item) => item.id == result.id ? result : item)
+          .where((item) => item.id != result.id)
           .toList()
         ..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
     });
