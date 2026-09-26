@@ -75,7 +75,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
   }
 
   Future<void> _openBirth(GestationModel naissance) async {
-    final result = await showDialog<_NaissanceDialogResult>(
+    final result = await showDialog<Object?>(
       context: context,
       builder: (_) => _NaissanceDetailsDialog(
         naissance: naissance,
