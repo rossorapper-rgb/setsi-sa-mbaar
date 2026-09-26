@@ -44,6 +44,7 @@ dependencies:
     uuid: ^4.5.1
     url_launcher: ^6.3.2
     shared_preferences: ^2.5.3
+    web: ^1.1.1
 
     # Graphiques
     fl_chart: ^1.0.0
