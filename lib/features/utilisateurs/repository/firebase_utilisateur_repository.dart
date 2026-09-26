@@ -49,7 +49,7 @@ class FirebaseUtilisateurRepository {
 
     try {
       final telephoneExisteDeja =
-      await this.telephoneExiste(utilisateur.telephone);
+      await telephoneExiste(utilisateur.telephone);
 
       if (telephoneExisteDeja) {
         throw FirebaseAuthException(
