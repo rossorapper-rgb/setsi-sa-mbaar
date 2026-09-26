@@ -1,4 +1,4 @@
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 
 Future<bool> downloadImage(String url, String filename) async {
   final anchor = html.AnchorElement(href: url)
