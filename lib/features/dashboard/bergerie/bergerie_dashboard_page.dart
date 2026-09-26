@@ -397,10 +397,10 @@ class _DashboardContentState extends State<_DashboardContent> {
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: Colors.white,
-                  backgroundImage: photoUrl.isNotEmpty
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty
                       ? NetworkImage(photoUrl)
                       : null,
-                  child: photoUrl == null || photoUrl!.isEmpty
+                  child: photoUrl == null || photoUrl.isEmpty
                       ? Icon(Icons.person_rounded, color: primary)
                       : null,
                 ),
