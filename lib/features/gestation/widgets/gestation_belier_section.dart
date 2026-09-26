@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../moutons/models/mouton_model.dart';
@@ -40,26 +39,25 @@ class GestationBelierSection extends StatelessWidget {
           ),
         ),
 
-        RadioListTile<TypeBelier>(
-          value: TypeBelier.troupeau,
+        RadioGroup<TypeBelier>(
           groupValue: typeBelier,
-          title: const Text("Bélier du troupeau"),
           onChanged: (v) {
             if (v != null) {
               onTypeChanged(v);
             }
           },
-        ),
-
-        RadioListTile<TypeBelier>(
-          value: TypeBelier.exterieur,
-          groupValue: typeBelier,
-          title: const Text("Bélier extérieur"),
-          onChanged: (v) {
-            if (v != null) {
-              onTypeChanged(v);
-            }
-          },
+          child: Column(
+            children: [
+              RadioListTile<TypeBelier>(
+                value: TypeBelier.troupeau,
+                title: const Text("Bélier du troupeau"),
+              ),
+              RadioListTile<TypeBelier>(
+                value: TypeBelier.exterieur,
+                title: const Text("Bélier extérieur"),
+              ),
+            ],
+          ),
         ),
 
         if (typeBelier == TypeBelier.troupeau) ...[
