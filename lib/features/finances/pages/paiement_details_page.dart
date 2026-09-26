@@ -343,7 +343,7 @@ paiement: paiement,
 ),
 );
 
-if (!mounted) return;
+if (!context.mounted) return;
 
 if (resultat == true) {
 Navigator.pop(
