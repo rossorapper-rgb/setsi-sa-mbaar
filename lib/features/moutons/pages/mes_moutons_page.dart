@@ -97,7 +97,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
           ..._moutons.where((item) => item.id != resultat.id),
           resultat,
         ];
-      ]);
+      });
       return;
     }
 
