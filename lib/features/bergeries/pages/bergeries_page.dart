@@ -22,6 +22,7 @@ final FirebaseMoutonRepository _moutonRepository =
 FirebaseMoutonRepository();
 
 late Future<List<BergerieModel>> _futureBergeries;
+List<BergerieModel> _bergeries = [];
 
 @override
 void initState() {
@@ -29,8 +30,13 @@ super.initState();
 _loadBergeries();
 }
 
-void _loadBergeries() {
-_futureBergeries = _repository.getAllBergeries();
+Future<void> _loadBergeries() async {
+  final liste = await _repository.getAllBergeries();
+  if (!mounted) return;
+  setState(() {
+    _bergeries = liste;
+    _futureBergeries = Future.value(_bergeries);
+  });
 }
 
 Future<void> _ouvrirAjout() async {
@@ -43,10 +49,13 @@ builder: (_) => const AddBergeriePage(),
 
 if (!mounted) return;
 
-if (result == true) {
-setState(() {
-_loadBergeries();
-});
+if (result is BergerieModel) {
+  setState(() {
+    _bergeries = [result, ..._bergeries.where((b) => b.id != result.id)];
+    _futureBergeries = Future.value(_bergeries);
+  });
+} else if (result == true) {
+  _loadBergeries();
 }
 }
 
@@ -88,7 +97,9 @@ child: Text(
 );
 }
 
-final bergeries = snapshot.data ?? [];
+final bergeries = _bergeries.isNotEmpty || snapshot.data == null
+    ? _bergeries
+    : snapshot.data!;
 
 if (bergeries.isEmpty) {
 return const Center(
