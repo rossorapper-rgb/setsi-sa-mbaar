@@ -87,9 +87,10 @@ class _NaissancesPageState extends State<NaissancesPage> {
     if (!mounted) return;
 
     if (result is GestationModel) {
+      final gestationResult = result;
       setState(() {
         _naissances = _naissances
-            .map((item) => item.id == result.id ? result : item)
+            .map((item) => item.id == gestationResult.id ? gestationResult : item)
             .toList();
       });
     } else if (result == _NaissanceDialogResult.deleted ||
