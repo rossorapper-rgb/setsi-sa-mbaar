@@ -127,11 +127,28 @@ class _GestationsPageState extends State<GestationsPage> {
   }
 
   Future<void> _ouvrirDetails(GestationModel gestation) async {
-    await Navigator.push(
+    final result = await Navigator.push<GestationModel>(
       context,
-      MaterialPageRoute(builder: (_) => GestationDetailsPage(gestation: gestation)),
+      MaterialPageRoute(
+        builder: (_) => GestationDetailsPage(gestation: gestation),
+      ),
     );
-    _charger();
+
+    if (!mounted || result == null) return;
+
+    if (result.statut == 'Gestante') {
+      setState(() {
+        _gestations = _gestations
+            .map((item) => item.id == result.id ? result : item)
+            .toList()
+          ..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+      });
+    } else {
+      setState(() {
+        _gestations =
+            _gestations.where((item) => item.id != result.id).toList();
+      });
+    }
   }
 
   Future<void> _modifier(GestationModel gestation) async {
