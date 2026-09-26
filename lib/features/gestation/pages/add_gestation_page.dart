@@ -465,23 +465,24 @@ class _AddGestationPageState extends State<AddGestationPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            RadioListTile<TypeBelier>(
-              value: TypeBelier.troupeau,
+            RadioGroup<TypeBelier>(
               groupValue: _typeBelier,
-              title: const Text("Bélier du troupeau"),
               onChanged: (value) {
                 if (value == null) return;
                 setState(() => _typeBelier = value);
               },
-            ),
-            RadioListTile<TypeBelier>(
-              value: TypeBelier.exterieur,
-              groupValue: _typeBelier,
-              title: const Text("Bélier extérieur"),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() => _typeBelier = value);
-              },
+              child: Column(
+                children: [
+                  RadioListTile<TypeBelier>(
+                    value: TypeBelier.troupeau,
+                    title: const Text("Bélier du troupeau"),
+                  ),
+                  RadioListTile<TypeBelier>(
+                    value: TypeBelier.exterieur,
+                    title: const Text("Bélier extérieur"),
+                  ),
+                ],
+              ),
             ),
             if (_typeBelier == TypeBelier.troupeau) ...[
               DropdownButtonFormField<MoutonModel>(
