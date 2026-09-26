@@ -73,7 +73,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
   }
 
   Future<void> _openBirth(GestationModel naissance) async {
-    await showDialog<void>(
+    final result = await showDialog<_NaissanceDialogResult>(
       context: context,
       builder: (_) => _NaissanceDetailsDialog(
         naissance: naissance,
@@ -81,6 +81,16 @@ class _NaissancesPageState extends State<NaissancesPage> {
         orange: _orange,
       ),
     );
+
+    if (!mounted) return;
+
+    if (result == _NaissanceDialogResult.deleted) {
+      setState(() {
+        _naissances = _naissances
+            .where((item) => item.id != naissance.id)
+            .toList();
+      });
+    }
   }
 
   @override
@@ -246,6 +256,8 @@ class _NaissanceCard extends StatelessWidget {
   }
 }
 
+enum _NaissanceDialogResult { deleted }
+
 class _NaissanceDetailsDialog extends StatefulWidget {
   const _NaissanceDetailsDialog({required this.naissance, required this.primary, required this.orange});
 
@@ -260,10 +272,63 @@ class _NaissanceDetailsDialog extends StatefulWidget {
 class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
   final GlobalKey _ficheKey = GlobalKey();
   bool _saving = false;
+  bool _deleting = false;
 
   GestationModel get naissance => widget.naissance;
   Color get primary => widget.primary;
   Color get orange => widget.orange;
+
+  Future<void> _supprimerNaissance() async {
+    if (_deleting) return;
+
+    final confirmer = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer la naissance ?'),
+        content: const Text(
+          'Cette action supprimera définitivement la fiche de naissance de cet élevage. '
+          'Elle ne supprimera pas automatiquement le mouton ni les agneaux déjà créés.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmer != true || !mounted) return;
+    setState(() => _deleting = true);
+
+    try {
+      await FirebaseGestationRepository().deleteGestation(naissance.id);
+      if (!mounted) return;
+      Navigator.pop(context, _NaissanceDialogResult.deleted);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible de supprimer la naissance : $e')),
+      );
+    }
+  }
+
+  Future<void> _ajouterDansMoutons() async {
+    if (_deleting) return;
+    final result = await context.push('/moutons/add');
+    if (!mounted) return;
+    if (result != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le mouton a été ajouté à votre élevage.')),
+      );
+    }
+  }
 
   Future<void> _saveAsJpeg() async {
     if (_saving) return;
@@ -337,25 +402,46 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
               ],
               const SizedBox(height: 16),
               _Info('Mère', mere),
-              _Info('Géniteur', geniteur),
-              _Info('Date de mise bas', _date(naissance.dateMiseBas)),
-              _Info('Total agneaux', '${naissance.nombreAgneaux}'),
-              _Info('Mâles', '${naissance.nombreMales}'),
-              _Info('Femelles', '${naissance.nombreFemelles}'),
-              _Info('Mort-nés', '${naissance.nombreMortNes}'),
-              _Info('Observations', naissance.observations.isEmpty ? 'Aucune' : naissance.observations),
+              if (geniteur != 'Non renseigné') _Info('Géniteur', geniteur),
+              if (naissance.dateMiseBas != null)
+                _Info('Date de mise bas', _date(naissance.dateMiseBas)),
+              if (naissance.nombreAgneaux > 0)
+                _Info('Total agneaux', '${naissance.nombreAgneaux}'),
+              if (naissance.nombreMales > 0)
+                _Info('Mâles', '${naissance.nombreMales}'),
+              if (naissance.nombreFemelles > 0)
+                _Info('Femelles', '${naissance.nombreFemelles}'),
+              if (naissance.nombreMortNes > 0)
+                _Info('Mort-nés', '${naissance.nombreMortNes}'),
+              if (naissance.observations.trim().isNotEmpty)
+                _Info('Observations', naissance.observations.trim()),
+              if (naissance.belierExterieur &&
+                  (naissance.proprietaireBelier?.trim().isNotEmpty ?? false))
+                _Info('Propriétaire du géniteur', naissance.proprietaireBelier!.trim()),
               const SizedBox(height: 8),
-              if (!_saving) ...[
+              if (!_saving && !_deleting) ...[
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
                     OutlinedButton.icon(
                       onPressed: _saveAsJpeg,
                       icon: const Icon(Icons.image_rounded),
                       label: const Text('Enregistrer JPEG'),
                     ),
-                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: _ajouterDansMoutons,
+                      icon: const Icon(Icons.pets_rounded),
+                      label: const Text('Ajouter dans Moutons'),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                      onPressed: _supprimerNaissance,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Supprimer'),
+                    ),
                     FilledButton(
                       style: FilledButton.styleFrom(backgroundColor: orange),
                       onPressed: () => Navigator.pop(context),
@@ -364,6 +450,11 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
                   ],
                 ),
               ],
+              if (_saving || _deleting)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
             ],
           ),
         ),
