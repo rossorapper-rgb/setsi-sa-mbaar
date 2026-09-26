@@ -22,21 +22,33 @@ mouton.photoUrl.isNotEmpty
 return Card(
 elevation: 0,
 shape: RoundedRectangleBorder(
-borderRadius:
-BorderRadius.circular(20),
+borderRadius: BorderRadius.circular(20),
 ),
 child: Padding(
-padding:
-const EdgeInsets.all(20),
+padding: const EdgeInsets.all(16),
 child: Column(
 children: [
-CircleAvatar(
-radius: 65,
-backgroundImage:
-imageProvider,
+ClipRRect(
+borderRadius: BorderRadius.circular(16),
+child: AspectRatio(
+aspectRatio: 1,
+child: Image(
+image: imageProvider,
+width: double.infinity,
+fit: BoxFit.cover,
+errorBuilder: (_, __, ___) => Container(
+color: Colors.grey.shade100,
+child: Icon(
+Icons.pets,
+size: 72,
+color: Colors.grey.shade400,
+),
+),
+),
+),
 ),
 
-const SizedBox(height: 18),
+const SizedBox(height: 16),
 
 Text(
 mouton.nom.isEmpty
@@ -51,40 +63,7 @@ FontWeight.bold,
 ),
 ),
 
-const SizedBox(height: 10),
 
-Wrap(
-spacing: 8,
-runSpacing: 8,
-alignment:
-WrapAlignment.center,
-children: [
-_chip(
-icon: Icons.qr_code,
-text: mouton
-.numeroIdentification,
-color: Colors.blue,
-),
-
-_chip(
-icon: Icons.pets,
-text: mouton.race,
-color:
-Colors.orange,
-),
-
-_chip(
-icon:
-mouton.sexe ==
-"Mâle"
-? Icons.male
-: Icons.female,
-text: mouton.sexe,
-color:
-Colors.purple,
-),
-],
-),
 
 const SizedBox(height: 18),
   Container(
