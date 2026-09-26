@@ -97,7 +97,7 @@ class _MoutonDetailsPageState
   }
   String _formatDate(DateTime? date) {
     if (date == null) {
-      return "Non renseignée";
+      return "";
     }
 
     return "${date.day.toString().padLeft(2, '0')}/"
@@ -106,7 +106,7 @@ class _MoutonDetailsPageState
   }
   String _calculAge(DateTime? naissance) {
     if (naissance == null) {
-      return "Non renseigné";
+      return "";
     }
 
     final now = DateTime.now();
@@ -135,7 +135,7 @@ class _MoutonDetailsPageState
   }
   String _identificationCourte(String numero) {
     if (numero.trim().isEmpty) {
-      return "-";
+      return "";
     }
 
     if (numero.length <= 6) {
@@ -181,6 +181,8 @@ class _MoutonDetailsPageState
     required String titre,
     required String valeur,
   }) {
+    if (valeur.trim().isEmpty) return const SizedBox.shrink();
+
     return Padding(
       padding:
       const EdgeInsets.only(bottom: 12),
@@ -450,21 +452,18 @@ class _MoutonDetailsPageState
             ),
           ),
 
-          _sectionTitle(
-            Icons.notes,
-            "Observations",
-          ),
-
-          AppCard(
-            child: Text(
-              bergerie == null || bergerie.observations.trim().isEmpty
-                  ? "Aucune observation enregistrée."
-                  : bergerie.observations,
-              style: const TextStyle(
-                fontSize: 15,
+          if (bergerie != null && bergerie.observations.trim().isNotEmpty) ...[
+            _sectionTitle(
+              Icons.notes,
+              "Observations",
+            ),
+            AppCard(
+              child: Text(
+                bergerie.observations,
+                style: const TextStyle(fontSize: 15),
               ),
             ),
-          ),
+          ],
 
           _sectionTitle(
             Icons.favorite,
