@@ -150,7 +150,7 @@ class InterventionsPage extends ConsumerWidget {
         interventionId: intervention.id,
         produitId: choix.produit.id,
         quantite: choix.quantite,
-        motif: 'Intervention - ' + intervention.type,
+        motif: 'Intervention - ${intervention.type}',
         date: intervention.date,
       );
       if (!context.mounted) return;
@@ -362,7 +362,7 @@ class _StockInterventionDialogState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Intervention : ' + widget.intervention.type),
+              Text('Intervention : ${widget.intervention.type}'),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _produitId,
@@ -375,7 +375,7 @@ class _StockInterventionDialogState
                       (p) => DropdownMenuItem(
                         value: p.id,
                         child: Text(
-                          p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite,
+                          '${p.nom} — ${p.quantite} ${p.unite}',
                         ),
                       ),
                     )
