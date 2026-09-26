@@ -112,7 +112,7 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
       }
       final choix = await showDialog<_StockSoinChoice>(context: context, builder: (_) => _StockSoinDialog(soin: soin, produits: produits));
       if (choix == null) return;
-      await _stockRepository.deduireDepuisCarnetSante(soinId: soin.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Soin - ' + soin.problemeSoin, date: soin.date);
+      await _stockRepository.deduireDepuisCarnetSante(soinId: soin.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Soin - ${soin.problemeSoin}', date: soin.date);
       if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock déduit avec succès.'))); await _charger(); }
     } catch (e) {
       if (!mounted) return;
@@ -506,12 +506,12 @@ class _StockSoinDialogState extends State<_StockSoinDialog> {
         child: Form(
           key: _formKey,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text('Soin : ' + widget.soin.problemeSoin),
+            Text('Soin : ${widget.soin.problemeSoin}'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _produitId,
               decoration: const InputDecoration(labelText: 'Produit stock', prefixIcon: Icon(Icons.inventory_2_rounded)),
-              items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' — ' + p.quantite.toString() + ' ' + p.unite))).toList(),
+              items: widget.produits.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.nom} — ${p.quantite} ${p.unite}'))).toList(),
               onChanged: (value) { if (value != null) setState(() => _produitId = value); },
             ),
             const SizedBox(height: 14),
