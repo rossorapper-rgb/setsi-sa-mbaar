@@ -118,7 +118,26 @@ class _MoutonsPageState extends State<MoutonsPage> {
 
     if (!mounted) return;
 
-    if (resultat == true) {
+    if (resultat is MoutonModel) {
+      final mouton = resultat;
+
+      setState(() {
+        _moutons = [
+          ..._moutons.where((item) => item.id != mouton.id),
+          mouton,
+        ];
+
+        _cacheParBergerie[widget.bergerie.id] =
+            List<MoutonModel>.from(_moutons);
+
+        _filtrerMoutonsSansSetState();
+        _futureMoutons = Future.value(_moutons);
+      });
+
+      // La synchronisation Firebase continue en arrière-plan si nécessaire.
+      // La liste n'attend donc pas un aller-retour réseau pour s'actualiser.
+    } else if (resultat == true) {
+      // Compatibilité avec un retour booléen éventuel.
       _cacheParBergerie.remove(widget.bergerie.id);
       setState(() {
         _futureMoutons = _chargerMoutons();
