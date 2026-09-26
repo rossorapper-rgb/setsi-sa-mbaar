@@ -3,8 +3,6 @@ import '../../features/interventions/models/intervention_model.dart';
 class InterventionService {
   InterventionService._();
 
-  static int _compteur = 3;
-
   static InterventionModel creerIntervention({
     required String clientNom,
     required DateTime dateIntervention,
@@ -16,8 +14,6 @@ class InterventionService {
     required String vehicule,
     required String observations,
   }) {
-    _compteur++;
-
     final type = nettoyageBergerie
         ? 'Nettoyage de la bergerie'
         : desinfection
