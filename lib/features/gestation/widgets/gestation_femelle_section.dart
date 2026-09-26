@@ -30,7 +30,7 @@ class GestationFemelleSection extends StatelessWidget {
 
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<MoutonModel>(
+        _ControlledDropdown<MoutonModel>(
           value: femelleSelectionnee,
           decoration: const InputDecoration(
             labelText: "Brebis",
@@ -54,6 +54,36 @@ class GestationFemelleSection extends StatelessWidget {
           femelle: femelleSelectionnee,
         ),
       ],
+    );
+  }
+}
+
+class _ControlledDropdown<T> extends StatelessWidget {
+  final T? value;
+  final bool isExpanded;
+  final InputDecoration decoration;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? Function(T?)? validator;
+
+  const _ControlledDropdown({
+    required this.value,
+    this.isExpanded = false,
+    required this.decoration,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      isExpanded: isExpanded,
+      decoration: decoration,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
     );
   }
 }
