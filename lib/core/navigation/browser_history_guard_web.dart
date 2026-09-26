@@ -1,21 +1,32 @@
-import 'dart:async';
+import 'dart:js_interop';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:web/web.dart' as web;
 
-StreamSubscription<web.PopStateEvent>? _subscription;
+JSFunction? _popStateListener;
+JSFunction? _pageShowListener;
 
 void installBrowserHistoryGuard() {
-  _subscription?.cancel();
-  _subscription = web.window.onpopstate?.listen((_) {
-    _redirectIfLoggedOut();
-  });
+  if (_popStateListener != null) {
+    web.window.removeEventListener('popstate', _popStateListener!);
+  }
+  if (_pageShowListener != null) {
+    web.window.removeEventListener('pageshow', _pageShowListener!);
+  }
 
-  web.window.onpageshow?.listen((_) {
+  _popStateListener = ((web.Event _) {
+    _redirectIfLoggedOut();
+  }).toJS;
+
+  _pageShowListener = ((web.Event _) {
     // Chrome can restore a previous Flutter Web document from bfcache
     // when the user presses Back/Forward. In that case popstate alone
     // is not enough to re-run the authentication guard.
     _redirectIfLoggedOut();
-  });
+  }).toJS;
+
+  web.window.addEventListener('popstate', _popStateListener!);
+  web.window.addEventListener('pageshow', _pageShowListener!);
 }
 
 void _redirectIfLoggedOut() {
