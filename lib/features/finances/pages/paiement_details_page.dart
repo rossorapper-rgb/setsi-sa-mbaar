@@ -367,7 +367,7 @@ true,
         paiement,
       );
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
@@ -393,7 +393,7 @@ true,
         paiement,
       );
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
@@ -455,6 +455,7 @@ child: const Text(
 if (confirmer != true) {
 return;
 }
+if (!context.mounted) return;
 ScaffoldMessenger.of(context)
     .showSnackBar(
   const SnackBar(
