@@ -187,7 +187,9 @@ class _AddBergeriePageState
 
       if (!mounted) return;
 
-      Navigator.pop(context, true);
+      // Retourne la bergerie créée/modifiée pour permettre à la liste
+      // de se mettre à jour immédiatement, sans rechargement.
+      Navigator.pop(context, bergerie);
     } catch (e) {
       if (!mounted) return;
 
