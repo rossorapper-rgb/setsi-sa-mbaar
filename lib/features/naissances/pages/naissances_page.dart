@@ -86,7 +86,14 @@ class _NaissancesPageState extends State<NaissancesPage> {
 
     if (!mounted) return;
 
-    if (result == _NaissanceDialogResult.deleted || result == _NaissanceDialogResult.completed) {
+    if (result is GestationModel) {
+      setState(() {
+        _naissances = _naissances
+            .map((item) => item.id == result.id ? result : item)
+            .toList();
+      });
+    } else if (result == _NaissanceDialogResult.deleted ||
+        result == _NaissanceDialogResult.completed) {
       setState(() {
         _naissances = _naissances
             .where((item) => item.id != naissance.id)
@@ -408,7 +415,7 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
               Row(
                 children: [
                   Expanded(child: Text('Fiche de naissance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primary))),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  IconButton(onPressed: () => Navigator.pop(context, naissance), icon: const Icon(Icons.close)),
                 ],
               ),
               if (naissance.photoUrl != null && naissance.photoUrl!.isNotEmpty) ...[
@@ -462,7 +469,7 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
                     ),
                     FilledButton(
                       style: FilledButton.styleFrom(backgroundColor: orange),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(context, naissance),
                       child: const Text('Fermer'),
                     ),
                   ],
