@@ -396,7 +396,7 @@ class _CarnetSanteFormDialogState extends State<_CarnetSanteFormDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: _moutonId,
+                  initialValue: _moutonId,
                   decoration: const InputDecoration(
                     labelText: 'Mouton',
                     prefixIcon: Icon(Icons.pets),
