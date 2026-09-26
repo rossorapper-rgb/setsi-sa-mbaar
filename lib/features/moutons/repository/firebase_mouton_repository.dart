@@ -60,12 +60,9 @@ class FirebaseMoutonRepository {
     );
   }
 
-  /// Archiver un mouton
+  /// Archiver un mouton localement puis synchroniser.
   Future<void> archiveMouton(String id) async {
-    await _firestore
-        .collection(_collection)
-        .doc(id)
-        .update({'actif': false});
+    await deleteMouton(id);
   }
 
   /// Tous les moutons actifs de la bergerie de l'utilisateur.
@@ -252,11 +249,25 @@ class FirebaseMoutonRepository {
     }).toList();
   }
 
-  /// Supprimer (archiver) un mouton
+  /// Supprimer (archiver) un mouton localement puis synchroniser.
+  /// L'UI peut donc retirer l'animal immédiatement, même hors ligne.
   Future<void> deleteMouton(String id) async {
-    await _firestore
-        .collection(_collection)
-        .doc(id)
-        .update({'actif': false});
+    final bergerieId =
+        CurrentUserService.instance.currentUser?.bergerieId?.trim() ?? '';
+
+    if (bergerieId.isNotEmpty) {
+      final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? [];
+      final updated = cached
+          .where((item) => item['id']?.toString() != id)
+          .toList();
+      await _cache.saveList(_cacheKey(bergerieId), updated);
+    }
+
+    unawaited(
+      _firestore
+          .collection(_collection)
+          .doc(id)
+          .update({'actif': false}),
+    );
   }
 }
