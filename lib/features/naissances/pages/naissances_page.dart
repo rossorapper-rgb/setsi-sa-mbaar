@@ -213,7 +213,7 @@ class _NaissanceCard extends StatelessWidget {
                   color: primary.withValues(alpha: .08),
                   child: photo == null || photo.isEmpty
                       ? Icon(Icons.photo_camera_back_rounded, color: primary, size: 30)
-                      : Image.network(photo, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.broken_image_rounded, color: primary)),
+                      : Image.network(photo, fit: BoxFit.cover, errorBuilder: (_, _, _) => Icon(Icons.broken_image_rounded, color: primary)),
                 ),
               ),
               const SizedBox(width: 13),
