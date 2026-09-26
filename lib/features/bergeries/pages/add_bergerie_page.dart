@@ -253,7 +253,7 @@ class _AddBergeriePageState
                 )
               else
                 DropdownButtonFormField<ClientModel>(
-                  value: _clientSelectionne,
+                  initialValue: _clientSelectionne,
                   decoration:
                   const InputDecoration(
                     labelText: "Client *",
