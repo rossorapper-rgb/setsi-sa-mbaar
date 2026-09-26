@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -48,6 +49,20 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Sur le Web, Firestore n'active pas la persistance hors ligne par défaut.
+    // On l'active pour permettre la lecture du cache et la mise en file des
+    // écritures lorsque la connexion est absente.
+    if (kIsWeb) {
+      try {
+        await FirebaseFirestore.instance.enablePersistence(
+          const PersistenceSettings(synchronizeTabs: true),
+        );
+      } catch (_) {
+        // L'application reste utilisable même si le navigateur ne permet pas
+        // la persistance ou si une ancienne instance est déjà active.
+      }
+    }
 
     final firebaseAuth = FirebaseAuth.instance;
 
