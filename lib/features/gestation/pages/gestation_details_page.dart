@@ -83,7 +83,9 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
               );
               if (!mounted) return;
               if (result != null) {
-                setState(() => _gestation = result);
+                // Retourne immédiatement la version modifiée à la liste
+                // des gestations : aucun Actualiser n'est nécessaire.
+                Navigator.pop(context, result);
               }
             },
           ),
