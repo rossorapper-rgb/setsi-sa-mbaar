@@ -8,7 +8,7 @@ StreamSubscription<web.PopStateEvent>? _subscription;
 
 void installBrowserHistoryGuard() {
   _subscription?.cancel();
-  _subscription = html.window.onPopState.listen((_) {
+  _subscription = web.window.onpopstate.listen((_) {
     _redirectIfLoggedOut();
   });
 
