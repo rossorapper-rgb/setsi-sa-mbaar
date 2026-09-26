@@ -161,7 +161,6 @@ class _MoutonsPageState extends State<MoutonsPage> {
             List<MoutonModel>.from(_moutons);
 
         _filtrerMoutonsSansSetState();
-        _futureMoutons = Future.value(_moutons);
       });
 
       // La synchronisation Firebase continue en arrière-plan si nécessaire.
@@ -190,9 +189,7 @@ class _MoutonsPageState extends State<MoutonsPage> {
 
     if (resultat == true) {
       _cacheParBergerie.remove(widget.bergerie.id);
-      setState(() {
-        _futureMoutons = _chargerMoutons();
-      });
+      await _actualiserEnArrierePlan();
     }
   }
 
