@@ -149,6 +149,7 @@ class FirebaseGestationRepository {
   Future<GestationModel> enregistrerAgneauAjoute({
     required String gestationId,
     required String moutonId,
+    required String sexe,
   }) async {
     final key = _cacheKey;
     final now = DateTime.now();
@@ -165,7 +166,17 @@ class FirebaseGestationRepository {
               .map((e) => e.toString())
               .toSet();
           ids.add(moutonId);
+          final sexes = ((current['agneauSexes'] as List?) ?? const [])
+              .map((e) => e.toString())
+              .toList();
+          while (sexes.length < ids.length - 1) {
+            sexes.add('');
+          }
+          if (!sexes.contains(sexe) || sexes.length < ids.length) {
+            sexes.add(sexe);
+          }
           current['agneauMoutonIds'] = ids.toList();
+          current['agneauSexes'] = sexes;
           current['dateModification'] = Timestamp.fromDate(now);
           final updated = [...cached];
           updated[index] = current;
@@ -173,6 +184,7 @@ class FirebaseGestationRepository {
 
           unawaited(_gestations.doc(gestationId).update({
             'agneauMoutonIds': ids.toList(),
+            'agneauSexes': sexes,
             'dateModification': Timestamp.fromDate(now),
           }));
           return GestationModel.fromMap(current, gestationId);
@@ -190,7 +202,15 @@ class FirebaseGestationRepository {
         .map((e) => e.toString())
         .toSet();
     ids.add(moutonId);
+    final sexes = ((data['agneauSexes'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .toList();
+    while (sexes.length < ids.length - 1) {
+      sexes.add('');
+    }
+    sexes.add(sexe);
     data['agneauMoutonIds'] = ids.toList();
+    data['agneauSexes'] = sexes;
     data['dateModification'] = Timestamp.fromDate(now);
 
     if (key != null) {
