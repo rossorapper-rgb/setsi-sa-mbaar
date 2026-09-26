@@ -10,6 +10,8 @@ import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/utils/jpeg_exporter.dart';
 import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
+import '../../moutons/pages/add_mouton_page.dart';
+import '../../moutons/models/mouton_model.dart';
 
 class NaissancesPage extends StatefulWidget {
   const NaissancesPage({super.key});
@@ -84,7 +86,7 @@ class _NaissancesPageState extends State<NaissancesPage> {
 
     if (!mounted) return;
 
-    if (result == _NaissanceDialogResult.deleted) {
+    if (result == _NaissanceDialogResult.deleted || result == _NaissanceDialogResult.completed) {
       setState(() {
         _naissances = _naissances
             .where((item) => item.id != naissance.id)
@@ -256,7 +258,7 @@ class _NaissanceCard extends StatelessWidget {
   }
 }
 
-enum _NaissanceDialogResult { deleted }
+enum _NaissanceDialogResult { deleted, completed }
 
 class _NaissanceDetailsDialog extends StatefulWidget {
   const _NaissanceDetailsDialog({required this.naissance, required this.primary, required this.orange});
@@ -321,12 +323,15 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
 
   Future<void> _ajouterDansMoutons() async {
     if (_deleting) return;
-    final result = await context.push('/moutons/add');
+    final result = await Navigator.push<_NaissanceDialogResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _AjouterAgneauxPage(naissance: naissance),
+      ),
+    );
     if (!mounted) return;
-    if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Le mouton a été ajouté à votre élevage.')),
-      );
+    if (result == _NaissanceDialogResult.completed) {
+      Navigator.pop(context, result);
     }
   }
 
@@ -459,6 +464,178 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
           ),
         ),
       ),
+      ),
+    );
+  }
+}
+
+class _AjouterAgneauxPage extends StatefulWidget {
+  const _AjouterAgneauxPage({required this.naissance});
+
+  final GestationModel naissance;
+
+  @override
+  State<_AjouterAgneauxPage> createState() => _AjouterAgneauxPageState();
+}
+
+class _AjouterAgneauxPageState extends State<_AjouterAgneauxPage> {
+  final _repository = FirebaseGestationRepository();
+  final List<MoutonModel> _created = [];
+  bool _opening = false;
+
+  GestationModel get naissance => widget.naissance;
+
+  List<String> get _sexesRestants {
+    final malesDeja = naissance.agneauSexes.where((s) => s == 'Mâle').length;
+    final femellesDeja = naissance.agneauSexes.where((s) => s == 'Femelle').length;
+
+    final sexes = <String>[
+      ...List<String>.filled(
+        (naissance.nombreMales - malesDeja).clamp(0, naissance.nombreMales),
+        'Mâle',
+      ),
+      ...List<String>.filled(
+        (naissance.nombreFemelles - femellesDeja).clamp(0, naissance.nombreFemelles),
+        'Femelle',
+      ),
+    ];
+
+    final totalVivant = (naissance.nombreAgneaux - naissance.nombreMortNes).clamp(
+      0,
+      naissance.nombreAgneaux,
+    );
+
+    if (sexes.length < totalVivant - naissance.agneauMoutonIds.length) {
+      final reste = totalVivant - naissance.agneauMoutonIds.length - sexes.length;
+      sexes.addAll(List<String>.filled(reste.clamp(0, reste), 'Mâle'));
+    }
+
+    return sexes;
+  }
+
+  int get _totalVivant =>
+      (naissance.nombreAgneaux - naissance.nombreMortNes).clamp(0, naissance.nombreAgneaux);
+
+  int get _dejaAjoutes => naissance.agneauMoutonIds.length + _created.length;
+
+  Future<void> _ajouterSuivant() async {
+    if (_opening || _sexesRestants.isEmpty) {
+      if (_sexesRestants.isEmpty && _dejaAjoutes >= _totalVivant && mounted) {
+        Navigator.pop(context, _NaissanceDialogResult.completed);
+      }
+      return;
+    }
+
+    setState(() => _opening = true);
+    final sexe = _sexesRestants.first;
+
+    final result = await Navigator.push<MoutonModel>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddMoutonPage(
+          initialSexe: sexe,
+          initialDateNaissance: naissance.dateMiseBas,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() => _opening = false);
+
+    if (result == null) return;
+
+    await _repository.enregistrerAgneauAjoute(
+      gestationId: naissance.id,
+      moutonId: result.id,
+      sexe: result.sexe,
+    );
+
+    if (!mounted) return;
+    setState(() => _created.add(result));
+
+    if (_sexesRestants.isEmpty) {
+      Navigator.pop(context, _NaissanceDialogResult.completed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = _totalVivant;
+    final deja = _dejaAjoutes;
+    final restants = _sexesRestants;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ajouter les agneaux'),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  naissance.nomFemelle.isEmpty
+                      ? 'Naissance'
+                      : 'Naissance de ${naissance.nomFemelle}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  total == 0
+                      ? 'Aucun agneau vivant à ajouter.'
+                      : '$deja / $total agneau(x) déjà ajouté(s) dans Moutons.',
+                  style: const TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 20),
+                if (total > 0)
+                  LinearProgressIndicator(
+                    value: total == 0 ? 0 : (deja / total).clamp(0, 1),
+                  ),
+                const SizedBox(height: 24),
+                if (restants.isEmpty)
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'Tous les agneaux vivants de cette naissance sont déjà enregistrés dans Moutons.',
+                      ),
+                    ),
+                  )
+                else ...[
+                  Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        child: Text('${deja + 1}'),
+                      ),
+                      title: Text('Agneau ${deja + 1} sur $total'),
+                      subtitle: Text('Sexe prérempli : ${restants.first}'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _opening ? null : _ajouterSuivant,
+                      icon: const Icon(Icons.pets_rounded),
+                      label: Text('Ajouter l’agneau ${deja + 1}'),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(restants.isEmpty ? 'Terminer' : 'Plus tard'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
