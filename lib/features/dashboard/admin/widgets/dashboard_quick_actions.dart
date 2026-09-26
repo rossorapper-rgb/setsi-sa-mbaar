@@ -54,6 +54,8 @@ class DashboardQuickActions extends ConsumerWidget {
         );
       }
 
+      if (!context.mounted) return;
+
       final resultat = await Navigator.push<bool>(
         context,
         MaterialPageRoute(builder: (_) => AddMoutonPage(bergerie: bergerie)),
