@@ -494,7 +494,7 @@ class _MoutonDetailsPageState
                     texte: "Modifier le mouton",
                     couleur: Colors.orange,
                     onPressed: () async {
-                      final resultat = await Navigator.push<bool>(
+                      final resultat = await Navigator.push<MoutonModel>(
                         context,
                         MaterialPageRoute(
                           builder: (_) => AddMoutonPage(
@@ -506,8 +506,8 @@ class _MoutonDetailsPageState
 
                       if (!context.mounted) return;
 
-                      if (resultat == true) {
-                        Navigator.pop(context, true);
+                      if (resultat != null) {
+                        Navigator.pop(context, resultat);
                       }
                     },
                   ),
@@ -556,7 +556,7 @@ class _MoutonDetailsPageState
                         ),
                       );
 
-                      Navigator.pop(context, true);
+                      Navigator.pop(context, widget.mouton.id);
                     } catch (e) {
                       if (!context.mounted) return;
 
