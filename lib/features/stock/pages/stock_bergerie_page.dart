@@ -118,7 +118,7 @@ class _StockBergeriePageState extends State<StockBergeriePage> {
                       Row(children: [
                         Expanded(child: _ResumeCard(icon: Icons.inventory_2_rounded, title: 'Produits', value: _produits.length.toString())),
                         const SizedBox(width: 10),
-                        Expanded(child: _ResumeCard(icon: Icons.payments_rounded, title: 'Valeur', value: _money.format(_valeurStock) + ' F')),
+                        Expanded(child: _ResumeCard(icon: Icons.payments_rounded, title: 'Valeur', value: '${_money.format(_valeurStock)} F')),
                         const SizedBox(width: 10),
                         Expanded(child: _ResumeCard(icon: Icons.warning_amber_rounded, title: 'Alertes', value: _alertes.toString(), alert: _alertes > 0)),
                       ]),
@@ -197,12 +197,12 @@ class _ProduitCard extends StatelessWidget {
                 Text(
                   produit.categorie.isEmpty
                       ? produit.unite
-                      : produit.categorie + ' • ' + produit.unite,
+                      : '${produit.categorie} • ${produit.unite}',
                   style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Stock : ' + produit.quantite.toString() + ' ' + produit.unite,
+                  'Stock : ${produit.quantite} ${produit.unite}',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
@@ -229,7 +229,7 @@ class _ProduitCard extends StatelessWidget {
             ),
           ),
           Text(
-            NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock) + ' F',
+            '''${NumberFormat('#,##0', 'fr_FR').format(produit.valeurStock)} F''',
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
           ),
           PopupMenuButton<String>(
@@ -250,7 +250,7 @@ class _ProduitCard extends StatelessWidget {
                   builder: (dialogContext) => AlertDialog(
                     title: const Text('Supprimer le produit ?'),
                     content: Text(
-                      'Le produit « ' + produit.nom + ' » sera définitivement supprimé.',
+                      'Le produit « ${produit.nom} » sera définitivement supprimé.',
                     ),
                     actions: [
                       TextButton(
@@ -277,7 +277,7 @@ class _ProduitCard extends StatelessWidget {
                 } catch (e) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Impossible de supprimer le produit : ' + e.toString())),
+                    SnackBar(content: Text('Impossible de supprimer le produit : $e')),
                   );
                 }
               }
