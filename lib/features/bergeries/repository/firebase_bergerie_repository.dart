@@ -112,7 +112,7 @@ class FirebaseBergerieRepository implements BergerieRepository {
       final doc = await _firestore
           .collection(_collection)
           .doc(trimmedId)
-          .get(const GetOptions(source: Source.server));
+          .get(const GetOptions());
 
       if (!doc.exists || doc.data() == null) {
         return null;
