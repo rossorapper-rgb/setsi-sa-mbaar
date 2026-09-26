@@ -317,18 +317,18 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
     return Column(
       children: _moutons.map((mouton) {
         return Card(
-          margin: const EdgeInsets.only(bottom: 14),
+          margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 8,
+              horizontal: 12,
+              vertical: 4,
             ),
             leading: _buildPhotoMouton(mouton),
             title: Text(
               mouton.nom,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
             subtitle: _moutonsGestants.contains(mouton.id)
@@ -367,8 +367,8 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
 
     if (photoUrl.isEmpty) {
       return Container(
-        width: 58,
-        height: 58,
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: Colors.grey.shade100,
@@ -389,8 +389,8 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
         height: 58,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => Container(
-          width: 58,
-          height: 58,
+          width: 50,
+          height: 50,
           color: Colors.grey.shade100,
           child: Icon(
             Icons.pets,
