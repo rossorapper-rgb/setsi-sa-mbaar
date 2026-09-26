@@ -12,7 +12,7 @@ void installBrowserHistoryGuard() {
     _redirectIfLoggedOut();
   });
 
-  html.window.onPageShow.listen((_) {
+  web.window.onpageshow.listen((_) {
     // Chrome can restore a previous Flutter Web document from bfcache
     // when the user presses Back/Forward. In that case popstate alone
     // is not enough to re-run the authentication guard.
