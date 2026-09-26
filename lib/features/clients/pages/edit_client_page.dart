@@ -236,7 +236,7 @@ class _EditClientPageState
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: _abonnement,
+              initialValue: _abonnement,
               decoration: _inputDecoration(
                 "Abonnement",
                 Icons.workspace_premium,
