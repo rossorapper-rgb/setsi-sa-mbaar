@@ -50,8 +50,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
         throw Exception('Aucune bergerie n’est associée à ce compte.');
       }
 
-      final canView = CurrentUserService.instance.hasPermission('alimentation.view');
-      final alimentations = canView ? await _repository.getParBergerie(bergerieId) : <AlimentationModel>[];
+        final alimentations = canView ? await _repository.getParBergerie(bergerieId) : <AlimentationModel>[];
 
       if (!mounted) return;
       setState(() {
