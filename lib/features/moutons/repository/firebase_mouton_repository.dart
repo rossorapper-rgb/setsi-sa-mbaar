@@ -141,7 +141,6 @@ class FirebaseMoutonRepository {
             .collection(_collection)
             .where('bergerieId', isEqualTo: id)
             .where('actif', isEqualTo: true),
-        forceServer: true,
       );
     } catch (_) {
       return _loadCachedMoutons(id);
