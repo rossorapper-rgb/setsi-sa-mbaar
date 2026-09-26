@@ -63,9 +63,9 @@ class PublicBergerieConfig {
         'nomApplication': nomApplication,
         'logo': logo,
         'imageAccueil': imageAccueil,
-        'couleurPrimaire': couleurPrimaire.value,
-        'couleurSecondaire': couleurSecondaire.value,
-        'couleurFond': couleurFond.value,
+        'couleurPrimaire': couleurPrimaire.toARGB32(),
+        'couleurSecondaire': couleurSecondaire.toARGB32(),
+        'couleurFond': couleurFond.toARGB32(),
         'slogan': slogan,
         'active': active,
       };
