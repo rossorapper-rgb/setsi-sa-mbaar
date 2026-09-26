@@ -135,7 +135,7 @@ class ClientCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: statutColor.withOpacity(.12),
+                        color: statutColor.withValues(alpha: .12),
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
