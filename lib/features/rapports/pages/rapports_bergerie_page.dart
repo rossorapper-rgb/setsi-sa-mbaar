@@ -45,7 +45,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
   }
 
   String _reportCacheKey(String bergerieId) =>
-      'rapport_' + bergerieId + '_' + _mois.year.toString() + '_' + _mois.month.toString();
+      'rapport_${bergerieId}_${_mois.year}_${_mois.month}';
 
   Future<void> _charger() async {
     final bergerieId = _bergerieId;
