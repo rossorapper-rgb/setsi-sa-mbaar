@@ -73,7 +73,7 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
-              await Navigator.push(
+              final result = await Navigator.push<GestationModel>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => AddGestationPage(
@@ -81,7 +81,10 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                   ),
                 ),
               );
-              _refresh();
+              if (!mounted) return;
+              if (result != null) {
+                setState(() => _gestation = result);
+              }
             },
           ),
         ],
@@ -150,7 +153,7 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                 icon: const Icon(Icons.pets),
                 label: const Text('Enregistrer la mise bas'),
                 onPressed: () async {
-                  await Navigator.push(
+                  final result = await Navigator.push<GestationModel>(
                     context,
                     MaterialPageRoute(
                       builder: (_) => MiseBasPage(
@@ -158,7 +161,10 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                       ),
                     ),
                   );
-                  _refresh();
+                  if (!mounted) return;
+                  if (result != null) {
+                    Navigator.pop(context, result);
+                  }
                 },
               ),
             ],
