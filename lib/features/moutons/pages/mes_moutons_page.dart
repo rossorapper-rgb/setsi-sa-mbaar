@@ -82,7 +82,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
   }
 
   Future<void> _ouvrirDetails(MoutonModel mouton) async {
-    final resultat = await Navigator.push<bool>(
+    final resultat = await Navigator.push<Object?>(
       context,
       MaterialPageRoute(
         builder: (_) => MoutonDetailsPage(mouton: mouton),
@@ -91,8 +91,22 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
 
     if (!mounted) return;
 
-    if (resultat == true) {
-      _charger();
+    if (resultat is MoutonModel) {
+      setState(() {
+        _moutons = [
+          ..._moutons.where((item) => item.id != resultat.id),
+          resultat,
+        ];
+      ]);
+      return;
+    }
+
+    if (resultat is String) {
+      setState(() {
+        _moutons = _moutons
+            .where((item) => item.id != resultat)
+            .toList();
+      });
     }
   }
 
