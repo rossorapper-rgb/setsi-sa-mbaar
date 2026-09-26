@@ -96,9 +96,24 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
     }
   }
 
-  void _ajouterMouton() {
+  Future<void> _ajouterMouton() async {
     if (_bergerieId.isEmpty) return;
-    context.push('/moutons/add');
+
+    final resultat = await context.push('/moutons/add');
+
+    if (!mounted) return;
+
+    // AddMoutonPage retourne le modèle enregistré avant de se fermer.
+    // On l'applique directement à l'état visible : le total et la liste
+    // doivent changer sans Actualiser, y compris hors ligne.
+    if (resultat is MoutonModel) {
+      setState(() {
+        _moutons = [
+          ..._moutons.where((item) => item.id != resultat.id),
+          resultat,
+        ];
+      });
+    }
   }
 
   @override
