@@ -1,7 +1,12 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
+import '../../../core/utils/jpeg_exporter.dart';
 import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
 
@@ -240,12 +245,60 @@ class _NaissanceCard extends StatelessWidget {
   }
 }
 
-class _NaissanceDetailsDialog extends StatelessWidget {
+class _NaissanceDetailsDialog extends StatefulWidget {
   const _NaissanceDetailsDialog({required this.naissance, required this.primary, required this.orange});
 
   final GestationModel naissance;
   final Color primary;
   final Color orange;
+
+  @override
+  State<_NaissanceDetailsDialog> createState() => _NaissanceDetailsDialogState();
+}
+
+class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
+  final GlobalKey _ficheKey = GlobalKey();
+  bool _saving = false;
+
+  GestationModel get naissance => widget.naissance;
+  Color get primary => widget.primary;
+  Color get orange => widget.orange;
+
+  Future<void> _saveAsJpeg() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      final boundary = _ficheKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) throw StateError('La fiche n’est pas prête.');
+
+      final uiImage = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+      uiImage.dispose();
+      if (byteData == null) throw StateError('Impossible de créer l’image.');
+
+      final pngBytes = byteData.buffer.asUint8List();
+      final decoded = img.decodeImage(pngBytes);
+      if (decoded == null) throw StateError('Impossible de convertir la fiche en JPEG.');
+
+      final jpegBytes = Uint8List.fromList(img.encodeJpg(decoded, quality: 92));
+      final safeName = (naissance.nomFemelle.trim().isEmpty ? 'naissance' : naissance.nomFemelle.trim())
+          .replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
+      await saveJpegBytes(jpegBytes, 'fiche_naissance_\${safeName}.jpg');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fiche de naissance enregistrée en JPEG.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible d’enregistrer la fiche : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   String _date(DateTime? date) {
     if (date == null) return '—';
@@ -258,7 +311,9 @@ class _NaissanceDetailsDialog extends StatelessWidget {
     final geniteur = naissance.belierNom.isEmpty ? 'Non renseigné' : naissance.belierNom;
 
     return Dialog(
-      child: ConstrainedBox(
+      child: RepaintBoundary(
+        key: _ficheKey,
+        child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -289,13 +344,28 @@ class _NaissanceDetailsDialog extends StatelessWidget {
               _Info('Mort-nés', '${naissance.nombreMortNes}'),
               _Info('Observations', naissance.observations.isEmpty ? 'Aucune' : naissance.observations),
               const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: orange),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Fermer'),
-                ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _saving ? null : _saveAsJpeg,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.image_rounded),
+                    label: Text(_saving ? 'Enregistrement…' : 'Enregistrer JPEG'),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    style: FilledButton.styleFrom(backgroundColor: orange),
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    child: const Text('Fermer'),
+                  ),
+                ],
               ),
             ],
           ),
