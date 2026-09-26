@@ -69,7 +69,7 @@ class _AddAbonnementPageState extends State<AddAbonnementPage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _pack,
+                initialValue: _pack,
                 decoration: const InputDecoration(
                   labelText: "Pack",
                   prefixIcon: Icon(Icons.workspace_premium),
