@@ -244,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
         logo,
         height: 150,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Image.asset(
+        errorBuilder: (_, _, _) => Image.asset(
           'assets/images/app_icon.png',
           height: 150,
           fit: BoxFit.contain,
@@ -256,7 +256,7 @@ class _LoginPageState extends State<LoginPage> {
       logo,
       height: 150,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => Image.asset(
+      errorBuilder: (_, _, _) => Image.asset(
         'assets/images/app_icon.png',
         height: 150,
         fit: BoxFit.contain,
@@ -281,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Image.network(
         image,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),
     );
   }
