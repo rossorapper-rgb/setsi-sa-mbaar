@@ -263,7 +263,7 @@ class _PersonnalisationBergeriePageState
       return Image.memory(
         _logoPreview!,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             Icon(Icons.broken_image_rounded, color: _couleurPrimaire, size: 42),
       );
     }
@@ -281,7 +281,7 @@ class _PersonnalisationBergeriePageState
       return Image.network(
         logo,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             Icon(Icons.broken_image_rounded, color: _couleurPrimaire, size: 42),
       );
     }
@@ -289,7 +289,7 @@ class _PersonnalisationBergeriePageState
     return Image.asset(
       logo,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
+      errorBuilder: (_, _, _) =>
           Icon(Icons.home_work_rounded, color: _couleurPrimaire, size: 42),
     );
   }
@@ -395,7 +395,7 @@ class _PersonnalisationBergeriePageState
                             ? Image.network(
                                 _imageAccueil!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Center(
+                                errorBuilder: (_, _, _) => Center(
                                   child: Icon(
                                     Icons.image_outlined,
                                     size: 52,
