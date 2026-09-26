@@ -33,7 +33,7 @@ class DrawerMenuItem extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: selected
-                  ? AppColors.primary.withOpacity(0.12)
+                  ? AppColors.primary.withValues(alpha: 0.12)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(14),
             ),
