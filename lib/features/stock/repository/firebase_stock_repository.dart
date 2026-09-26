@@ -218,7 +218,7 @@ class FirebaseStockRepository {
       if (!snapshot.exists) throw StateError('Produit introuvable.');
       final produit = StockProduitModel.fromMap({...snapshot.data()!, 'id': snapshot.id});
       if (produit.bergerieId != bergerieId) throw StateError('Ce produit n’appartient pas à votre bergerie.');
-      if (quantite > produit.quantite) throw StateError('Stock insuffisant. Stock disponible : ' + produit.quantite.toString() + ' ' + produit.unite + '.');
+      if (quantite > produit.quantite) throw StateError('Stock insuffisant. Stock disponible : ${produit.quantite} ${produit.unite}.');
       transaction.update(produitRef, {'quantite': produit.quantite - quantite});
       transaction.set(mouvementRef, {
         'bergerieId': bergerieId, 'produitId': produitId, 'type': 'sortie',
