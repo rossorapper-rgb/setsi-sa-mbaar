@@ -23,6 +23,7 @@ dependencies:
 
     # Médias
     image_picker: ^1.2.0
+    image: ^4.10.1
 
     # Réseau
     http: ^1.6.0
