@@ -33,7 +33,8 @@ class _MoutonsPageState extends State<MoutonsPage> {
   // immédiatement lors du retour sur la page.
   static final Map<String, List<MoutonModel>> _cacheParBergerie = {};
 
-  late Future<List<MoutonModel>> _futureMoutons;
+  bool _chargementInitial = true;
+  String? _erreurInitiale;
 
   List<MoutonModel> _moutons = [];
   List<MoutonModel> _moutonsFiltres = [];
@@ -48,13 +49,13 @@ class _MoutonsPageState extends State<MoutonsPage> {
     if (cache != null) {
       _moutons = List<MoutonModel>.from(cache);
       _moutonsFiltres = List<MoutonModel>.from(cache);
-      _futureMoutons = Future.value(_moutons);
+      _chargementInitial = false;
 
       // Actualisation en arrière-plan : l'utilisateur ne reste pas bloqué
       // pendant la nouvelle lecture Firestore.
       _actualiserEnArrierePlan();
     } else {
-      _futureMoutons = _chargerMoutons();
+      _initialiser();
     }
 
     _searchController.addListener(_filtrerMoutons);
@@ -65,6 +66,26 @@ class _MoutonsPageState extends State<MoutonsPage> {
     _searchController.removeListener(_filtrerMoutons);
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initialiser() async {
+    try {
+      final moutons = await _chargerMoutons();
+      if (!mounted) return;
+
+      setState(() {
+        _moutons = moutons;
+        _moutonsFiltres = List.from(moutons);
+        _chargementInitial = false;
+        _erreurInitiale = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _chargementInitial = false;
+        _erreurInitiale = e.toString();
+      });
+    }
   }
 
   Future<List<MoutonModel>> _chargerMoutons() async {
@@ -90,7 +111,6 @@ class _MoutonsPageState extends State<MoutonsPage> {
       setState(() {
         _moutons = moutons;
         _filtrerMoutonsSansSetState();
-        _futureMoutons = Future.value(_moutons);
       });
     } catch (_) {
       // Le cache reste affiché si l'actualisation réseau échoue.
@@ -150,7 +170,7 @@ class _MoutonsPageState extends State<MoutonsPage> {
       // Compatibilité avec un retour booléen éventuel.
       _cacheParBergerie.remove(widget.bergerie.id);
       setState(() {
-        _futureMoutons = _chargerMoutons();
+        _actualiserEnArrierePlan();
       });
     }
   }
@@ -185,7 +205,6 @@ class _MoutonsPageState extends State<MoutonsPage> {
       setState(() {
         _moutons = moutons;
         _filtrerMoutonsSansSetState();
-        _futureMoutons = Future.value(moutons);
       });
     } catch (_) {
       // Le FutureBuilder conserve les données déjà affichées.
@@ -194,6 +213,60 @@ class _MoutonsPageState extends State<MoutonsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_chargementInitial) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text("Moutons - ${widget.bergerie.nom}"),
+          centerTitle: true,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_erreurInitiale != null && _moutons.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text("Moutons - ${widget.bergerie.nom}"),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: AppCard(
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 70),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Une erreur est survenue",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(_erreurInitiale!, textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final total = _moutons.length;
+    final beliers = _moutons.where((m) {
+      final sexe = m.sexe.toLowerCase();
+      return sexe == "male" || sexe == "mâle";
+    }).length;
+    final brebis = total - beliers;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -203,141 +276,83 @@ class _MoutonsPageState extends State<MoutonsPage> {
         title: Text("Moutons - ${widget.bergerie.nom}"),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<MoutonModel>>(
-        future: _futureMoutons,
-        builder: (context, snapshot) {
-          // Si le cache est disponible, on affiche immédiatement les données
-          // déjà connues, même pendant une actualisation réseau.
-          final donnees = snapshot.data ?? _moutons;
-
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              donnees.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError && donnees.isEmpty) {
-            return Center(
-              child: AppCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(30),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+      body: RefreshIndicator(
+        onRefresh: _rafraichir,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.bergerie.nom,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.bergerie.id,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 70),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Une erreur est survenue",
+                      Expanded(child: _StatItem(titre: "Moutons", valeur: "$total", icon: Icons.pets)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _StatItem(titre: "Béliers", valeur: "$beliers", icon: Icons.male)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _StatItem(titre: "Brebis", valeur: "$brebis", icon: Icons.female)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            AppTextField(
+              controller: _searchController,
+              icon: Icons.search,
+              label: "Recherche",
+            ),
+            const SizedBox(height: 20),
+            AppActionButton(
+              icon: Icons.add,
+              label: "Ajouter un mouton",
+              onPressed: _ajouterMouton,
+            ),
+            const SizedBox(height: 24),
+            if (_moutonsFiltres.isEmpty)
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  child: Column(
+                    children: const [
+                      Icon(Icons.pets, size: 80, color: Colors.grey),
+                      SizedBox(height: 20),
+                      Text(
+                        "Aucun mouton trouvé",
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 10),
-                      Text(snapshot.error.toString(), textAlign: TextAlign.center),
+                      SizedBox(height: 10),
+                      Text(
+                        "Ajoutez un mouton ou modifiez votre recherche.",
+                        textAlign: TextAlign.center,
+                      ),
                     ],
+                  ),
+                ),
+              )
+            else
+              ..._moutonsFiltres.map(
+                (mouton) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: MoutonCard(
+                    mouton: mouton,
+                    onTap: () => _ouvrirDetails(mouton),
                   ),
                 ),
               ),
-            );
-          }
-
-          // Le FutureBuilder peut encore restituer une ancienne valeur
-          // après un retour de AddMoutonPage. Ne jamais écraser une liste
-          // locale déjà mise à jour immédiatement par une ancienne lecture.
-          if (_moutons.isEmpty && snapshot.hasData) {
-            _moutons = List<MoutonModel>.from(snapshot.data!);
-            _moutonsFiltres = List.from(_moutons);
-
-            if (_searchController.text.isNotEmpty) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _filtrerMoutonsSansSetState();
-              });
-            }
-          }
-
-          final total = _moutons.length;
-          final beliers = _moutons.where((m) {
-            final sexe = m.sexe.toLowerCase();
-            return sexe == "male" || sexe == "mâle";
-          }).length;
-          final brebis = total - beliers;
-
-          return RefreshIndicator(
-            onRefresh: _rafraichir,
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.bergerie.nom,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.bergerie.id,
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(child: _StatItem(titre: "Moutons", valeur: "$total", icon: Icons.pets)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _StatItem(titre: "Béliers", valeur: "$beliers", icon: Icons.male)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _StatItem(titre: "Brebis", valeur: "$brebis", icon: Icons.female)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                AppTextField(
-                  controller: _searchController,
-                  icon: Icons.search,
-                  label: "Recherche",
-                ),
-                const SizedBox(height: 20),
-                AppActionButton(
-                  icon: Icons.add,
-                  label: "Ajouter un mouton",
-                  onPressed: _ajouterMouton,
-                ),
-                const SizedBox(height: 24),
-                if (_moutonsFiltres.isEmpty)
-                  AppCard(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                      child: Column(
-                        children: const [
-                          Icon(Icons.pets, size: 80, color: Colors.grey),
-                          SizedBox(height: 20),
-                          Text(
-                            "Aucun mouton trouvé",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "Ajoutez un mouton ou modifiez votre recherche.",
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  ..._moutonsFiltres.map(
-                    (mouton) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: MoutonCard(
-                        mouton: mouton,
-                        onTap: () => _ouvrirDetails(mouton),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
