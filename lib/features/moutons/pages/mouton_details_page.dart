@@ -457,9 +457,9 @@ class _MoutonDetailsPageState
 
           AppCard(
             child: Text(
-              bergerie == null || bergerie!.observations.trim().isEmpty
+              bergerie == null || bergerie.observations.trim().isEmpty
                   ? "Aucune observation enregistrée."
-                  : bergerie!.observations,
+                  : bergerie.observations,
               style: const TextStyle(
                 fontSize: 15,
               ),
