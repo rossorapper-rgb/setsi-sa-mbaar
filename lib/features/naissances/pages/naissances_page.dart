@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 import 'package:go_router/go_router.dart';
 
@@ -284,7 +285,7 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
       final jpegBytes = Uint8List.fromList(img.encodeJpg(decoded, quality: 92));
       final safeName = (naissance.nomFemelle.trim().isEmpty ? 'naissance' : naissance.nomFemelle.trim())
           .replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
-      await saveJpegBytes(jpegBytes, 'fiche_naissance_\${safeName}.jpg');
+      await saveJpegBytes(jpegBytes, 'fiche_naissance_${safeName}.jpg');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -344,29 +345,25 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
               _Info('Mort-nés', '${naissance.nombreMortNes}'),
               _Info('Observations', naissance.observations.isEmpty ? 'Aucune' : naissance.observations),
               const SizedBox(height: 8),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _saving ? null : _saveAsJpeg,
-                    icon: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.image_rounded),
-                    label: Text(_saving ? 'Enregistrement…' : 'Enregistrer JPEG'),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: orange),
-                    onPressed: _saving ? null : () => Navigator.pop(context),
-                    child: const Text('Fermer'),
-                  ),
-                ],
-              ),
+              if (!_saving) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _saveAsJpeg,
+                      icon: const Icon(Icons.image_rounded),
+                      label: const Text('Enregistrer JPEG'),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: orange),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Fermer'),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
