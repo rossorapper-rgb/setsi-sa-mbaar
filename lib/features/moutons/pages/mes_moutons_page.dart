@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/session/current_user_service.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
+import '../../gestation/models/gestation_model.dart';
+import '../../gestation/repositories/firebase_gestation_repository.dart';
 import 'mouton_details_page.dart';
 
 class MesMoutonsPage extends StatefulWidget {
@@ -16,6 +18,8 @@ class MesMoutonsPage extends StatefulWidget {
 class _MesMoutonsPageState extends State<MesMoutonsPage> {
   final FirebaseMoutonRepository _moutonRepository =
       FirebaseMoutonRepository();
+  final FirebaseGestationRepository _gestationRepository =
+      FirebaseGestationRepository();
 
   CurrentUserService get _session => CurrentUserService.instance;
 
@@ -23,6 +27,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
 
   bool _loading = true;
   List<MoutonModel> _moutons = [];
+  Set<String> _moutonsGestants = <String>{};
   String? _erreur;
   String _bergerieId = '';
 
@@ -55,12 +60,22 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
       final moutons = await _moutonRepository.getMoutonsByBergerie(
         bergerieId,
       );
+      final gestations = await _gestationRepository.getGestationsParBergerie(
+        bergerieId,
+      );
+
+      final moutonsGestants = gestations
+          .where((gestation) => gestation.statut == 'Gestante')
+          .map((gestation) => gestation.brebisId)
+          .where((id) => id.trim().isNotEmpty)
+          .toSet();
 
       if (!mounted) return;
 
       setState(() {
         _bergerieId = bergerieId;
         _moutons = moutons;
+        _moutonsGestants = moutonsGestants;
         _loading = false;
       });
     } catch (e) {
@@ -316,6 +331,29 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
                 fontSize: 16,
               ),
             ),
+            subtitle: _moutonsGestants.contains(mouton.id)
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.pregnant_woman,
+                          size: 16,
+                          color: Colors.deepPurple,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Gestante',
+                          style: TextStyle(
+                            color: Colors.deepPurple,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : null,
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _ouvrirDetails(mouton),
           ),
