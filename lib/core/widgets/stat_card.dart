@@ -46,7 +46,7 @@ class _StatCardState extends State<StatCard> {
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             transform: hovered
-                ? (Matrix4.identity()..translate(0.0, -3.0))
+                ? (Matrix4.identity()..translateByDouble(0.0, -3.0, 0.0, 1.0))
                 : Matrix4.identity(),
             child: Material(
               color: Colors.transparent,
