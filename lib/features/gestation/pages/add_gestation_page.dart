@@ -102,34 +102,43 @@ class _AddGestationPageState extends State<AddGestationPage> {
   Future<void> _verifierGestationActive() async {
     if (_brebisSelectionnee == null) return;
 
-    final gestation = await _repo.getGestationActiveByBrebis(
-      _brebisSelectionnee!.id,
-    );
-
-    if (!mounted) return;
-
-    if (gestation != null &&
-        (!widget.isEdition || gestation.id != widget.gestation?.id)) {
-      await showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Gestation déjà en cours"),
-          content: Text(
-            "Cette femelle possède déjà une gestation active.\n\n"
-            "Date de saillie : "
-            "${gestation.dateSaillie.day}/${gestation.dateSaillie.month}/${gestation.dateSaillie.year}\n\n"
-            "Veuillez enregistrer la mise bas avant de créer une nouvelle gestation.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
+    try {
+      final gestation = await _repo.getGestationActiveByBrebis(
+        _brebisSelectionnee!.id,
       );
 
-      setState(() => _brebisSelectionnee = null);
+      if (!mounted) return;
+
+      if (gestation != null &&
+          (!widget.isEdition || gestation.id != widget.gestation?.id)) {
+        await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("Gestation déjà en cours"),
+            content: Text(
+              "Cette femelle possède déjà une gestation active.\n\n"
+              "Date de saillie : "
+              "${gestation.dateSaillie.day}/${gestation.dateSaillie.month}/${gestation.dateSaillie.year}\n\n"
+              "Veuillez enregistrer la mise bas avant de créer une nouvelle gestation.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+
+        if (mounted) {
+          setState(() => _brebisSelectionnee = null);
+        }
+      }
+    } catch (_) {
+      // Hors ligne, la requête de vérification peut ne pas être disponible
+      // si cette collection n'est pas encore présente dans le cache local.
+      // On laisse l'enregistrement continuer : Firestore gère l'écriture
+      // hors ligne et la synchronisera dès que la connexion revient.
     }
   }
 
