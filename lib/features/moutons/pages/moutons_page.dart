@@ -37,6 +37,7 @@ class _MoutonsPageState extends State<MoutonsPage> {
 
   List<MoutonModel> _moutons = [];
   List<MoutonModel> _moutonsFiltres = [];
+  int _localVersion = 0;
 
   @override
   void initState() {
@@ -75,14 +76,21 @@ class _MoutonsPageState extends State<MoutonsPage> {
   }
 
   Future<void> _actualiserEnArrierePlan() async {
+    final versionAuDepart = _localVersion;
+
     try {
       final moutons = await _chargerMoutons();
 
       if (!mounted) return;
 
+      // Si une opération locale (ajout/modification) a eu lieu pendant
+      // l'actualisation, l'ancienne lecture ne doit jamais l'écraser.
+      if (versionAuDepart != _localVersion) return;
+
       setState(() {
         _moutons = moutons;
         _filtrerMoutonsSansSetState();
+        _futureMoutons = Future.value(_moutons);
       });
     } catch (_) {
       // Le cache reste affiché si l'actualisation réseau échoue.
@@ -120,6 +128,8 @@ class _MoutonsPageState extends State<MoutonsPage> {
 
     if (resultat is MoutonModel) {
       final mouton = resultat;
+
+      _localVersion++;
 
       setState(() {
         _moutons = [
