@@ -251,7 +251,7 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
           width: double.infinity,
           height: 240,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPhotoPlaceholder(),
+          errorBuilder: (_, _, _) => _buildPhotoPlaceholder(),
         ),
       );
     }
