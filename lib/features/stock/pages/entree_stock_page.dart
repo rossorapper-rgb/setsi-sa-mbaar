@@ -61,14 +61,14 @@ class _EntreeStockPageState extends State<EntreeStockPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
       appBar: AppBar(leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: _saving ? null : () => context.pop()), title: const Text('Entrée de stock')),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : _loadError != null ? Center(child: Text('Impossible de charger les produits.\n' + _loadError!, textAlign: TextAlign.center)) : _produits.isEmpty ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Aucun produit disponible. Ajoutez d’abord un produit au stock.', textAlign: TextAlign.center))) : Form(
+      body: _loading ? const Center(child: CircularProgressIndicator()) : _loadError != null ? Center(child: Text('Impossible de charger les produits.\n$_loadError!', textAlign: TextAlign.center)) : _produits.isEmpty ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Aucun produit disponible. Ajoutez d’abord un produit au stock.', textAlign: TextAlign.center))) : Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
           children: [
             _Section(title: 'Produit', child: Column(children: [
-              DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit', border: OutlineInputBorder(), prefixIcon: Icon(Icons.inventory_2_rounded)), items: _produits.where((p) => p.actif).map((p) => DropdownMenuItem(value: p.id, child: Text(p.nom + ' (' + p.unite + ')'))).toList(), onChanged: _saving ? null : (value) => setState(() => _produitId = value), validator: (v) => v == null ? 'Sélectionnez un produit.' : null),
-              if (selected != null) ...[const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: Text('Stock actuel : ' + _formatQuantity(selected.quantite) + ' ' + selected.unite, style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600)))],
+              DropdownButtonFormField<String>(initialValue: _produitId, decoration: const InputDecoration(labelText: 'Produit', border: OutlineInputBorder(), prefixIcon: Icon(Icons.inventory_2_rounded)), items: _produits.where((p) => p.actif).map((p) => DropdownMenuItem(value: p.id, child: Text('${p.nom} (${p.unite})'))).toList(), onChanged: _saving ? null : (value) => setState(() => _produitId = value), validator: (v) => v == null ? 'Sélectionnez un produit.' : null),
+              if (selected != null) ...[const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: Text('Stock actuel : ${_formatQuantity(selected.quantite)} ${selected.unite}', style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600)))],
             ])),
             const SizedBox(height: 14),
             _Section(title: 'Détails de l’entrée', child: Column(children: [
