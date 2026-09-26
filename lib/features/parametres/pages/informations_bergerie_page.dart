@@ -228,7 +228,7 @@ class _Header extends StatelessWidget {
                     width: 48,
                     height: 48,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.home_work_rounded,
                       color: primary,
                       size: 32,
