@@ -558,7 +558,7 @@ class _MoutonDetailsPageState
 
                       Navigator.pop(context, true);
                     } catch (e) {
-                      if (!mounted) return;
+                      if (!context.mounted) return;
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
