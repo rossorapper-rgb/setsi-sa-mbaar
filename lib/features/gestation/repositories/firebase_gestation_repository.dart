@@ -34,7 +34,7 @@ class FirebaseGestationRepository {
       }
 
       final snapshot = await query.get(
-        const GetOptions(source: Source.server),
+        const GetOptions(),
       );
       final result = snapshot.docs
           .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
@@ -140,7 +140,7 @@ class FirebaseGestationRepository {
     try {
       final snapshot = await _gestations
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server));
+          .get(const GetOptions());
 
       final result = snapshot.docs
           .map((doc) => GestationModel.fromMap(doc.data(), doc.id))
@@ -213,7 +213,7 @@ class FirebaseGestationRepository {
     });
   }
 
-  Future<void> enregistrerMiseBas({
+  Future<GestationModel> enregistrerMiseBas({
     required String gestationId,
     required DateTime dateMiseBas,
     required int nombreAgneaux,
@@ -223,6 +223,7 @@ class FirebaseGestationRepository {
     String observations = '',
     String? photoUrl,
   }) async {
+    final dateModification = DateTime.now();
     await _gestations.doc(gestationId).update({
       'statut': 'Terminée',
       'dateMiseBas': Timestamp.fromDate(dateMiseBas),
@@ -233,8 +234,14 @@ class FirebaseGestationRepository {
       'observations': observations,
       'photoUrl': photoUrl,
       'active': false,
-      'dateModification': Timestamp.fromDate(DateTime.now()),
+      'dateModification': Timestamp.fromDate(dateModification),
     });
+
+    final actuelle = await _gestations.doc(gestationId).get();
+    if (!actuelle.exists || actuelle.data() == null) {
+      throw StateError('Gestation introuvable après mise à jour.');
+    }
+    return GestationModel.fromMap(actuelle.data()!, actuelle.id);
   }
 
   Future<void> mettreAJourStatut({required String gestationId, required String statut}) async => _gestations.doc(gestationId).update({'statut': statut, 'dateModification': Timestamp.fromDate(DateTime.now())});
