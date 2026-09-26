@@ -206,6 +206,7 @@ class _AddGestationPageState extends State<AddGestationPage> {
       }
 
       if (bergerie == null) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Impossible de retrouver votre bergerie."),
