@@ -19,11 +19,13 @@ import '../repository/firebase_mouton_repository.dart';
 class AddMoutonPage extends StatefulWidget {
   final BergerieModel? bergerie;
   final MoutonModel? mouton;
+  final ValueChanged<MoutonModel>? onSaved;
 
   const AddMoutonPage({
     super.key,
     this.bergerie,
     this.mouton,
+    this.onSaved,
   });
 
   @override
@@ -405,6 +407,11 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
 
       if (!mounted) return;
 
+      // Notifie directement la page parente avant la fermeture de l'écran.
+      // Cela garantit l'affichage immédiat sans dépendre du résultat de
+      // Navigator.pop().
+      widget.onSaved?.call(mouton);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green,
@@ -416,8 +423,6 @@ class _AddMoutonPageState extends State<AddMoutonPage> {
         ),
       );
 
-      // Retourne directement le modèle créé afin que la liste des moutons
-      // puisse être mise à jour immédiatement, même hors connexion.
       Navigator.pop(context, mouton);
     } catch (e) {
       if (!mounted) return;
