@@ -21,6 +21,7 @@ class GestationModel {
   final String observations;
   final String? photoUrl;
   final List<String> agneauMoutonIds;
+  final List<String> agneauSexes;
   final bool active;
   final DateTime dateCreation;
   final DateTime? dateModification;
@@ -46,6 +47,7 @@ class GestationModel {
     this.observations = '',
     this.photoUrl,
     this.agneauMoutonIds = const [],
+    this.agneauSexes = const [],
     this.active = true,
     required this.dateCreation,
     this.dateModification,
@@ -72,6 +74,7 @@ class GestationModel {
     String? observations,
     String? photoUrl,
     List<String>? agneauMoutonIds,
+    List<String>? agneauSexes,
     bool? active,
     DateTime? dateCreation,
     DateTime? dateModification,
@@ -97,6 +100,7 @@ class GestationModel {
       observations: observations ?? this.observations,
       photoUrl: photoUrl ?? this.photoUrl,
       agneauMoutonIds: agneauMoutonIds ?? this.agneauMoutonIds,
+      agneauSexes: agneauSexes ?? this.agneauSexes,
       active: active ?? this.active,
       dateCreation: dateCreation ?? this.dateCreation,
       dateModification: dateModification ?? this.dateModification,
@@ -124,6 +128,7 @@ class GestationModel {
       'observations': observations,
       'photoUrl': photoUrl,
       'agneauMoutonIds': agneauMoutonIds,
+      'agneauSexes': agneauSexes,
       'active': active,
       'dateCreation': Timestamp.fromDate(dateCreation),
       'dateModification': dateModification == null ? null : Timestamp.fromDate(dateModification!),
@@ -168,6 +173,7 @@ class GestationModel {
       observations: map['observations'] ?? '',
       photoUrl: map['photoUrl']?.toString(),
       agneauMoutonIds: (map['agneauMoutonIds'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+      agneauSexes: (map['agneauSexes'] as List?)?.map((e) => e.toString()).toList() ?? const [],
       active: map['active'] ?? true,
       dateCreation: parseDate(map['dateCreation']),
       dateModification: parseNullableDate(map['dateModification']),
