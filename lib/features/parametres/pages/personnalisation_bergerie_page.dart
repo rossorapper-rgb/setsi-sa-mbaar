@@ -172,7 +172,7 @@ class _PersonnalisationBergeriePageState
           runSpacing: 12,
           children: _palettes.map((item) {
             final nom = item.keys.first;
-            final couleur = item.toARGB32()s.first;
+            final couleur = item.values.first;
             final selected = couleur.toARGB32() == actuelle.toARGB32();
 
             return InkWell(
