@@ -64,7 +64,7 @@ class InterventionCard extends StatelessWidget {
               vertical: 6,
             ),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(.12),
+              color: statusColor.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Text(
