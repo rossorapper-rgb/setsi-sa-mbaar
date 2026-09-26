@@ -109,13 +109,19 @@ class _GestationsPageState extends State<GestationsPage> {
   }
 
   Future<void> _nouvelleGestation() async {
-    final result = await Navigator.push<bool>(
+    final result = await Navigator.push<GestationModel>(
       context,
       MaterialPageRoute(
         builder: (_) => AddGestationPage(bergerie: widget.bergerie),
       ),
     );
-    if (result == true) _charger();
+    if (!mounted || result == null) return;
+    setState(() {
+      _gestations = [
+        ..._gestations.where((item) => item.id != result.id),
+        result,
+      ]..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    });
   }
 
   Future<void> _ouvrirDetails(GestationModel gestation) async {
@@ -127,19 +133,31 @@ class _GestationsPageState extends State<GestationsPage> {
   }
 
   Future<void> _modifier(GestationModel gestation) async {
-    final result = await Navigator.push<bool>(
+    final result = await Navigator.push<GestationModel>(
       context,
       MaterialPageRoute(builder: (_) => AddGestationPage(gestation: gestation)),
     );
-    if (result == true) _charger();
+    if (!mounted || result == null) return;
+    setState(() {
+      _gestations = _gestations
+          .map((item) => item.id == result.id ? result : item)
+          .toList()
+        ..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    });
   }
 
   Future<void> _miseBas(GestationModel gestation) async {
-    final result = await Navigator.push<bool>(
+    final result = await Navigator.push<GestationModel>(
       context,
       MaterialPageRoute(builder: (_) => MiseBasPage(gestation: gestation)),
     );
-    if (result == true) _charger();
+    if (!mounted || result == null) return;
+    setState(() {
+      _gestations = _gestations
+          .map((item) => item.id == result.id ? result : item)
+          .toList()
+        ..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
+    });
   }
 
   @override
