@@ -272,11 +272,18 @@ class _NaissanceDetailsDialog extends StatefulWidget {
 }
 
 class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
+  @override
+  void initState() {
+    super.initState();
+    _naissance = widget.naissance;
+  }
+
   final GlobalKey _ficheKey = GlobalKey();
   bool _saving = false;
   bool _deleting = false;
+  late GestationModel _naissance;
 
-  GestationModel get naissance => widget.naissance;
+  GestationModel get naissance => _naissance;
   Color get primary => widget.primary;
   Color get orange => widget.orange;
 
@@ -323,14 +330,20 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
 
   Future<void> _ajouterDansMoutons() async {
     if (_deleting) return;
-    final result = await Navigator.push<_NaissanceDialogResult>(
+    final result = await Navigator.push<Object?>(
       context,
       MaterialPageRoute(
         builder: (_) => _AjouterAgneauxPage(naissance: naissance),
       ),
     );
     if (!mounted) return;
-    if (result == _NaissanceDialogResult.completed) {
+    if (result is GestationModel) {
+      setState(() => _naissance = result);
+      if (result.agneauMoutonIds.length >=
+          (result.nombreAgneaux - result.nombreMortNes).clamp(0, result.nombreAgneaux).toInt()) {
+        Navigator.pop(context, _NaissanceDialogResult.completed);
+      }
+    } else if (result == _NaissanceDialogResult.completed) {
       Navigator.pop(context, result);
     }
   }
@@ -630,7 +643,19 @@ class _AjouterAgneauxPageState extends State<_AjouterAgneauxPage> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      final updated = naissance.copyWith(
+                        agneauMoutonIds: [
+                          ...naissance.agneauMoutonIds,
+                          ..._created.map((m) => m.id),
+                        ],
+                        agneauSexes: [
+                          ...naissance.agneauSexes,
+                          ..._created.map((m) => m.sexe),
+                        ],
+                      );
+                      Navigator.pop(context, updated);
+                    },
                     child: Text(restants.isEmpty ? 'Terminer' : 'Plus tard'),
                   ),
                 ),
