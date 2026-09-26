@@ -396,7 +396,7 @@ class _AddGestationPageState extends State<AddGestationPage> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context, true);
+      Navigator.pop(context, gestation);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
