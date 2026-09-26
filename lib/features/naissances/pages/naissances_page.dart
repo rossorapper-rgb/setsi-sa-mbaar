@@ -486,16 +486,18 @@ class _AjouterAgneauxPageState extends State<_AjouterAgneauxPage> {
   GestationModel get naissance => widget.naissance;
 
   List<String> get _sexesRestants {
-    final malesDeja = naissance.agneauSexes.where((s) => s == 'Mâle').length;
-    final femellesDeja = naissance.agneauSexes.where((s) => s == 'Femelle').length;
+    final malesDeja = naissance.agneauSexes.where((s) => s == 'Mâle').length +
+        _created.where((m) => m.sexe == 'Mâle').length;
+    final femellesDeja = naissance.agneauSexes.where((s) => s == 'Femelle').length +
+        _created.where((m) => m.sexe == 'Femelle').length;
 
     final sexes = <String>[
       ...List<String>.filled(
-        (naissance.nombreMales - malesDeja).clamp(0, naissance.nombreMales),
+        (naissance.nombreMales - malesDeja).clamp(0, naissance.nombreMales).toInt(),
         'Mâle',
       ),
       ...List<String>.filled(
-        (naissance.nombreFemelles - femellesDeja).clamp(0, naissance.nombreFemelles),
+        (naissance.nombreFemelles - femellesDeja).clamp(0, naissance.nombreFemelles).toInt(),
         'Femelle',
       ),
     ];
@@ -503,18 +505,18 @@ class _AjouterAgneauxPageState extends State<_AjouterAgneauxPage> {
     final totalVivant = (naissance.nombreAgneaux - naissance.nombreMortNes).clamp(
       0,
       naissance.nombreAgneaux,
-    );
+    ).toInt();
 
-    if (sexes.length < totalVivant - naissance.agneauMoutonIds.length) {
-      final reste = totalVivant - naissance.agneauMoutonIds.length - sexes.length;
-      sexes.addAll(List<String>.filled(reste.clamp(0, reste), 'Mâle'));
+    if (sexes.length < totalVivant - naissance.agneauMoutonIds.length - _created.length) {
+      final reste = totalVivant - naissance.agneauMoutonIds.length - _created.length - sexes.length;
+      sexes.addAll(List<String>.filled(reste > 0 ? reste : 0, 'Mâle'));
     }
 
     return sexes;
   }
 
   int get _totalVivant =>
-      (naissance.nombreAgneaux - naissance.nombreMortNes).clamp(0, naissance.nombreAgneaux);
+      (naissance.nombreAgneaux - naissance.nombreMortNes).clamp(0, naissance.nombreAgneaux).toInt();
 
   int get _dejaAjoutes => naissance.agneauMoutonIds.length + _created.length;
 
