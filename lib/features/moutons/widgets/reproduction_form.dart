@@ -470,8 +470,7 @@ return const Text(
 );
 }
 
-return DropdownButtonFormField<
-MoutonModel>(
+return _ControlledDropdown<MoutonModel>(
 value:
 _belierSelectionne,
 isExpanded: true,
@@ -655,4 +654,34 @@ strokeWidth: 2.5,
 ),
 );
 }
+}
+
+class _ControlledDropdown<T> extends StatelessWidget {
+  final T? value;
+  final bool isExpanded;
+  final InputDecoration decoration;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? Function(T?)? validator;
+
+  const _ControlledDropdown({
+    required this.value,
+    this.isExpanded = false,
+    required this.decoration,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      isExpanded: isExpanded,
+      decoration: decoration,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
 }
