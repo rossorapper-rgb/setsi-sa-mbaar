@@ -300,9 +300,9 @@ class _AlimentationPageState extends State<AlimentationPage> {
           children: [
             CircleAvatar(
               radius: 24,
-              child: const Icon(Icons.grass_rounded),
               backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
               foregroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.grass_rounded),
             ),
             const SizedBox(width: 14),
             Expanded(
