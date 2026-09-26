@@ -13,7 +13,6 @@ import '../../../core/widgets/responsive_page.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../../core/services/cloudinary_image_service.dart';
 import '../../bergeries/models/bergerie_model.dart';
-import '../../bergeries/repository/firebase_bergerie_repository.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
 
@@ -34,8 +33,6 @@ class AddMoutonPage extends StatefulWidget {
 class _AddMoutonPageState extends State<AddMoutonPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FirebaseMoutonRepository _repository = FirebaseMoutonRepository();
-  final FirebaseBergerieRepository _bergerieRepository =
-      FirebaseBergerieRepository();
   final CloudinaryImageService _cloudinaryImageService =
       const CloudinaryImageService();
   final ImagePicker _imagePicker = ImagePicker();
