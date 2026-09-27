@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
@@ -39,7 +41,15 @@ class FirebaseInterventionRepository {
       observation: observation.trim(),
     );
 
-    await doc.set(intervention.toMap());
+    final key = _cacheKey(bergerieId);
+    final cached = await _cache.loadList(key) ?? [];
+    final updated = [
+      ...cached.where((item) => item['id']?.toString() != intervention.id),
+      {'id': intervention.id, ...intervention.toMap()},
+    ];
+    await _cache.saveList(key, updated);
+
+    unawaited(_syncAdd(intervention));
     return intervention;
   }
 
@@ -57,7 +67,15 @@ class FirebaseInterventionRepository {
       );
     }
 
-    await _collection.doc(intervention.id).update(intervention.toMap());
+    final key = _cacheKey(bergerieId);
+    final cached = await _cache.loadList(key) ?? [];
+    final updated = [
+      ...cached.where((item) => item['id']?.toString() != intervention.id),
+      {'id': intervention.id, ...intervention.toMap()},
+    ];
+    await _cache.saveList(key, updated);
+
+    unawaited(_syncUpdate(intervention));
   }
 
   Future<void> supprimer(String id) async {
@@ -66,10 +84,34 @@ class FirebaseInterventionRepository {
       throw StateError('Aucune bergerie associée à cet utilisateur.');
     }
 
-    final doc = await _collection.doc(id).get();
-    if (!doc.exists) return;
+    final key = _cacheKey(bergerieId);
+    final cached = await _cache.loadList(key);
+    InterventionModel? intervention;
 
-    final intervention = InterventionModel.fromMap(doc.data()!);
+    if (cached != null) {
+      for (final item in cached) {
+        if (item['id']?.toString() == id) {
+          intervention = InterventionModel.fromMap(item);
+          break;
+        }
+      }
+    }
+
+    if (intervention == null) {
+      try {
+        final doc = await _collection.doc(id).get();
+        if (!doc.exists) return;
+        intervention = InterventionModel.fromMap({
+          ...doc.data()!,
+          'id': doc.id,
+        });
+      } catch (_) {
+        throw StateError(
+          'Cette intervention n’est pas disponible hors connexion.',
+        );
+      }
+    }
+
     if (intervention.bergerieId != bergerieId) {
       throw StateError('Cette intervention n’appartient pas à votre bergerie.');
     }
@@ -79,7 +121,14 @@ class FirebaseInterventionRepository {
       );
     }
 
-    await _collection.doc(id).delete();
+    if (cached != null) {
+      await _cache.saveList(
+        key,
+        cached.where((item) => item['id']?.toString() != id).toList(),
+      );
+    }
+
+    unawaited(_syncDelete(id));
   }
 
   Future<List<InterventionModel>> getToutesLesInterventions() async {
@@ -99,7 +148,7 @@ class FirebaseInterventionRepository {
     try {
       final snapshot = await _collection
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server));
+          .get();
 
       final liste = snapshot.docs
           .map(
@@ -154,6 +203,24 @@ class FirebaseInterventionRepository {
       liste.sort((a, b) => b.date.compareTo(a.date));
       return liste;
     }
+  }
+
+  Future<void> _syncAdd(InterventionModel intervention) async {
+    try {
+      await _collection.doc(intervention.id).set(intervention.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _syncUpdate(InterventionModel intervention) async {
+    try {
+      await _collection.doc(intervention.id).set(intervention.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _syncDelete(String id) async {
+    try {
+      await _collection.doc(id).delete();
+    } catch (_) {}
   }
 
   // Compatibilite avec le dashboard admin historique.
