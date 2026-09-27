@@ -374,6 +374,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
         await _repository.ajouter(
           type: type,
           libelle: type == FinanceEntryType.depense ? _libelleCategorie(categorie, libelle) : libelle,
+          categorie: type == FinanceEntryType.depense ? categorie : '',
           montant: montant,
           date: date,
           observation: observationController.text,
@@ -546,7 +547,10 @@ class _FinanceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vente = entry.type == FinanceEntryType.vente;
-    return Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(vente ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: vente ? Colors.green : Colors.red), title: Text(entry.libelle, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text('${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}'), isThreeLine: entry.observation.isNotEmpty, trailing: Row(mainAxisSize: MainAxisSize.min, children: [Text('${money.format(entry.montant)} FCFA', style: TextStyle(fontWeight: FontWeight.w800, color: vente ? Colors.green : Colors.red)), PopupMenuButton<String>(onSelected: (value) { if (value == 'delete') onDelete(); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer'))])])));
+    final titre = entry.libelle.trim().isNotEmpty
+        ? entry.libelle.trim()
+        : (entry.categorie.trim().isNotEmpty ? entry.categorie.trim() : (vente ? 'Vente' : 'Dépense'));
+    return Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(vente ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: vente ? Colors.green : Colors.red), title: Text(titre, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text('${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}'), isThreeLine: entry.observation.isNotEmpty, trailing: Row(mainAxisSize: MainAxisSize.min, children: [Text('${money.format(entry.montant)} FCFA', style: TextStyle(fontWeight: FontWeight.w800, color: vente ? Colors.green : Colors.red)), PopupMenuButton<String>(onSelected: (value) { if (value == 'delete') onDelete(); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer'))])])));
   }
 }
 
