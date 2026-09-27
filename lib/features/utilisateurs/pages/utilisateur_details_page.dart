@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/responsive_page.dart';
+import '../models/user_role.dart';
 import '../providers/utilisateur_provider.dart';
 
 class UtilisateurDetailsPage extends ConsumerWidget {
@@ -67,7 +68,7 @@ class UtilisateurDetailsPage extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text(utilisateur.role.label),
+                              Text(utilisateur.role.value),
                               const SizedBox(height: 20),
                               _infoTile(
                                 "Téléphone",
