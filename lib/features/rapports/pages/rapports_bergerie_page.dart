@@ -252,10 +252,10 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                 pw.Table.fromTextArray(
                   headers: const ['Indicateur', 'Montant'],
                   data: [
-                    ['Ventes', '\${_money.format(_ventes)} FCFA'],
-                    ['Dépenses', '\${_money.format(_depenses)} FCFA'],
-                    ['Dont alimentation', '\${_money.format(_alimentation)} FCFA'],
-                    ['Solde', '\${_money.format(solde)} FCFA'],
+                    ['Ventes', '${_money.format(_ventes)} FCFA'],
+                    ['Dépenses', '${_money.format(_depenses)} FCFA'],
+                    ['Dont alimentation', '${_money.format(_alimentation)} FCFA'],
+                    ['Solde', '${_money.format(solde)} FCFA'],
                   ],
                 ),
                 pw.Spacer(),
