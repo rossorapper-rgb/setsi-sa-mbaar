@@ -206,7 +206,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     return DateTime.tryParse(raw?.toString() ?? '');
   }
 
-  Future<void> _exporterPdf() async {
+  Future<void> _exporterPdf({bool partager = false}) async {
     final config = CurrentBergerieConfig.instance.config;
     final solde = _ventes - _depenses;
     final pdf = pw.Document();
@@ -267,7 +267,15 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    final bytes = await pdf.save();
+    final nomFichier = 'rapport_${config.nomBergerie}_${_mois.year}_${_mois.month}.pdf';
+
+    if (partager) {
+      await Printing.sharePdf(bytes: bytes, filename: nomFichier);
+      return;
+    }
+
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
   }
   void _moisPrecedent() {
     setState(() => _mois = DateTime(_mois.year, _mois.month - 1));
@@ -300,6 +308,11 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
             tooltip: 'Exporter / imprimer le rapport',
             onPressed: _loading ? null : _exporterPdf,
             icon: const Icon(Icons.picture_as_pdf),
+          ),
+          IconButton(
+            tooltip: 'Enregistrer / partager le PDF',
+            onPressed: _loading ? null : () => _exporterPdf(partager: true),
+            icon: const Icon(Icons.share),
           ),
         ],
       ),
