@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
@@ -88,7 +90,14 @@ class FirebaseFinanceRepository {
       date: date,
       observation: observation.trim(),
     );
-    await doc.set(entry.toMap());
+    final cached = await _cache.loadList(_cacheKey(entry.bergerieId)) ?? <Map<String, dynamic>>[];
+    final updated = [
+      ...cached.where((item) => item['id']?.toString() != entry.id),
+      {'id': entry.id, ...entry.toMap()},
+    ];
+    await _cache.saveList(_cacheKey(entry.bergerieId), updated);
+
+    unawaited(doc.set(entry.toMap()));
     return entry;
   }
 
@@ -96,17 +105,34 @@ class FirebaseFinanceRepository {
     if (entry.bergerieId != _bergerieId) {
       throw StateError('Cette opération n’appartient pas à votre bergerie.');
     }
-    await _collection.doc(entry.id).update(entry.toMap());
+    final cached = await _cache.loadList(_cacheKey(entry.bergerieId)) ?? <Map<String, dynamic>>[];
+    final updated = [
+      ...cached.where((item) => item['id']?.toString() != entry.id),
+      {'id': entry.id, ...entry.toMap()},
+    ];
+    await _cache.saveList(_cacheKey(entry.bergerieId), updated);
+
+    unawaited(_collection.doc(entry.id).set(entry.toMap()));
   }
 
   Future<void> supprimer(String id) async {
-    final doc = await _collection.doc(id).get();
-    if (!doc.exists) return;
-    final entry = FinanceEntryModel.fromMap(doc.data()!);
-    if (entry.bergerieId != _bergerieId) {
-      throw StateError('Cette opération n’appartient pas à votre bergerie.');
+    final bergerieId = _bergerieId;
+    final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? <Map<String, dynamic>>[];
+    final cachedEntry = cached.cast<Map<String, dynamic>?>().firstWhere(
+      (item) => item?['id']?.toString() == id,
+      orElse: () => null,
+    );
+    if (cachedEntry != null) {
+      final entry = FinanceEntryModel.fromMap(cachedEntry);
+      if (entry.bergerieId != bergerieId) {
+        throw StateError('Cette opération n’appartient pas à votre bergerie.');
+      }
     }
-    await _collection.doc(id).delete();
+    await _cache.saveList(
+      _cacheKey(bergerieId),
+      cached.where((item) => item['id']?.toString() != id).toList(),
+    );
+    unawaited(_collection.doc(id).delete());
   }
 
   Future<List<AlimentationModel>> getAlimentations() async {
