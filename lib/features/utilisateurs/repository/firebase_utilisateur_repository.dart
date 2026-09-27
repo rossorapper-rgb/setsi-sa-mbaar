@@ -452,6 +452,40 @@ class FirebaseUtilisateurRepository {
   }
 
   /// ===========================
+  /// Flux des utilisateurs désactivés
+  /// ===========================
+  Stream<List<UtilisateurModel>> streamUtilisateursDesactives() {
+    Query<Map<String, dynamic>> query = _firestore
+        .collection(_collection)
+        .where('actif', isEqualTo: false);
+
+    if (!_session.isAdmin &&
+        _session.bergerieId != null &&
+        _session.bergerieId!.isNotEmpty) {
+      query = query.where('bergerieId', isEqualTo: _session.bergerieId);
+    }
+
+    return query.snapshots().map((snapshot) {
+      final utilisateurs = snapshot.docs
+          .map(
+            (doc) => UtilisateurModel.fromMap(
+              doc.data(),
+              doc.id,
+            ),
+          )
+          .toList();
+
+      utilisateurs.sort(
+        (a, b) => a.nomComplet
+            .toLowerCase()
+            .compareTo(b.nomComplet.toLowerCase()),
+      );
+
+      return utilisateurs;
+    });
+  }
+
+  /// ===========================
   /// Flux de tous les utilisateurs
   /// ===========================
   Stream<List<UtilisateurModel>> streamTousLesUtilisateurs() {
