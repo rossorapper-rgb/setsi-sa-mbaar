@@ -119,21 +119,35 @@ class UtilisateurDetailsPage extends ConsumerWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: utilisateur.actif
+                            ? Colors.red
+                            : Colors.green,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () async {
                         final repository =
                             ref.read(utilisateurRepositoryProvider);
 
-                        await repository.deleteUtilisateur(utilisateur.id);
+                        if (utilisateur.actif) {
+                          await repository.deleteUtilisateur(utilisateur.id);
+                        } else {
+                          await repository.reactiverUtilisateur(utilisateur.id);
+                        }
 
                         if (!context.mounted) return;
 
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.delete),
-                      label: const Text("Désactiver"),
+                      icon: Icon(
+                        utilisateur.actif
+                            ? Icons.person_off
+                            : Icons.person_add_alt_1,
+                      ),
+                      label: Text(
+                        utilisateur.actif
+                            ? "Désactiver"
+                            : "Réactiver",
+                      ),
                     ),
                   ),
                 ],
