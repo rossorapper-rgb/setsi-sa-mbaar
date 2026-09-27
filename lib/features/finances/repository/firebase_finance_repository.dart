@@ -35,7 +35,7 @@ class FirebaseFinanceRepository {
     try {
       final snapshot = await _collection
           .where('bergerieId', isEqualTo: bergerieId)
-          .get(const GetOptions(source: Source.server));
+          .get();
 
       final entries = snapshot.docs
           .map(
@@ -97,7 +97,7 @@ class FirebaseFinanceRepository {
     ];
     await _cache.saveList(_cacheKey(entry.bergerieId), updated);
 
-    unawaited(doc.set(entry.toMap()));
+    unawaited(_synchroniserAjout(doc, entry));
     return entry;
   }
 
@@ -112,7 +112,7 @@ class FirebaseFinanceRepository {
     ];
     await _cache.saveList(_cacheKey(entry.bergerieId), updated);
 
-    unawaited(_collection.doc(entry.id).set(entry.toMap()));
+    unawaited(_synchroniserModification(entry));
   }
 
   Future<void> supprimer(String id) async {
@@ -132,7 +132,35 @@ class FirebaseFinanceRepository {
       _cacheKey(bergerieId),
       cached.where((item) => item['id']?.toString() != id).toList(),
     );
-    unawaited(_collection.doc(id).delete());
+    unawaited(_synchroniserSuppression(id));
+  }
+
+
+  Future<void> _synchroniserAjout(
+    DocumentReference<Map<String, dynamic>> doc,
+    FinanceEntryModel entry,
+  ) async {
+    try {
+      await doc.set(entry.toMap());
+    } catch (_) {
+      // La donnée locale reste disponible hors ligne.
+    }
+  }
+
+  Future<void> _synchroniserModification(FinanceEntryModel entry) async {
+    try {
+      await _collection.doc(entry.id).set(entry.toMap());
+    } catch (_) {
+      // La modification locale reste disponible hors ligne.
+    }
+  }
+
+  Future<void> _synchroniserSuppression(String id) async {
+    try {
+      await _collection.doc(id).delete();
+    } catch (_) {
+      // La suppression locale reste disponible hors ligne.
+    }
   }
 
   Future<List<AlimentationModel>> getAlimentations() async {
