@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_business_cache_service.dart';
 import '../models/carnet_sante_model.dart';
 
@@ -14,16 +17,60 @@ class FirebaseCarnetSanteRepository {
 
   String _cacheKey(String bergerieId) => 'carnet_sante_$bergerieId';
 
-  Future<void> ajouter(CarnetSanteModel soin) async {
-    await _firestore.collection(_collection).doc(soin.id).set(soin.toMap());
+  Future<CarnetSanteModel> ajouter(CarnetSanteModel soin) async {
+    final cached = await _cache.loadList(_cacheKey(soin.bergerieId)) ?? [];
+    await _cache.saveList(
+      _cacheKey(soin.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != soin.id),
+        {
+          'id': soin.id,
+          ...soin.toMap(),
+        },
+      ],
+    );
+
+    unawaited(
+      _firestore.collection(_collection).doc(soin.id).set(soin.toMap()),
+    );
+
+    return soin;
   }
 
-  Future<void> modifier(CarnetSanteModel soin) async {
-    await _firestore.collection(_collection).doc(soin.id).update(soin.toMap());
+  Future<CarnetSanteModel> modifier(CarnetSanteModel soin) async {
+    final cached = await _cache.loadList(_cacheKey(soin.bergerieId)) ?? [];
+    await _cache.saveList(
+      _cacheKey(soin.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != soin.id),
+        {
+          'id': soin.id,
+          ...soin.toMap(),
+        },
+      ],
+    );
+
+    unawaited(
+      _firestore.collection(_collection).doc(soin.id).set(soin.toMap()),
+    );
+
+    return soin;
   }
 
   Future<void> supprimer(String id) async {
-    await _firestore.collection(_collection).doc(id).delete();
+    final bergerieId = CurrentUserService.instance.bergerieId?.trim() ?? '';
+
+    if (bergerieId.isNotEmpty) {
+      final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? [];
+      await _cache.saveList(
+        _cacheKey(bergerieId),
+        cached.where((item) => item['id']?.toString() != id).toList(),
+      );
+    }
+
+    unawaited(
+      _firestore.collection(_collection).doc(id).delete(),
+    );
   }
 
   Future<List<CarnetSanteModel>> getParBergerie(String bergerieId) async {
@@ -34,7 +81,7 @@ class FirebaseCarnetSanteRepository {
       final snapshot = await _firestore
           .collection(_collection)
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server))
+          .get()
           .timeout(const Duration(seconds: 4));
 
       final result = snapshot.docs
