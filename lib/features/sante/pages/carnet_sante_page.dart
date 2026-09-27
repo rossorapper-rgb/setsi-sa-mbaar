@@ -82,7 +82,7 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
   Future<void> _ouvrirFormulaire({CarnetSanteModel? soin}) async {
     if (_bergerieId.isEmpty || _moutons.isEmpty) return;
 
-    final resultat = await showDialog<bool>(
+    final resultat = await showDialog<CarnetSanteModel>(
       context: context,
       builder: (_) => _CarnetSanteFormDialog(
         bergerieId: _bergerieId,
@@ -93,7 +93,14 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
       ),
     );
 
-    if (resultat == true) await _charger();
+    if (!mounted || resultat == null) return;
+
+    setState(() {
+      _soins = [
+        ..._soins.where((item) => item.id != resultat.id),
+        resultat,
+      ]..sort((a, b) => b.date.compareTo(a.date));
+    });
   }
 
   bool get _canDeduirStock {
@@ -140,7 +147,11 @@ class _CarnetSantePageState extends State<CarnetSantePage> {
 
     if (confirmer != true) return;
     await _repository.supprimer(soin.id);
-    if (mounted) await _charger();
+    if (!mounted) return;
+
+    setState(() {
+      _soins = _soins.where((item) => item.id != soin.id).toList();
+    });
   }
 
   @override
@@ -365,15 +376,16 @@ class _CarnetSanteFormDialogState extends State<_CarnetSanteFormDialog> {
       problemeSoin: _problemeController.text.trim(),
       date: _date,
       observation: _observationController.text.trim(),
+      stockDeduit: widget.soin?.stockDeduit ?? false,
+      stockMouvementId: widget.soin?.stockMouvementId ?? '',
     );
 
     try {
-      if (widget.soin == null) {
-        await widget.repository.ajouter(soin);
-      } else {
-        await widget.repository.modifier(soin);
-      }
-      if (mounted) Navigator.pop(context, true);
+      final resultat = widget.soin == null
+          ? await widget.repository.ajouter(soin)
+          : await widget.repository.modifier(soin);
+
+      if (mounted) Navigator.pop(context, resultat);
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
