@@ -423,12 +423,160 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     }
   }
 
+  Future<void> _modifier(FinanceEntryModel entry) async {
+    final libelleController = TextEditingController(text: entry.libelle);
+    final montantController = TextEditingController(text: entry.montant.toStringAsFixed(0));
+    final observationController = TextEditingController(text: entry.observation);
+    String categorie = entry.categorie.trim().isNotEmpty
+        ? entry.categorie
+        : (entry.type == FinanceEntryType.vente ? 'Vente' : 'Autre');
+    DateTime date = entry.date;
+
+    final result = await showDialog<FinanceEntryModel?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(entry.type == FinanceEntryType.depense ? 'Modifier la dépense' : 'Modifier la vente'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (entry.type == FinanceEntryType.depense)
+                  DropdownButtonFormField<String>(
+                    initialValue: categorie,
+                    decoration: const InputDecoration(
+                      labelText: 'Catégorie',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Alimentation', child: Text('🌾 Alimentation')),
+                      DropdownMenuItem(value: 'Sante', child: Text('💊 Santé / vétérinaire')),
+                      DropdownMenuItem(value: 'Entretien', child: Text('🧹 Entretien / nettoyage')),
+                      DropdownMenuItem(value: 'Transport', child: Text('🚚 Transport')),
+                      DropdownMenuItem(value: 'Salaires', child: Text('👷 Salaires / main-d’œuvre')),
+                      DropdownMenuItem(value: 'Materiel', child: Text('🔧 Matériel / équipement')),
+                      DropdownMenuItem(value: 'EauElectricite', child: Text('💡 Électricité / eau')),
+                      DropdownMenuItem(value: 'Autre', child: Text('📦 Autres')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setDialogState(() => categorie = value);
+                    },
+                  ),
+                if (entry.type == FinanceEntryType.depense) const SizedBox(height: 12),
+                TextField(
+                  controller: libelleController,
+                  decoration: InputDecoration(
+                    labelText: entry.type == FinanceEntryType.vente ? 'Produit / mouton vendu' : 'Libellé',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: montantController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Montant (FCFA)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: date,
+                      firstDate: DateTime(2024),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setDialogState(() => date = picked);
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Date',
+                      border: OutlineInputBorder(),
+                    ),
+                    child: Text(_dateFormat.format(date)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: observationController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Observation (facultative)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final libelle = libelleController.text.trim();
+                final montant = double.tryParse(
+                  montantController.text.trim().replaceAll(',', '.'),
+                );
+                if (montant == null || montant <= 0) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Veuillez renseigner un montant valide.')),
+                  );
+                  return;
+                }
+                if (libelle.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Veuillez renseigner le libellé.')),
+                  );
+                  return;
+                }
+                Navigator.pop(
+                  dialogContext,
+                  entry.copyWith(
+                    libelle: libelle,
+                    categorie: entry.type == FinanceEntryType.depense ? categorie : '',
+                    montant: montant,
+                    date: date,
+                    observation: observationController.text.trim(),
+                  ),
+                );
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    libelleController.dispose();
+    montantController.dispose();
+    observationController.dispose();
+
+    if (result == null) return;
+
+    try {
+      await _repository.modifier(result);
+      await _charger();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Opération modifiée avec succès.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+    }
+  }
+
   Future<void> _supprimer(FinanceEntryModel entry) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Supprimer ?'),
-        content: Text('Supprimer « ${entry.libelle} » ?'),
+        content: Text('Supprimer « ${entry.libelle.isEmpty ? entry.categorie : entry.libelle} » ?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Annuler')),
           FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Supprimer')),
@@ -501,7 +649,19 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                         const Card(child: Padding(padding: EdgeInsets.all(22), child: Text('Aucune opération enregistrée pour ce mois.')))
                       else ...[
                         ..._alimentations.where((e) => _dansMois(e.date)).map((e) => _AlimentationFinanceTile(alimentation: e, dateFormat: _dateFormat)),
-                        ..._entries.where((e) => _dansMois(e.date)).map((e) => _FinanceTile(entry: e, dateFormat: _dateFormat, money: _money, onDelete: () => _supprimer(e))),
+                        ..._entries.where((e) => _dansMois(e.date)).map((e) => _FinanceTile(
+                          entry: e,
+                          dateFormat: _dateFormat,
+                          money: _money,
+                          onEdit: (_canEditDepenses && e.type == FinanceEntryType.depense) ||
+                                  (_canEditVentes && e.type == FinanceEntryType.vente)
+                              ? () => _modifier(e)
+                              : null,
+                          onDelete: (_canEditDepenses && e.type == FinanceEntryType.depense) ||
+                                  (_canEditVentes && e.type == FinanceEntryType.vente)
+                              ? () => _supprimer(e)
+                              : null,
+                        )),
                       ],
                     ],
                   ),
@@ -538,11 +698,18 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _FinanceTile extends StatelessWidget {
-  const _FinanceTile({required this.entry, required this.dateFormat, required this.money, required this.onDelete});
+  const _FinanceTile({
+    required this.entry,
+    required this.dateFormat,
+    required this.money,
+    this.onEdit,
+    this.onDelete,
+  });
   final FinanceEntryModel entry;
   final DateFormat dateFormat;
   final NumberFormat money;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -550,7 +717,54 @@ class _FinanceTile extends StatelessWidget {
     final titre = entry.libelle.trim().isNotEmpty
         ? entry.libelle.trim()
         : (entry.categorie.trim().isNotEmpty ? entry.categorie.trim() : (vente ? 'Vente' : 'Dépense'));
-    return Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(vente ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: vente ? Colors.green : Colors.red), title: Text(titre, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text('${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}'), isThreeLine: entry.observation.isNotEmpty, trailing: Row(mainAxisSize: MainAxisSize.min, children: [Text('${money.format(entry.montant)} FCFA', style: TextStyle(fontWeight: FontWeight.w800, color: vente ? Colors.green : Colors.red)), PopupMenuButton<String>(onSelected: (value) { if (value == 'delete') onDelete(); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer'))])])));
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(
+          vente ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+          color: vente ? Colors.green : Colors.red,
+        ),
+        title: Text(titre, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(
+          '${dateFormat.format(entry.date)}${entry.observation.isEmpty ? '' : '\n${entry.observation}'}',
+        ),
+        isThreeLine: entry.observation.isNotEmpty,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${money.format(entry.montant)} FCFA',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: vente ? Colors.green : Colors.red,
+              ),
+            ),
+            if (onEdit != null || onDelete != null)
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    onEdit?.call();
+                  } else if (value == 'delete') {
+                    onDelete?.call();
+                  }
+                },
+                itemBuilder: (_) => [
+                  if (onEdit != null)
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Modifier'),
+                    ),
+                  if (onDelete != null)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Supprimer'),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
