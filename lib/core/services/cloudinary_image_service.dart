@@ -71,11 +71,12 @@ class CloudinaryImageService {
     required Uint8List bytes,
     required String utilisateurId,
   }) {
+    final uniqueId = DateTime.now().microsecondsSinceEpoch;
     return _upload(
       bytes: bytes,
       folder: 'users/$utilisateurId/profile',
-      publicId: 'profile',
-      filename: 'profile.jpg',
+      publicId: 'profile_$uniqueId',
+      filename: 'profile_$uniqueId.jpg',
     );
   }
 
@@ -99,9 +100,9 @@ class CloudinaryImageService {
   }) {
     return _upload(
       bytes: bytes,
-      folder: 'bergeries/\$bergerieId/config',
-      publicId: 'accueil_\${DateTime.now().millisecondsSinceEpoch}',
-      filename: 'accueil_\${DateTime.now().millisecondsSinceEpoch}.jpg',
+      folder: 'bergeries/$bergerieId/config',
+      publicId: 'accueil_${DateTime.now().millisecondsSinceEpoch}',
+      filename: 'accueil_${DateTime.now().millisecondsSinceEpoch}.jpg',
     );
   }
 
