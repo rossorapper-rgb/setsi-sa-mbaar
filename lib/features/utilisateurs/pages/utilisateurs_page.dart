@@ -16,6 +16,7 @@ class UtilisateursPage extends ConsumerStatefulWidget {
 class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
   final TextEditingController _searchController = TextEditingController();
   String _search = "";
+  bool _afficherDesactives = false;
 
   @override
   void dispose() {
@@ -25,7 +26,7 @@ class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
 
   @override
   Widget build(BuildContext context) {
-    final utilisateursAsync = ref.watch(utilisateursStreamProvider);
+    final utilisateursAsync = ref.watch(tousLesUtilisateursStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +54,32 @@ class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
       body: Column(
         children: [
           Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: DropdownButtonFormField<bool>(
+              initialValue: _afficherDesactives,
+              decoration: const InputDecoration(
+                labelText: 'Statut',
+                prefixIcon: Icon(Icons.people_alt_outlined),
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: false,
+                  child: Text('Utilisateurs actifs'),
+                ),
+                DropdownMenuItem(
+                  value: true,
+                  child: Text('Utilisateurs désactivés'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _afficherDesactives = value);
+                }
+              },
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
@@ -72,6 +99,10 @@ class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
             child: utilisateursAsync.when(
               data: (utilisateurs) {
                 final liste = utilisateurs.where((u) {
+                  if (u.actif == _afficherDesactives) {
+                    return false;
+                  }
+
                   if (_search.isEmpty) {
                     return true;
                   }
