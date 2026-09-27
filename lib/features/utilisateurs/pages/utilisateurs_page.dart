@@ -26,7 +26,9 @@ class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
 
   @override
   Widget build(BuildContext context) {
-    final utilisateursAsync = ref.watch(tousLesUtilisateursStreamProvider);
+    final utilisateursAsync = _afficherDesactives
+        ? ref.watch(utilisateursDesactivesStreamProvider)
+        : ref.watch(utilisateursStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -99,10 +101,6 @@ class _UtilisateursPageState extends ConsumerState<UtilisateursPage> {
             child: utilisateursAsync.when(
               data: (utilisateurs) {
                 final liste = utilisateurs.where((u) {
-                  if (u.actif == _afficherDesactives) {
-                    return false;
-                  }
-
                   if (_search.isEmpty) {
                     return true;
                   }
