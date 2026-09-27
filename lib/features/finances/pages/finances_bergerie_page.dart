@@ -370,8 +370,14 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           observation: observationController.text.trim(),
         );
         await _alimentationRepository.ajouter(alimentation);
+        if (mounted) {
+          setState(() {
+            _alimentations = [..._alimentations, alimentation]
+              ..sort((a, b) => b.date.compareTo(a.date));
+          });
+        }
       } else {
-        await _repository.ajouter(
+        final entry = await _repository.ajouter(
           type: type,
           libelle: type == FinanceEntryType.depense ? _libelleCategorie(categorie, libelle) : libelle,
           categorie: type == FinanceEntryType.depense ? categorie : '',
@@ -379,6 +385,12 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           date: date,
           observation: observationController.text,
         );
+        if (mounted) {
+          setState(() {
+            _entries = [entry, ..._entries];
+            _entries.sort((a, b) => b.date.compareTo(a.date));
+          });
+        }
       }
 
       if (mounted) {
@@ -388,8 +400,6 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
           ),
         );
       }
-
-      await _charger();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
     } finally {
@@ -560,7 +570,12 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
 
     try {
       await _repository.modifier(result);
-      await _charger();
+      if (mounted) {
+        setState(() {
+          _entries = _entries.map((item) => item.id == result.id ? result : item).toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
+        });
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Opération modifiée avec succès.')),
@@ -586,7 +601,11 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
     if (ok != true) return;
     try {
       await _repository.supprimer(entry.id);
-      await _charger();
+      if (mounted) {
+        setState(() {
+          _entries = _entries.where((item) => item.id != entry.id).toList();
+        });
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
     }
