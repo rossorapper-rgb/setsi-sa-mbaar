@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/local_business_cache_service.dart';
+import '../../../core/session/current_user_service.dart';
 import '../models/veterinaire_model.dart';
 
 class FirebaseVeterinaireRepository {
@@ -16,21 +19,57 @@ class FirebaseVeterinaireRepository {
   String _cacheKey(String bergerieId) => 'veterinaires_${bergerieId.trim()}';
 
   Future<void> addVeterinaire(VeterinaireModel veterinaire) async {
-    await _firestore
-        .collection(_collection)
-        .doc(veterinaire.id)
-        .set(veterinaire.toMap());
+    final cached = await _cache.loadList(_cacheKey(veterinaire.bergerieId)) ?? <Map<String, dynamic>>[];
+    await _cache.saveList(
+      _cacheKey(veterinaire.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != veterinaire.id),
+        {'id': veterinaire.id, ...veterinaire.toMap()},
+      ],
+    );
+    unawaited(_synchroniserAjout(veterinaire));
   }
 
   Future<void> updateVeterinaire(VeterinaireModel veterinaire) async {
-    await _firestore
-        .collection(_collection)
-        .doc(veterinaire.id)
-        .update(veterinaire.toMap());
+    final cached = await _cache.loadList(_cacheKey(veterinaire.bergerieId)) ?? <Map<String, dynamic>>[];
+    await _cache.saveList(
+      _cacheKey(veterinaire.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != veterinaire.id),
+        {'id': veterinaire.id, ...veterinaire.toMap()},
+      ],
+    );
+    unawaited(_synchroniserModification(veterinaire));
   }
 
   Future<void> deleteVeterinaire(String id) async {
-    await _firestore.collection(_collection).doc(id).delete();
+    final bergerieId = CurrentUserService.instance.bergerieId?.trim() ?? '';
+    if (bergerieId.isNotEmpty) {
+      final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? <Map<String, dynamic>>[];
+      await _cache.saveList(
+        _cacheKey(bergerieId),
+        cached.where((item) => item['id']?.toString() != id).toList(),
+      );
+    }
+    unawaited(_synchroniserSuppression(id));
+  }
+
+  Future<void> _synchroniserAjout(VeterinaireModel veterinaire) async {
+    try {
+      await _firestore.collection(_collection).doc(veterinaire.id).set(veterinaire.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserModification(VeterinaireModel veterinaire) async {
+    try {
+      await _firestore.collection(_collection).doc(veterinaire.id).set(veterinaire.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserSuppression(String id) async {
+    try {
+      await _firestore.collection(_collection).doc(id).delete();
+    } catch (_) {}
   }
 
   Future<List<VeterinaireModel>> getVeterinairesParBergerie(
@@ -43,7 +82,7 @@ class FirebaseVeterinaireRepository {
       final snapshot = await _firestore
           .collection(_collection)
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server));
+          .get();
 
       final veterinaires = snapshot.docs
           .map(
