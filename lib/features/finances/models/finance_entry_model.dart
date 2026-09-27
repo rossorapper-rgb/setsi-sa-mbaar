@@ -8,6 +8,7 @@ class FinanceEntryModel {
   final String bergerieId;
   final FinanceEntryType type;
   final String libelle;
+  final String categorie;
   final double montant;
   final DateTime date;
   final String observation;
@@ -17,6 +18,7 @@ class FinanceEntryModel {
     required this.bergerieId,
     required this.type,
     required this.libelle,
+    this.categorie = '',
     required this.montant,
     required this.date,
     this.observation = '',
@@ -27,6 +29,7 @@ class FinanceEntryModel {
         'bergerieId': bergerieId,
         'type': type.name,
         'libelle': libelle,
+        'categorie': categorie,
         'montant': montant,
         'date': date.millisecondsSinceEpoch,
         'observation': observation,
@@ -45,6 +48,7 @@ class FinanceEntryModel {
           ? FinanceEntryType.vente
           : FinanceEntryType.depense,
       libelle: map['libelle']?.toString() ?? '',
+      categorie: map['categorie']?.toString() ?? '',
       montant: (map['montant'] as num?)?.toDouble() ?? 0,
       date: date,
       observation: map['observation']?.toString() ?? '',
@@ -56,6 +60,7 @@ class FinanceEntryModel {
     String? bergerieId,
     FinanceEntryType? type,
     String? libelle,
+    String? categorie,
     double? montant,
     DateTime? date,
     String? observation,
@@ -65,6 +70,7 @@ class FinanceEntryModel {
       bergerieId: bergerieId ?? this.bergerieId,
       type: type ?? this.type,
       libelle: libelle ?? this.libelle,
+      categorie: categorie ?? this.categorie,
       montant: montant ?? this.montant,
       date: date ?? this.date,
       observation: observation ?? this.observation,
