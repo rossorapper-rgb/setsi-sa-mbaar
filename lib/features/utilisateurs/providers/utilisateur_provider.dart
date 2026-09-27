@@ -77,6 +77,13 @@ StreamProvider<List<UtilisateurModel>>((ref) {
       .streamTousLesUtilisateurs();
 });
 
+final utilisateursDesactivesStreamProvider =
+StreamProvider<List<UtilisateurModel>>((ref) {
+  return ref
+      .read(utilisateurRepositoryProvider)
+      .streamUtilisateursDesactives();
+});
+
 final utilisateurStreamProvider =
 StreamProvider.family<UtilisateurModel?, String>(
       (ref, id) {
