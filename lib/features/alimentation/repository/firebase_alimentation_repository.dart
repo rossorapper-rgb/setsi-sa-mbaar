@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/local_business_cache_service.dart';
 import '../models/alimentation_model.dart';
+import '../../../core/session/current_user_service.dart';
 
 class FirebaseAlimentationRepository {
   FirebaseAlimentationRepository({FirebaseFirestore? firestore})
@@ -46,10 +47,14 @@ class FirebaseAlimentationRepository {
   }
 
   Future<void> supprimer(String id) async {
-    final cached = <Map<String, dynamic>>[
-      ...(await _cache.loadList(_cacheKey('current')) ?? const <Map<String, dynamic>>[]),
-    ];
-    // La suppression complète par bergerie reste gérée lors du chargement.
+    final bergerieId = CurrentUserService.instance.bergerieId?.trim() ?? '';
+    if (bergerieId.isNotEmpty) {
+      final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? <Map<String, dynamic>>[];
+      await _cache.saveList(
+        _cacheKey(bergerieId),
+        cached.where((item) => item['id']?.toString() != id).toList(),
+      );
+    }
     unawaited(_synchroniserSuppression(id));
   }
 
