@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
@@ -203,6 +206,69 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     return DateTime.tryParse(raw?.toString() ?? '');
   }
 
+  Future<void> _exporterPdf() async {
+    final config = CurrentBergerieConfig.instance.config;
+    final solde = _ventes - _depenses;
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return pw.Padding(
+            padding: const pw.EdgeInsets.all(28),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Rapport de bergerie',
+                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 6),
+                pw.Text(config.nomBergerie),
+                pw.Text(_dateFormat.format(_mois)),
+                pw.SizedBox(height: 24),
+                pw.Text(
+                  'Vue d’ensemble',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table.fromTextArray(
+                  headers: const ['Indicateur', 'Valeur'],
+                  data: [
+                    ['Moutons', _moutons.toString()],
+                    ['Gestations en cours', _gestations.toString()],
+                    ['Naissances', _naissances.toString()],
+                    ['Soins', _soins.toString()],
+                    ['Interventions', _interventions.toString()],
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Text(
+                  'Finances du mois',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table.fromTextArray(
+                  headers: const ['Indicateur', 'Montant'],
+                  data: [
+                    ['Ventes', '\${_money.format(_ventes)} FCFA'],
+                    ['Dépenses', '\${_money.format(_depenses)} FCFA'],
+                    ['Dont alimentation', '\${_money.format(_alimentation)} FCFA'],
+                    ['Solde', '\${_money.format(solde)} FCFA'],
+                  ],
+                ),
+                pw.Spacer(),
+                pw.Text("Généré depuis SET'S I SA MBAAR", style: const pw.TextStyle(fontSize: 9)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+  }
   void _moisPrecedent() {
     setState(() => _mois = DateTime(_mois.year, _mois.month - 1));
     _charger();
@@ -229,6 +295,13 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
           icon: const Icon(Icons.arrow_back),
         ),
         title: Text('Rapports - ${config.nomBergerie}'),
+        actions: [
+          IconButton(
+            tooltip: 'Exporter / imprimer le rapport',
+            onPressed: _loading ? null : _exporterPdf,
+            icon: const Icon(Icons.picture_as_pdf),
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
