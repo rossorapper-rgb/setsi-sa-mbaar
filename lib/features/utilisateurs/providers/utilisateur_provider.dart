@@ -64,21 +64,21 @@ FutureProvider.family<List<UtilisateurModel>, String>(
 );
 
 final utilisateursStreamProvider =
-StreamProvider<List<UtilisateurModel>>((ref) {
+StreamProvider.autoDispose<List<UtilisateurModel>>((ref) {
   return ref
       .read(utilisateurRepositoryProvider)
       .streamUtilisateurs();
 });
 
 final tousLesUtilisateursStreamProvider =
-StreamProvider<List<UtilisateurModel>>((ref) {
+StreamProvider.autoDispose<List<UtilisateurModel>>((ref) {
   return ref
       .read(utilisateurRepositoryProvider)
       .streamTousLesUtilisateurs();
 });
 
 final utilisateursDesactivesStreamProvider =
-StreamProvider<List<UtilisateurModel>>((ref) {
+StreamProvider.autoDispose<List<UtilisateurModel>>((ref) {
   return ref
       .read(utilisateurRepositoryProvider)
       .streamUtilisateursDesactives();
