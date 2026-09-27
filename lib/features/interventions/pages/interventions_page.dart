@@ -294,8 +294,24 @@ class _InterventionCard extends StatelessWidget {
                     value: 'stock_done',
                     child: Text('Stock déjà déduit'),
                   ),
-                const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+                PopupMenuItem(
+                  value: 'edit',
+                  enabled: !intervention.stockDeduit,
+                  child: Text(
+                    intervention.stockDeduit
+                        ? 'Modification impossible (stock déduit)'
+                        : 'Modifier',
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  enabled: !intervention.stockDeduit,
+                  child: Text(
+                    intervention.stockDeduit
+                        ? 'Suppression impossible (stock déduit)'
+                        : 'Supprimer',
+                  ),
+                ),
               ],
             ),
           ],
