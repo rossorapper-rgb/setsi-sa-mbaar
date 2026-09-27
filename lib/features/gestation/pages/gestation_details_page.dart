@@ -64,6 +64,42 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
   bool get _miseBasEffectuee =>
       _gestation.dateMiseBas != null || _gestation.terminee;
 
+  Future<void> _supprimer() async {
+    final confirmer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer la gestation ?'),
+        content: Text(
+          'La gestation de ${_gestation.nomFemelle} sera définitivement supprimée.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmer != true || !mounted) return;
+
+    await _repository.deleteGestation(_gestation.id);
+
+    if (!mounted) return;
+
+    Navigator.pop(
+      context,
+      _gestation.copyWith(
+        statut: 'Annulée',
+        active: false,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +124,11 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                 Navigator.pop(context, result);
               }
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Supprimer',
+            onPressed: _supprimer,
           ),
         ],
       ),
