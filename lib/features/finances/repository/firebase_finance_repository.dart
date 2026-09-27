@@ -72,6 +72,7 @@ class FirebaseFinanceRepository {
   Future<FinanceEntryModel> ajouter({
     required FinanceEntryType type,
     required String libelle,
+    String categorie = '',
     required double montant,
     required DateTime date,
     String observation = '',
@@ -82,6 +83,7 @@ class FirebaseFinanceRepository {
       bergerieId: _bergerieId,
       type: type,
       libelle: libelle.trim(),
+      categorie: categorie.trim(),
       montant: montant,
       date: date,
       observation: observation.trim(),
