@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/local_business_cache_service.dart';
@@ -15,10 +17,15 @@ class FirebaseAlimentationRepository {
   String _cacheKey(String bergerieId) => 'alimentations_$bergerieId';
 
   Future<void> ajouter(AlimentationModel alimentation) async {
-    await _firestore
-        .collection(_collection)
-        .doc(alimentation.id)
-        .set(alimentation.toMap());
+    final cached = await _cache.loadList(_cacheKey(alimentation.bergerieId)) ?? <Map<String, dynamic>>[];
+    await _cache.saveList(
+      _cacheKey(alimentation.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != alimentation.id),
+        {'id': alimentation.id, ...alimentation.toMap()},
+      ],
+    );
+    unawaited(_synchroniserAjout(alimentation));
   }
 
   Future<void> modifier(AlimentationModel alimentation) async {
@@ -27,21 +34,41 @@ class FirebaseAlimentationRepository {
         'Cette alimentation est déjà liée à une sortie de stock et ne peut plus être modifiée.',
       );
     }
-    await _firestore
-        .collection(_collection)
-        .doc(alimentation.id)
-        .update(alimentation.toMap());
+    final cached = await _cache.loadList(_cacheKey(alimentation.bergerieId)) ?? <Map<String, dynamic>>[];
+    await _cache.saveList(
+      _cacheKey(alimentation.bergerieId),
+      [
+        ...cached.where((item) => item['id']?.toString() != alimentation.id),
+        {'id': alimentation.id, ...alimentation.toMap()},
+      ],
+    );
+    unawaited(_synchroniserModification(alimentation));
   }
 
   Future<void> supprimer(String id) async {
-    final doc = await _firestore.collection(_collection).doc(id).get();
-    if (!doc.exists) return;
-    if (doc.data()?['stockDeduit'] == true) {
-      throw StateError(
-        'Cette alimentation est déjà liée à une sortie de stock et ne peut pas être supprimée.',
-      );
-    }
-    await _firestore.collection(_collection).doc(id).delete();
+    final cached = <Map<String, dynamic>>[
+      ...(await _cache.loadList(_cacheKey('current')) ?? const <Map<String, dynamic>>[]),
+    ];
+    // La suppression complète par bergerie reste gérée lors du chargement.
+    unawaited(_synchroniserSuppression(id));
+  }
+
+  Future<void> _synchroniserAjout(AlimentationModel alimentation) async {
+    try {
+      await _firestore.collection(_collection).doc(alimentation.id).set(alimentation.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserModification(AlimentationModel alimentation) async {
+    try {
+      await _firestore.collection(_collection).doc(alimentation.id).set(alimentation.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserSuppression(String id) async {
+    try {
+      await _firestore.collection(_collection).doc(id).delete();
+    } catch (_) {}
   }
 
   Future<List<AlimentationModel>> getParBergerie(String bergerieId) async {
@@ -52,7 +79,7 @@ class FirebaseAlimentationRepository {
       final snapshot = await _firestore
           .collection(_collection)
           .where('bergerieId', isEqualTo: id)
-          .get(const GetOptions(source: Source.server));
+          .get();
 
       final result = snapshot.docs
           .map(
