@@ -17,6 +17,27 @@ class FinancesBergeriePage extends StatefulWidget {
 }
 
 class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
+  static const List<String> _alimentsCourants = [
+    'Super ladoum',
+    'Khonte',
+    'Mélange',
+    'Foin "Ngogne"',
+    'Maïs "Mbokou"',
+    'Pain sec',
+    'Gousses de kadd',
+    'Pierre à lécher',
+    'Concentré pour ruminants',
+    'Niébé',
+    'Son de mil',
+    'Son de riz',
+    'Son de blé',
+    'Tourteau d’arachide',
+    'Tourteau de coton',
+    'Graine de coton',
+    'Paille de riz',
+    'Paille de brousse',
+    'autre',
+  ];
   final _repository = FirebaseFinanceRepository();
   final _alimentationRepository = FirebaseAlimentationRepository();
   final _uuid = const Uuid();
@@ -152,10 +173,57 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: alimentController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Aliment',
                         hintText: 'Ex. Maïs, son, aliment bétail...',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          tooltip: 'Choisir un aliment courant',
+                          icon: const Icon(Icons.list_alt_rounded),
+                          onPressed: () async {
+                            final choix = await showDialog<String>(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('Aliments fréquemment utilisés'),
+                                content: SizedBox(
+                                  width: 520,
+                                  child: ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: _alimentsCourants.length,
+                                    separatorBuilder: (_, __) =>
+                                        const Divider(height: 1),
+                                    itemBuilder: (_, index) {
+                                      final aliment = _alimentsCourants[index];
+                                      return ListTile(
+                                        leading: const Icon(Icons.grass_rounded),
+                                        title: Text(aliment),
+                                        onTap: () => Navigator.pop(
+                                          dialogContext,
+                                          aliment,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext),
+                                    child: const Text('Annuler'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (choix != null) {
+                              alimentController.text =
+                                  choix == 'autre' ? '' : choix;
+                              alimentController.selection =
+                                  TextSelection.collapsed(
+                                offset: alimentController.text.length,
+                              );
+                            }
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
