@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
@@ -143,20 +145,18 @@ class FirebaseStockRepository {
       actif: actif,
     );
 
-    // Firestore peut accepter l'écriture hors ligne grâce à sa file
-    // locale, mais getProduits() force ensuite une lecture serveur et peut
-    // restaurer un ancien cache avant la synchronisation. On met donc le
-    // cache local à jour immédiatement après l'écriture.
-    await doc.set(produit.toMap());
+    // LOCAL-FIRST : l'interface et le cache sont mis à jour avant Firebase.
+    final cached =
+        await _cache.loadList(_cacheKey(bergerieId)) ??
+        <Map<String, dynamic>>[];
 
-    final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? <Map<String, dynamic>>[];
     final updated = cached
         .where((item) => item['id']?.toString() != produit.id)
-        .toList();
-    updated.add({
-      'id': produit.id,
-      ...produit.toMap(),
-    });
+        .toList()
+      ..add({
+        'id': produit.id,
+        ...produit.toMap(),
+      });
 
     updated.sort(
       (a, b) => (a['nom']?.toString() ?? '')
@@ -165,6 +165,11 @@ class FirebaseStockRepository {
     );
 
     await _cache.saveList(_cacheKey(bergerieId), updated);
+
+    // Synchronisation Firebase en arrière-plan, sans bloquer l'UI.
+    unawaited(
+      doc.set(produit.toMap()).catchError((_) {}),
+    );
 
     return produit;
   }
@@ -429,8 +434,29 @@ class FirebaseStockRepository {
       throw StateError('Ce produit n’appartient pas à votre bergerie.');
     }
 
-    await _collection.doc(produit.id).update(produit.toMap());
-    await getProduits();
+    final cached =
+        await _cache.loadList(_cacheKey(bergerieId)) ??
+        <Map<String, dynamic>>[];
+
+    final updated = cached
+        .where((item) => item['id']?.toString() != produit.id)
+        .toList()
+      ..add({
+        'id': produit.id,
+        ...produit.toMap(),
+      });
+
+    updated.sort(
+      (a, b) => (a['nom']?.toString() ?? '')
+          .toLowerCase()
+          .compareTo((b['nom']?.toString() ?? '').toLowerCase()),
+    );
+
+    await _cache.saveList(_cacheKey(bergerieId), updated);
+
+    unawaited(
+      _collection.doc(produit.id).set(produit.toMap()).catchError((_) {}),
+    );
   }
 
   Future<void> supprimerProduit(String id) async {
@@ -448,7 +474,17 @@ class FirebaseStockRepository {
       throw StateError('Ce produit n’appartient pas à votre bergerie.');
     }
 
-    await _collection.doc(id).delete();
-    await getProduits();
+    final cached =
+        await _cache.loadList(_cacheKey(bergerieId)) ??
+        <Map<String, dynamic>>[];
+
+    final updated =
+        cached.where((item) => item['id']?.toString() != id).toList();
+
+    await _cache.saveList(_cacheKey(bergerieId), updated);
+
+    unawaited(
+      _collection.doc(id).delete().catchError((_) {}),
+    );
   }
 }
