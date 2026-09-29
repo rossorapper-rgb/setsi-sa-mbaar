@@ -94,12 +94,12 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     } catch (_) {
       try {
         final local = await Future.wait([
-          _cache.loadList('moutons_${bergerieId}'),
-          _cache.loadList('gestations_${bergerieId}'),
-          _cache.loadList('carnet_sante_${bergerieId}'),
-          _cache.loadList('alimentations_${bergerieId}'),
+          _cache.loadList('moutons_$bergerieId'),
+          _cache.loadList('gestations_$bergerieId'),
+          _cache.loadList('carnet_sante_$bergerieId'),
+          _cache.loadList('alimentations_$bergerieId'),
           _cache.loadList('interventions_${bergerieId.trim()}'),
-          _cache.loadList('finances_${bergerieId}'),
+          _cache.loadList('finances_$bergerieId'),
         ]);
 
         final hasLocalData = local.any((items) => items != null);
@@ -266,10 +266,10 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                   style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
-                pw.Table.fromTextArray(
+                pw.TableHelper.fromTextArray(
                   headers: const ['Indicateur', 'Montant'],
                   data: [
-                    ['Ventes', '$_money.format(_ventes) FCFA'],
+                    ['Ventes', '${_money.format(_ventes)} FCFA'],
                     ['Dépenses', '${_money.format(_depenses)} FCFA'],
                     ['Dont alimentation', '${_money.format(_alimentation)} FCFA'],
                     ['Solde', '${_money.format(solde)} FCFA'],
