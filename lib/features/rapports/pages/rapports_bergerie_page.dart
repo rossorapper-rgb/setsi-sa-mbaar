@@ -48,7 +48,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
   }
 
   String _reportCacheKey(String bergerieId) =>
-      'rapport_${bergerieId}_${_mois.year}_${_mois.month}';
+      'rapport_${bergerieId}_$_mois.year_$_mois.month';
 
   Future<void> _charger() async {
     final bergerieId = _bergerieId;
@@ -250,7 +250,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                   style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
-                pw.Table.fromTextArray(
+                pw.TableHelper.fromTextArray(
                   headers: const ['Indicateur', 'Valeur'],
                   data: [
                     ['Moutons', _moutons.toString()],
@@ -269,7 +269,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
                 pw.Table.fromTextArray(
                   headers: const ['Indicateur', 'Montant'],
                   data: [
-                    ['Ventes', '${_money.format(_ventes)} FCFA'],
+                    ['Ventes', '$_money.format(_ventes) FCFA'],
                     ['Dépenses', '${_money.format(_depenses)} FCFA'],
                     ['Dont alimentation', '${_money.format(_alimentation)} FCFA'],
                     ['Solde', '${_money.format(solde)} FCFA'],
