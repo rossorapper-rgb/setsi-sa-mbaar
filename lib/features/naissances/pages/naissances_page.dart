@@ -376,7 +376,7 @@ class _NaissanceDetailsDialogState extends State<_NaissanceDetailsDialog> {
       final jpegBytes = Uint8List.fromList(img.encodeJpg(decoded, quality: 92));
       final safeName = (naissance.nomFemelle.trim().isEmpty ? 'naissance' : naissance.nomFemelle.trim())
           .replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
-      await saveJpegBytes(jpegBytes, 'fiche_naissance_${safeName}.jpg');
+      await saveJpegBytes(jpegBytes, 'fiche_naissance_$safeName.jpg');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
