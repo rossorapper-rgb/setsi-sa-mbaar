@@ -408,6 +408,32 @@ class _AlimentationFormDialog extends StatefulWidget {
 }
 
 class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
+  static const List<String> _alimentsCourants = [
+    'Maïs',
+    'Mil',
+    'Sorgho',
+    'Niébé',
+    'Son de mil',
+    'Son de riz',
+    'Son de blé',
+    'Riz khonté',
+    'Farine basse de riz',
+    'Tourteau d’arachide',
+    'Tourteau de coton',
+    'Graine de coton',
+    'Fane d’arachide',
+    'Fane de niébé',
+    'Paille de riz',
+    'Paille de brousse',
+    'Concentré pour ruminants',
+    'Aliment concentré',
+    'Restes de cuisine',
+    'Pain sec',
+    'Gousses de kadd',
+    'Pierre à lécher',
+    'CMV (complément minéral vitaminé)',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _alimentController;
   late TextEditingController _quantiteController;
@@ -445,6 +471,48 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
   double? _parseNombre(String value) {
     return double.tryParse(value.trim().replaceAll(',', '.'));
   }
+
+  Future<void> _choisirAliment() async {
+    final choix = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Aliments fréquemment utilisés'),
+          content: SizedBox(
+            width: 520,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _alimentsCourants.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (_, index) {
+                final aliment =
+                    _alimentsCourants[index];
+                return ListTile(
+                  leading: const Icon(Icons.grass_rounded),
+                  title: Text(aliment),
+                  onTap: () => Navigator.pop(dialogContext, aliment),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Annuler'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (choix != null && mounted) {
+      _alimentController.text = choix;
+      _alimentController.selection = TextSelection.collapsed(
+        offset: _alimentController.text.length,
+      );
+    }
+  }
+
 
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) return;
@@ -501,6 +569,11 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
                     labelText: 'Aliment *',
                     hintText: 'Ex. Maïs',
                     prefixIcon: Icon(Icons.grass_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: 'Choisir un aliment courant',
+                      onPressed: _saving ? null : _choisirAliment,
+                      icon: const Icon(Icons.list_alt_rounded),
+                    ),
                   ),
                   validator: (value) => value == null || value.trim().isEmpty
                       ? 'Ce champ est obligatoire.'
