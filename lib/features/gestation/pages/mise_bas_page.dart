@@ -179,14 +179,20 @@ class _MiseBasPageState extends State<MiseBasPage> {
     if (d != null) setState(() => _dateMiseBas = d);
   }
 
-  Widget _numberField(String label, TextEditingController controller) {
+  Widget _numberField(
+    String label,
+    TextEditingController controller, {
+    bool required = true,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(labelText: label),
       validator: (v) {
         final text = v?.trim() ?? '';
-        if (text.isEmpty) return 'Champ obligatoire';
+        if (text.isEmpty) {
+          return required ? 'Champ obligatoire' : null;
+        }
         final value = int.tryParse(text);
         if (value == null || value < 0) return 'Valeur invalide';
         return null;
@@ -241,7 +247,17 @@ class _MiseBasPageState extends State<MiseBasPage> {
               onTap: _pickDate,
             ),
             _numberField("Nombre total d'agneaux", _totalCtrl),
-            Row(children: [Expanded(child: _numberField('Mâles', _malesCtrl)), const SizedBox(width: 12), Expanded(child: _numberField('Femelles', _femellesCtrl))]),
+            Row(
+              children: [
+                Expanded(
+                  child: _numberField('Mâles', _malesCtrl, required: false),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _numberField('Femelles', _femellesCtrl, required: false),
+                ),
+              ],
+            ),
             _numberField('Mort-nés', _mortNesCtrl),
             TextFormField(controller: _obsCtrl, decoration: const InputDecoration(labelText: 'Observations'), maxLines: 4),
             const SizedBox(height: 24),
