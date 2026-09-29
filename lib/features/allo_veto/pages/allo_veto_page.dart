@@ -248,7 +248,7 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
     final telephoneController =
         TextEditingController(text: veterinaire.telephone);
 
-    final result = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
