@@ -117,7 +117,7 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                   ),
                 ),
               );
-              if (!mounted) return;
+              if (!context.mounted) return;
               if (result != null) {
                 // Retourne immédiatement la version modifiée à la liste
                 // des gestations : aucun Actualiser n'est nécessaire.
@@ -204,7 +204,7 @@ class _GestationDetailsPageState extends State<GestationDetailsPage> {
                       ),
                     ),
                   );
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   if (result != null) {
                     Navigator.pop(context, result);
                   }
