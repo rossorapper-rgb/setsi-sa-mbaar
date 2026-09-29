@@ -123,8 +123,12 @@ class _MiseBasPageState extends State<MiseBasPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vérifiez les nombres saisis.')));
       return;
     }
-    if (males + femelles + mortNes > total) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mâles + femelles + mort-nés ne peut pas dépasser le total.')));
+    if (males + femelles + mortNes != total) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mâles + femelles + mort-nés doit être égal au nombre total d’agneaux.'),
+        ),
+      );
       return;
     }
 
@@ -181,8 +185,9 @@ class _MiseBasPageState extends State<MiseBasPage> {
       keyboardType: TextInputType.number,
       decoration: InputDecoration(labelText: label),
       validator: (v) {
-        if (v == null || v.trim().isEmpty) return 'Champ obligatoire';
-        final value = int.tryParse(v.trim());
+        final text = v?.trim() ?? '';
+        if (text.isEmpty) return 'Champ obligatoire';
+        final value = int.tryParse(text);
         if (value == null || value < 0) return 'Valeur invalide';
         return null;
       },
