@@ -423,7 +423,7 @@ class FirebaseGestationRepository {
       'id': gestationId,
     };
 
-    final cacheKey = key ?? 'gestations_' + data['bergerieId'].toString();
+    final cacheKey = key ?? 'gestations_${data['bergerieId']}';
     final cached = await _cache.loadList(cacheKey) ?? [];
     final updated = [
       ...cached.where((item) => item['id']?.toString() != gestationId),
