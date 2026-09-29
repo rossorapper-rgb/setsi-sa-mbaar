@@ -190,7 +190,7 @@ class _FinancesBergeriePageState extends State<FinancesBergeriePage> {
                                   child: ListView.separated(
                                     shrinkWrap: true,
                                     itemCount: _alimentsCourants.length,
-                                    separatorBuilder: (_, __) =>
+                                    separatorBuilder: (_, _) =>
                                         const Divider(height: 1),
                                     itemBuilder: (_, index) {
                                       final aliment = _alimentsCourants[index];
