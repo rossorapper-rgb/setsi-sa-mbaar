@@ -602,7 +602,7 @@ class _AjouterAgneauxPageState extends State<_AjouterAgneauxPage> {
                 Text(
                   naissance.nomFemelle.isEmpty
                       ? 'Naissance'
-                      : 'Naissance de ${naissance.nomFemelle}',
+                      : 'Naissance de $naissance.nomFemelle',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 8),
