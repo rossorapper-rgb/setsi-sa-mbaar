@@ -195,6 +195,31 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
 
                   await _repository.addVeterinaire(veterinaire);
 
+                  if (mounted) {
+                    setState(() {
+                      _veterinaires = [
+                        ..._veterinaires.where((v) => v.id != veterinaire.id),
+                        veterinaire,
+                      ]..sort(
+                          (a, b) => a.nom
+                              .toLowerCase()
+                              .compareTo(b.nom.toLowerCase()),
+                        );
+
+                      final recherche =
+                          _searchController.text.trim().toLowerCase();
+
+                      _resultat = recherche.isEmpty
+                          ? List.from(_veterinaires)
+                          : _veterinaires.where((v) {
+                              return v.nom.toLowerCase().contains(recherche) ||
+                                  v.telephone
+                                      .toLowerCase()
+                                      .contains(recherche);
+                            }).toList();
+                    });
+                  }
+
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }
@@ -215,9 +240,7 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
     nomController.dispose();
     telephoneController.dispose();
 
-    if (result == true) {
-      await _charger();
-    }
+    // La liste est déjà mise à jour immédiatement.
   }
 
   Future<void> _modifierVeterinaire(VeterinaireModel veterinaire) async {
@@ -270,12 +293,39 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
                 }
 
                 try {
-                  await _repository.updateVeterinaire(
-                    veterinaire.copyWith(
-                      nom: nom,
-                      telephone: telephone,
-                    ),
+                  final veterinaireModifie = veterinaire.copyWith(
+                    nom: nom,
+                    telephone: telephone,
                   );
+
+                  await _repository.updateVeterinaire(veterinaireModifie);
+
+                  if (mounted) {
+                    setState(() {
+                      _veterinaires = [
+                        ..._veterinaires.where(
+                          (v) => v.id != veterinaireModifie.id,
+                        ),
+                        veterinaireModifie,
+                      ]..sort(
+                          (a, b) => a.nom
+                              .toLowerCase()
+                              .compareTo(b.nom.toLowerCase()),
+                        );
+
+                      final recherche =
+                          _searchController.text.trim().toLowerCase();
+
+                      _resultat = recherche.isEmpty
+                          ? List.from(_veterinaires)
+                          : _veterinaires.where((v) {
+                              return v.nom.toLowerCase().contains(recherche) ||
+                                  v.telephone
+                                      .toLowerCase()
+                                      .contains(recherche);
+                            }).toList();
+                    });
+                  }
 
                   if (context.mounted) {
                     Navigator.pop(context, true);
@@ -297,9 +347,7 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
     nomController.dispose();
     telephoneController.dispose();
 
-    if (result == true) {
-      await _charger();
-    }
+    // La liste est déjà mise à jour immédiatement.
   }
 
   Future<void> _supprimerVeterinaire(VeterinaireModel veterinaire) async {
@@ -327,7 +375,21 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
 
     try {
       await _repository.deleteVeterinaire(veterinaire.id);
-      await _charger();
+
+      if (mounted) {
+        setState(() {
+          _veterinaires.removeWhere((v) => v.id == veterinaire.id);
+
+          final recherche = _searchController.text.trim().toLowerCase();
+
+          _resultat = recherche.isEmpty
+              ? List.from(_veterinaires)
+              : _veterinaires.where((v) {
+                  return v.nom.toLowerCase().contains(recherche) ||
+                      v.telephone.toLowerCase().contains(recherche);
+                }).toList();
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
