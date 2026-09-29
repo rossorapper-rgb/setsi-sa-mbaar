@@ -84,7 +84,7 @@ class _AlimentationPageState extends State<AlimentationPage> {
   Future<void> _ouvrirFormulaire({AlimentationModel? alimentation}) async {
     if (_bergerieId.isEmpty) return;
 
-    final resultat = await showDialog<bool>(
+    final resultat = await showDialog<AlimentationModel>(
       context: context,
       builder: (_) => _AlimentationFormDialog(
         bergerieId: _bergerieId,
@@ -94,7 +94,14 @@ class _AlimentationPageState extends State<AlimentationPage> {
       ),
     );
 
-    if (resultat == true) await _charger();
+    if (resultat != null && mounted) {
+      setState(() {
+        _alimentations = [
+          ..._alimentations.where((item) => item.id != resultat.id),
+          resultat,
+        ]..sort((a, b) => b.date.compareTo(a.date));
+      });
+    }
   }
 
   bool get _canDeduirStock {
@@ -118,8 +125,18 @@ class _AlimentationPageState extends State<AlimentationPage> {
       if (choix == null) return;
       await _stockRepository.deduireDepuisAlimentation(alimentationId: alimentation.id, produitId: choix.produit.id, quantite: choix.quantite, motif: 'Consommation alimentation - ${alimentation.aliment}', date: alimentation.date);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock déduit avec succès.')));
-        await _charger();
+        final index =
+            _alimentations.indexWhere((item) => item.id == alimentation.id);
+        if (index >= 0) {
+          setState(() {
+            _alimentations[index] = _alimentations[index].copyWith(
+              stockDeduit: true,
+            );
+          });
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Stock déduit avec succès.')),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -149,7 +166,11 @@ class _AlimentationPageState extends State<AlimentationPage> {
 
     try {
       await _repository.supprimer(alimentation.id);
-      if (mounted) await _charger();
+      if (mounted) {
+        setState(() {
+          _alimentations.removeWhere((item) => item.id == alimentation.id);
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
