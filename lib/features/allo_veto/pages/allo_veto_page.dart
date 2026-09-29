@@ -128,7 +128,7 @@ class _AlloVetoPageState extends State<AlloVetoPage> {
     final nomController = TextEditingController();
     final telephoneController = TextEditingController();
 
-    final result = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
