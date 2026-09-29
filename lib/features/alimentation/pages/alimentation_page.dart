@@ -561,7 +561,7 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
                   controller: _alimentController,
                   enabled: !_saving,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Aliment *',
                     hintText: 'Ex. Maïs',
                     prefixIcon: Icon(Icons.grass_rounded),
