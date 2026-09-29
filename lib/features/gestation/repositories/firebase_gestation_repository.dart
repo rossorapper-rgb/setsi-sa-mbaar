@@ -423,10 +423,13 @@ class FirebaseGestationRepository {
       'id': gestationId,
     };
 
-    await _cache.saveList(
-      key ?? 'gestations_' + data['bergerieId'].toString(),
-      [data],
-    );
+    final cacheKey = key ?? 'gestations_' + data['bergerieId'].toString();
+    final cached = await _cache.loadList(cacheKey) ?? [];
+    final updated = [
+      ...cached.where((item) => item['id']?.toString() != gestationId),
+      data,
+    ];
+    await _cache.saveList(cacheKey, updated);
 
     unawaited(_gestations.doc(gestationId).update(data));
     return GestationModel.fromMap(data, gestationId);
