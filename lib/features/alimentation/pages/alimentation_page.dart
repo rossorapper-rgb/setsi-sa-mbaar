@@ -567,7 +567,7 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
                     prefixIcon: Icon(Icons.grass_rounded),
                     suffixIcon: IconButton(
                       tooltip: 'Choisir un aliment courant',
-                      onPressed: _saving ? null : _choisirAliment,
+                      onPressed: _choisirAliment,
                       icon: const Icon(Icons.list_alt_rounded),
                     ),
                   ),
