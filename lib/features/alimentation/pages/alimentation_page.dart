@@ -467,7 +467,13 @@ class _AlimentationFormDialogState extends State<_AlimentationFormDialog> {
       } else {
         await widget.repository.modifier(item);
       }
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pop(item);
+          }
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
