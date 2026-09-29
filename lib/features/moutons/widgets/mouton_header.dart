@@ -42,7 +42,7 @@ class MoutonHeader extends StatelessWidget {
                       image: imageProvider,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: Colors.grey.shade100,
                         child: Icon(
                           Icons.pets,
