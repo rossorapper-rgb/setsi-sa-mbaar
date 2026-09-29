@@ -143,8 +143,29 @@ class FirebaseStockRepository {
       actif: actif,
     );
 
+    // Firestore peut accepter l'écriture hors ligne grâce à sa file
+    // locale, mais getProduits() force ensuite une lecture serveur et peut
+    // restaurer un ancien cache avant la synchronisation. On met donc le
+    // cache local à jour immédiatement après l'écriture.
     await doc.set(produit.toMap());
-    await getProduits();
+
+    final cached = await _cache.loadList(_cacheKey(bergerieId)) ?? <Map<String, dynamic>>[];
+    final updated = cached
+        .where((item) => item['id']?.toString() != produit.id)
+        .toList();
+    updated.add({
+      'id': produit.id,
+      ...produit.toMap(),
+    });
+
+    updated.sort(
+      (a, b) => (a['nom']?.toString() ?? '')
+          .toLowerCase()
+          .compareTo((b['nom']?.toString() ?? '').toLowerCase()),
+    );
+
+    await _cache.saveList(_cacheKey(bergerieId), updated);
+
     return produit;
   }
 
