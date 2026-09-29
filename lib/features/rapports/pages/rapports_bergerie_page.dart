@@ -78,116 +78,51 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
         _firestore.collection('finance_entries').where('bergerieId', isEqualTo: bergerieId).get(const GetOptions(source: Source.server)),
       ]);
 
-      final gestations = results[1].docs;
-      final soins = results[2].docs;
-      final alimentations = results[3].docs;
-      final interventions = results[4].docs;
-      final finances = results[5].docs;
-
-      int naissances = 0;
-      int gestationsEnCours = 0;
-
-      for (final doc in gestations) {
-        final data = doc.data();
-        if (data['statut']?.toString() == 'Gestante') {
-          gestationsEnCours++;
-        }
-
-        final rawDate = data['dateMiseBas'];
-        DateTime? date;
-        if (rawDate is Timestamp) {
-          date = rawDate.toDate();
-        } else if (rawDate is int) {
-          date = DateTime.fromMillisecondsSinceEpoch(rawDate);
-        } else if (rawDate != null) {
-          date = DateTime.tryParse(rawDate.toString());
-        }
-
-        if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
-          naissances++;
-        }
-      }
-
-      double alimentation = 0;
-      for (final doc in alimentations) {
-        final data = doc.data();
-        final date = _dateFrom(data['date']);
-        if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
-          alimentation += (data['prix'] as num?)?.toDouble() ?? 0;
-        }
-      }
-
-      double ventes = 0;
-      double depenses = alimentation;
-      for (final doc in finances) {
-        final data = doc.data();
-        final date = _dateFrom(data['date']);
-        if (date == null || date.isBefore(debut) || !date.isBefore(fin)) {
-          continue;
-        }
-
-        final montant = (data['montant'] as num?)?.toDouble() ?? 0;
-        if (data['type']?.toString() == 'vente') {
-          ventes += montant;
-        } else {
-          depenses += montant;
-        }
-      }
-
-      final soinsMois = soins.where((d) {
-        final date = _dateFrom(d.data()['date']);
-        return date != null && !date.isBefore(debut) && date.isBefore(fin);
-      }).length;
-
-      final interventionsMois = interventions.where((d) {
-        final date = _dateFrom(d.data()['date']);
-        return date != null && !date.isBefore(debut) && date.isBefore(fin);
-      }).length;
-
-      final report = <String, dynamic>{
-        'moutons': results[0].docs.length,
-        'gestations': gestationsEnCours,
-        'naissances': naissances,
-        'soins': soinsMois,
-        'interventions': interventionsMois,
-        'alimentation': alimentation,
-        'ventes': ventes,
-        'depenses': depenses,
-      };
+      final report = _calculerRapport(
+        debut: debut,
+        fin: fin,
+        moutons: results[0].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+        gestations: results[1].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+        soins: results[2].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+        alimentations: results[3].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+        interventions: results[4].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+        finances: results[5].docs.map((d) => {...d.data(), 'id': d.id}).toList(),
+      );
 
       await _cache.saveList(_reportCacheKey(bergerieId), [report]);
-
-      if (!mounted) return;
-      setState(() {
-        _moutons = report['moutons'] as int;
-        _gestations = report['gestations'] as int;
-        _naissances = report['naissances'] as int;
-        _soins = report['soins'] as int;
-        _interventions = report['interventions'] as int;
-        _alimentation = (report['alimentation'] as num).toDouble();
-        _ventes = (report['ventes'] as num).toDouble();
-        _depenses = (report['depenses'] as num).toDouble();
-        _loading = false;
-      });
+      _appliquerRapport(report);
     } catch (_) {
+      try {
+        final local = await Future.wait([
+          _cache.loadList('moutons_${bergerieId}'),
+          _cache.loadList('gestations_${bergerieId}'),
+          _cache.loadList('carnet_sante_${bergerieId}'),
+          _cache.loadList('alimentations_${bergerieId}'),
+          _cache.loadList('interventions_${bergerieId.trim()}'),
+          _cache.loadList('finances_${bergerieId}'),
+        ]);
+
+        final hasLocalData = local.any((items) => items != null);
+        if (hasLocalData) {
+          final report = _calculerRapport(
+            debut: DateTime(_mois.year, _mois.month),
+            fin: DateTime(_mois.year, _mois.month + 1),
+            moutons: local[0] ?? const [],
+            gestations: local[1] ?? const [],
+            soins: local[2] ?? const [],
+            alimentations: local[3] ?? const [],
+            interventions: local[4] ?? const [],
+            finances: local[5] ?? const [],
+          );
+          await _cache.saveList(_reportCacheKey(bergerieId), [report]);
+          _appliquerRapport(report);
+          return;
+        }
+      } catch (_) {}
+
       final cached = await _cache.loadList(_reportCacheKey(bergerieId));
-
       if (cached != null && cached.isNotEmpty) {
-        final report = cached.first;
-        if (!mounted) return;
-
-        setState(() {
-          _moutons = (report['moutons'] as num?)?.toInt() ?? 0;
-          _gestations = (report['gestations'] as num?)?.toInt() ?? 0;
-          _naissances = (report['naissances'] as num?)?.toInt() ?? 0;
-          _soins = (report['soins'] as num?)?.toInt() ?? 0;
-          _interventions = (report['interventions'] as num?)?.toInt() ?? 0;
-          _alimentation = (report['alimentation'] as num?)?.toDouble() ?? 0;
-          _ventes = (report['ventes'] as num?)?.toDouble() ?? 0;
-          _depenses = (report['depenses'] as num?)?.toDouble() ?? 0;
-          _loading = false;
-          _error = null;
-        });
+        _appliquerRapport(cached.first);
         return;
       }
 
@@ -197,6 +132,88 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
         _error = 'Impossible de charger le rapport.';
       });
     }
+  }
+
+  Map<String, dynamic> _calculerRapport({
+    required DateTime debut,
+    required DateTime fin,
+    required List<Map<String, dynamic>> moutons,
+    required List<Map<String, dynamic>> gestations,
+    required List<Map<String, dynamic>> soins,
+    required List<Map<String, dynamic>> alimentations,
+    required List<Map<String, dynamic>> interventions,
+    required List<Map<String, dynamic>> finances,
+  }) {
+    int naissances = 0;
+    int gestationsEnCours = 0;
+
+    for (final data in gestations) {
+      if (data['statut']?.toString() == 'Gestante') {
+        gestationsEnCours++;
+      }
+      final date = _dateFrom(data['dateMiseBas']);
+      if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
+        naissances++;
+      }
+    }
+
+    double alimentation = 0;
+    for (final data in alimentations) {
+      final date = _dateFrom(data['date']);
+      if (date != null && !date.isBefore(debut) && date.isBefore(fin)) {
+        alimentation += (data['prix'] as num?)?.toDouble() ?? 0;
+      }
+    }
+
+    double ventes = 0;
+    double depenses = alimentation;
+    for (final data in finances) {
+      final date = _dateFrom(data['date']);
+      if (date == null || date.isBefore(debut) || !date.isBefore(fin)) continue;
+      final montant = (data['montant'] as num?)?.toDouble() ?? 0;
+      if (data['type']?.toString() == 'vente') {
+        ventes += montant;
+      } else {
+        depenses += montant;
+      }
+    }
+
+    final soinsMois = soins.where((data) {
+      final date = _dateFrom(data['date']);
+      return date != null && !date.isBefore(debut) && date.isBefore(fin);
+    }).length;
+
+    final interventionsMois = interventions.where((data) {
+      final date = _dateFrom(data['date']);
+      return date != null && !date.isBefore(debut) && date.isBefore(fin);
+    }).length;
+
+    return {
+      'moutons': moutons.where((data) => data['actif'] != false).length,
+      'gestations': gestationsEnCours,
+      'naissances': naissances,
+      'soins': soinsMois,
+      'interventions': interventionsMois,
+      'alimentation': alimentation,
+      'ventes': ventes,
+      'depenses': depenses,
+    };
+  }
+
+  void _appliquerRapport(Map<String, dynamic> report) {
+    if (!mounted) return;
+    setState(() {
+      _moutons = (report['moutons'] as num?)?.toInt() ?? 0;
+      _gestations = (report['gestations'] as num?)?.toInt() ?? 0;
+      _naissances = (report['naissances'] as num?)?.toInt() ?? 0;
+      _soins = (report['soins'] as num?)?.toInt() ?? 0;
+      _interventions = (report['interventions'] as num?)?.toInt() ?? 0;
+      _alimentation = (report['alimentation'] as num?)?.toDouble() ?? 0;
+      _ventes = (report['ventes'] as num?)?.toDouble() ?? 0;
+      _depenses = (report['depenses'] as num?)?.toDouble() ?? 0;
+      _loading = false;
+      _error = null;
+    });
   }
 
   DateTime? _dateFrom(dynamic raw) {
