@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../core/session/current_user_service.dart';
+import '../../../core/session/local_business_cache_service.dart';
 import '../../auth/services/auth_service.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
 import '../../../core/services/code_generator_service.dart';
@@ -11,13 +15,13 @@ class FirebasePaiementRepository {
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+  final LocalBusinessCacheService _cache =
+      LocalBusinessCacheService.instance;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('paiements');
 
-  //====================================================
-  // AJOUTER UN PAIEMENT
-  //====================================================
+  String _cacheKey(String bergerieId) => 'paiements_$bergerieId';
 
   Future<PaiementModel> createPaiement({
     required String clientId,
@@ -69,184 +73,148 @@ class FirebasePaiementRepository {
       dateModification: maintenant,
     );
 
-    await doc.set(paiement.toMap());
+    await _saveLocal(paiement);
+    unawaited(_synchroniserAjout(doc, paiement));
 
     return paiement;
   }
 
-  //====================================================
-  // MODIFIER
-  //====================================================
-
-  Future<void> updatePaiement(
-      PaiementModel paiement,
-      ) async {
-    await _collection.doc(paiement.id).update(
-      paiement
-          .copyWith(
-        dateModification: DateTime.now(),
-      )
-          .toMap(),
+  Future<void> updatePaiement(PaiementModel paiement) async {
+    final updated = paiement.copyWith(
+      dateModification: DateTime.now(),
     );
+
+    await _saveLocal(updated);
+    unawaited(_synchroniserModification(updated));
   }
 
-  //====================================================
-  // ANNULER
-  //====================================================
+  Future<void> annulerPaiement(String id) async {
+    final utilisateur = CurrentUserService.instance.currentUser;
+    final bergerieId = utilisateur?.bergerieId?.trim();
 
-  Future<void> annulerPaiement(
-      String id,
-      ) async {
-    await _collection.doc(id).update({
-      'actif': false,
-      'dateModification':
-      DateTime.now().toIso8601String(),
-    });
+    if (bergerieId == null || bergerieId.isEmpty) {
+      throw StateError('Aucune bergerie associée à cet utilisateur.');
+    }
+
+    final cached = await _loadLocal(bergerieId);
+    final index = cached.indexWhere((item) => item.id == id);
+
+    if (index < 0) {
+      throw StateError('Paiement introuvable dans les données locales.');
+    }
+
+    final updated = cached[index].copyWith(
+      actif: false,
+      dateModification: DateTime.now(),
+    );
+
+    await _saveLocal(updated);
+    unawaited(_synchroniserAnnulation(updated));
   }
 
-  //====================================================
-  // UN PAIEMENT
-  //====================================================
+  Future<PaiementModel?> getPaiement(String id) async {
+    try {
+      final doc = await _collection.doc(id).get();
 
-  Future<PaiementModel?> getPaiement(
-      String id,
-      ) async {
-    final doc = await _collection.doc(id).get();
+      if (!doc.exists) return null;
 
-    if (!doc.exists) {
+      final paiement = PaiementModel.fromMap(doc.data()!);
+      await _saveLocal(paiement);
+      return paiement;
+    } catch (_) {
+      final utilisateur = CurrentUserService.instance.currentUser;
+      final bergerieId = utilisateur?.bergerieId?.trim();
+      if (bergerieId == null || bergerieId.isEmpty) return null;
+
+      final cached = await _loadLocal(bergerieId);
+      for (final paiement in cached) {
+        if (paiement.id == id) return paiement;
+      }
       return null;
     }
-
-    return PaiementModel.fromMap(doc.data()!);
   }
-
-  //====================================================
-  // TOUS LES PAIEMENTS
-  //====================================================
 
   Future<List<PaiementModel>> getTousLesPaiements() async {
-    if (AuthService.instance.isAdmin ||
-        AuthService.instance.isResponsable) {
-      final snapshot = await _collection.get();
+    final utilisateur = CurrentUserService.instance.currentUser;
+    final bergerieId = utilisateur?.bergerieId?.trim();
 
-      final liste = snapshot.docs
-          .map(
-            (doc) => PaiementModel.fromMap(
-          doc.data(),
-        ),
-      )
-          .toList();
+    try {
+      List<PaiementModel> liste;
+
+      if (AuthService.instance.isAdmin ||
+          AuthService.instance.isResponsable) {
+        final snapshot = await _collection.get();
+        liste = snapshot.docs
+            .map((doc) => PaiementModel.fromMap(doc.data()))
+            .toList();
+      } else {
+        if (utilisateur == null) return [];
+
+        final clients = await FirebaseClientRepository().getClients();
+        if (clients.isEmpty) return [];
+
+        liste = await getPaiementsDuClient(clients.first.id);
+      }
 
       liste.sort(
-            (a, b) => b.datePaiement.compareTo(
-          a.datePaiement,
-        ),
+        (a, b) => b.datePaiement.compareTo(a.datePaiement),
       );
 
+      if (bergerieId != null && bergerieId.isNotEmpty) {
+        await _cache.saveList(
+          _cacheKey(bergerieId),
+          liste.map((p) => p.toMap()).toList(),
+        );
+      }
+
+      return liste;
+    } catch (_) {
+      if (bergerieId == null || bergerieId.isEmpty) return [];
+
+      final liste = await _loadLocal(bergerieId);
+      liste.sort(
+        (a, b) => b.datePaiement.compareTo(a.datePaiement),
+      );
       return liste;
     }
-
-    final utilisateur = CurrentUserService.instance.currentUser;
-
-    if (utilisateur == null) {
-      return [];
-    }
-
-    final clients =
-    await FirebaseClientRepository().getClients();
-
-    if (clients.isEmpty) {
-      return [];
-    }
-
-    final client = clients.first;
-
-    return getPaiementsDuClient(client.id);
   }
-  //====================================================
-  // PAIEMENTS D'UN CLIENT
-  //====================================================
 
-  Future<List<PaiementModel>> getPaiementsDuClient(
-      String clientId,
-      ) async {
+  Future<List<PaiementModel>> getPaiementsDuClient(String clientId) async {
     final snapshot = await _collection
         .where(
-      'clientId',
-      isEqualTo: clientId,
-    )
+          'clientId',
+          isEqualTo: clientId,
+        )
         .get();
 
     final liste = snapshot.docs
-        .map(
-          (doc) => PaiementModel.fromMap(
-        doc.data(),
-      ),
-    )
+        .map((doc) => PaiementModel.fromMap(doc.data()))
         .toList();
 
     liste.sort(
-          (a, b) =>
-          b.datePaiement.compareTo(a.datePaiement),
+      (a, b) => b.datePaiement.compareTo(a.datePaiement),
     );
 
     return liste;
   }
-
-  //====================================================
-  // PAIEMENTS ACTIFS
-  //====================================================
 
   Future<List<PaiementModel>> getPaiementsActifs() async {
-    final snapshot = await _collection
-        .where(
-      'actif',
-      isEqualTo: true,
-    )
-        .get();
-
-    final liste = snapshot.docs
-        .map(
-          (doc) => PaiementModel.fromMap(
-        doc.data(),
-      ),
-    )
-        .toList();
-
-    liste.sort(
-          (a, b) =>
-          b.datePaiement.compareTo(a.datePaiement),
-    );
-
-    return liste;
+    final liste = await getTousLesPaiements();
+    return liste.where((paiement) => paiement.actif).toList();
   }
-
-  //====================================================
-  // NOMBRE TOTAL
-  //====================================================
 
   Future<int> getNombrePaiements() async {
-    final snapshot = await _collection.get();
-    return snapshot.docs.length;
+    final liste = await getTousLesPaiements();
+    return liste.length;
   }
-
-  //====================================================
-  // REVENU TOTAL
-  //====================================================
 
   Future<double> getRevenuTotal() async {
     final liste = await getPaiementsActifs();
-
     return liste.fold<double>(
       0.0,
-          (total, paiement) =>
-      total + paiement.montantPaye,
+      (total, paiement) => total + paiement.montantPaye,
     );
   }
-
-  //====================================================
-  // REVENUS DU JOUR
-  //====================================================
 
   Future<double> getRevenuDuJour() async {
     final liste = await getPaiementsActifs();
@@ -256,25 +224,62 @@ class FirebasePaiementRepository {
     return liste
         .where(
           (paiement) =>
-      paiement.datePaiement.year ==
-          aujourdHui.year &&
-          paiement.datePaiement.month ==
-              aujourdHui.month &&
-          paiement.datePaiement.day ==
-              aujourdHui.day,
-    )
+              paiement.datePaiement.year == aujourdHui.year &&
+              paiement.datePaiement.month == aujourdHui.month &&
+              paiement.datePaiement.day == aujourdHui.day,
+        )
         .fold<double>(
-      0.0,
-          (total, paiement) =>
-      total + paiement.montantPaye,
-    );
+          0.0,
+          (total, paiement) => total + paiement.montantPaye,
+        );
   }
-
-  //====================================================
-  // RECHARGER
-  //====================================================
 
   Future<List<PaiementModel>> refresh() {
     return getTousLesPaiements();
+  }
+
+  Future<List<PaiementModel>> _loadLocal(String bergerieId) async {
+    final cached = await _cache.loadList(_cacheKey(bergerieId));
+    if (cached == null) return [];
+
+    return cached.map(PaiementModel.fromMap).toList();
+  }
+
+  Future<void> _saveLocal(PaiementModel paiement) async {
+    final cached = await _loadLocal(paiement.bergerieId);
+    final updated = [
+      ...cached.where((item) => item.id != paiement.id),
+      paiement,
+    ];
+    updated.sort((a, b) => b.datePaiement.compareTo(a.datePaiement));
+
+    await _cache.saveList(
+      _cacheKey(paiement.bergerieId),
+      updated.map((item) => item.toMap()).toList(),
+    );
+  }
+
+  Future<void> _synchroniserAjout(
+    DocumentReference<Map<String, dynamic>> doc,
+    PaiementModel paiement,
+  ) async {
+    try {
+      await doc.set(paiement.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserModification(PaiementModel paiement) async {
+    try {
+      await _collection.doc(paiement.id).set(paiement.toMap());
+    } catch (_) {}
+  }
+
+  Future<void> _synchroniserAnnulation(PaiementModel paiement) async {
+    try {
+      await _collection.doc(paiement.id).update({
+        'actif': false,
+        'dateModification': paiement.dateModification.toIso8601String(),
+      });
+    } catch (_) {}
   }
 }
