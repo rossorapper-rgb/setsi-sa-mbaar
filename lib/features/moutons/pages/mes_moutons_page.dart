@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/session/current_user_service.dart';
 import '../models/mouton_model.dart';
 import '../repository/firebase_mouton_repository.dart';
-import '../../gestation/models/gestation_model.dart';
 import '../../gestation/repositories/firebase_gestation_repository.dart';
 import 'mouton_details_page.dart';
 
@@ -86,14 +85,6 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
         _erreur = e.toString();
       });
     }
-  }
-
-  Color _couleurSexe(String sexe) {
-    return sexe.toLowerCase() == 'femelle' ? Colors.pink : Colors.blue;
-  }
-
-  IconData _iconeSexe(String sexe) {
-    return sexe.toLowerCase() == 'femelle' ? Icons.female : Icons.male;
   }
 
   Future<void> _ouvrirDetails(MoutonModel mouton) async {
@@ -388,7 +379,7 @@ class _MesMoutonsPageState extends State<MesMoutonsPage> {
         width: 58,
         height: 58,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           width: 50,
           height: 50,
           color: Colors.grey.shade100,
