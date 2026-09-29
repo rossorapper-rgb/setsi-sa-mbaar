@@ -40,16 +40,6 @@ class ParametresBergeriePage extends StatelessWidget {
             title: 'Utilisateurs',
             subtitle: 'Gérer les utilisateurs de la bergerie',
           ),
-          _SectionCard(
-            icon: Icons.pets_rounded,
-            title: 'Paramètres d’élevage',
-            subtitle: 'Règles et paramètres utilisés pour l’élevage',
-          ),
-          _SectionCard(
-            icon: Icons.notifications_active_rounded,
-            title: 'Rappels',
-            subtitle: 'Gérer les rappels de la bergerie',
-          ),
           ],
           _SectionCard(
             onTap: () => context.go('/parametres/securite'),
