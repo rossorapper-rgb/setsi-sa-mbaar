@@ -283,7 +283,16 @@ class FirebaseBergerieRepository implements BergerieRepository {
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final nom = data['nomBergerie']?.toString() ?? '';
-        if (BergerieModel.slugifier(nom) == trimmedSlug &&
+        final slugNom = BergerieModel.slugifier(nom);
+        final slugSansPrefixe = slugNom.startsWith('bergerie-')
+            ? slugNom.substring('bergerie-'.length)
+            : slugNom;
+
+        // Accepte le slug complet généré à partir du nom
+        // (ex. bergerie-test-cayor) ainsi que sa forme courte
+        // (ex. test-cayor), utilisée par certains liens d'accès.
+        if ((slugNom == trimmedSlug ||
+                slugSansPrefixe == trimmedSlug) &&
             data['active'] != false) {
           final id = data['bergerieId']?.toString().trim();
           return id != null && id.isNotEmpty ? id : doc.id;
