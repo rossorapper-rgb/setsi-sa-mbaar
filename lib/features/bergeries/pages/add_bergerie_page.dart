@@ -7,6 +7,10 @@ import '../../../core/config/public_bergerie_config.dart';
 
 import '../../clients/models/client_model.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
+import '../../utilisateurs/models/user_permissions.dart';
+import '../../utilisateurs/models/user_role.dart';
+import '../../utilisateurs/models/utilisateur_model.dart';
+import '../../utilisateurs/repository/firebase_utilisateur_repository.dart';
 
 import '../models/bergerie_model.dart';
 import '../repository/firebase_bergerie_repository.dart';
@@ -122,6 +126,8 @@ class _AddBergeriePageState
     _adresseController.dispose();
     _telephoneController.dispose();
     _responsableController.dispose();
+    _responsableTelephoneController.dispose();
+    _responsableMotDePasseController.dispose();
     _observationsController.dispose();
     super.dispose();
   }
@@ -203,6 +209,51 @@ class _AddBergeriePageState
         );
 
         await PublicBergerieConfigService.instance.save(branding);
+
+        // Une nouvelle bergerie doit disposer immédiatement de son
+        // compte Responsable principal. Les autres sous-comptes
+        // seront ensuite créés depuis les paramètres de la bergerie.
+        final responsableNomComplet =
+            _responsableController.text.trim();
+
+        final morceauxNom = responsableNomComplet
+            .split(RegExp(r'\s+'))
+            .where((element) => element.isNotEmpty)
+            .toList();
+
+        final prenom = morceauxNom.isNotEmpty
+            ? morceauxNom.first
+            : '';
+        final nom = morceauxNom.length > 1
+            ? morceauxNom.sublist(1).join(' ')
+            : '';
+
+        final responsableTelephone =
+            _responsableTelephoneController.text.trim();
+
+        final responsableUtilisateur = UtilisateurModel(
+          id: '',
+          nom: nom,
+          prenom: prenom,
+          telephone: responsableTelephone,
+          emailTechnique:
+              _utilisateurRepository.genererEmailTechnique(
+            responsableTelephone,
+          ),
+          role: UserRole.responsable,
+          bergerieId: bergerie.id,
+          actif: true,
+          dateCreation: DateTime.now(),
+          derniereConnexion: null,
+          creePar: 'Administrateur',
+          photoUrl: null,
+          permissions: createDefaultPermissions(),
+        );
+
+        await _utilisateurRepository.createUtilisateurAvecCompte(
+          responsableUtilisateur,
+          _responsableMotDePasseController.text.trim(),
+        );
       }
 
       if (!mounted) return;
@@ -367,13 +418,66 @@ class _AddBergeriePageState
                 _responsableController,
                 decoration:
                 const InputDecoration(
-                  labelText: "Responsable",
+                  labelText: "Responsable principal *",
                   prefixIcon:
                   Icon(Icons.badge),
                   border:
                   OutlineInputBorder(),
+                  helperText:
+                      "Ce responsable sera le premier compte de connexion de la bergerie.",
                 ),
+                validator: widget.isEdition
+                    ? null
+                    : (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Veuillez saisir le responsable principal";
+                        }
+                        return null;
+                      },
               ),
+
+              if (!widget.isEdition) ...[
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller:
+                      _responsableTelephoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: "Téléphone de connexion *",
+                    prefixIcon: Icon(Icons.phone),
+                    border: OutlineInputBorder(),
+                    helperText:
+                        "Ce numéro sera utilisé pour se connecter à la bergerie.",
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Veuillez saisir le téléphone du responsable";
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller:
+                      _responsableMotDePasseController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: "Mot de passe initial *",
+                    prefixIcon: Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(),
+                    helperText: "Minimum 6 caractères.",
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().length < 6) {
+                      return "Minimum 6 caractères.";
+                    }
+                    return null;
+                  },
+                ),
+              ],
 
               const SizedBox(height: 16),
 
