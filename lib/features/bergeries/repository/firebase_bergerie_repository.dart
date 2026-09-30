@@ -163,22 +163,65 @@ class FirebaseBergerieRepository implements BergerieRepository {
           .limit(1)
           .get();
 
-      if (snapshot.docs.isEmpty) return null;
+      if (snapshot.docs.isNotEmpty) {
+        final doc = snapshot.docs.first;
+        final bergerie = BergerieModel.fromMap({
+          ...doc.data(),
+          'id': doc.id,
+        });
 
-      final doc = snapshot.docs.first;
-      final bergerie = BergerieModel.fromMap({
-        ...doc.data(),
-        'id': doc.id,
-      });
+        try {
+          await _cache.saveList(
+            _cacheKey(doc.id),
+            [{...doc.data(), 'id': doc.id}],
+          );
+        } catch (_) {}
 
-      try {
-        await _cache.saveList(
-          _cacheKey(doc.id),
-          [{...doc.data(), 'id': doc.id}],
-        );
-      } catch (_) {}
+        return bergerie;
+      }
 
-      return bergerie;
+      // Compatibilité avec les bergeries créées avant l'introduction
+      // du champ slug : on recalcule le slug à partir du nom.
+      final all = await _firestore
+          .collection(_collection)
+          .get();
+
+      for (final doc in all.docs) {
+        final data = doc.data();
+        final bergerie = BergerieModel.fromMap({
+          ...data,
+          'id': doc.id,
+        });
+
+        if (bergerie.slugEffectif == trimmedSlug) {
+          try {
+            await _cache.saveList(
+              _cacheKey(doc.id),
+              [{
+                ...data,
+                'id': doc.id,
+                'slug': bergerie.slugEffectif,
+              }],
+            );
+          } catch (_) {}
+
+          // Migration douce : l'ancienne bergerie reçoit automatiquement
+          // son slug dans Firestore.
+          try {
+            await _firestore
+                .collection(_collection)
+                .doc(doc.id)
+                .set(
+              {'slug': bergerie.slugEffectif},
+              SetOptions(merge: true),
+            );
+          } catch (_) {}
+
+          return bergerie;
+        }
+      }
+
+      return null;
     } catch (_) {
       return null;
     }
