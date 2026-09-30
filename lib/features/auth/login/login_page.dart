@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/current_bergerie_config.dart';
+import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/public_bergerie_config.dart';
 import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_session_service.dart';
