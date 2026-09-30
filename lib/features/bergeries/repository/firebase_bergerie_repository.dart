@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/session/current_user_service.dart';
@@ -13,6 +15,8 @@ class FirebaseBergerieRepository implements BergerieRepository {
 
   final LocalBusinessCacheService _cache =
       LocalBusinessCacheService.instance;
+
+  static const String _allBergeriesCacheKey = 'all_bergeries';
 
   String _cacheKey(String id) => 'bergerie_$id';
 
@@ -30,10 +34,45 @@ class FirebaseBergerieRepository implements BergerieRepository {
   Future<void> updateBergerie(
       BergerieModel bergerie,
       ) async {
-    await _firestore
-        .collection(_collection)
-        .doc(bergerie.id)
-        .update(bergerie.toMap());
+    // Local-first : la modification est disponible immédiatement,
+    // même si Firebase est momentanément inaccessible.
+    try {
+      await _cache.saveList(
+        _cacheKey(bergerie.id),
+        [bergerie.toMap()],
+      );
+    } catch (_) {}
+
+    // Synchronisation Firebase en arrière-plan.
+    unawaited(
+      _firestore
+          .collection(_collection)
+          .doc(bergerie.id)
+          .set(
+            bergerie.toMap(),
+            SetOptions(merge: true),
+          )
+          .catchError((_) {}),
+    );
+
+    // Met à jour aussi le cache global utilisé par la liste Admin.
+    try {
+      final cached = await _cache.loadList(_allBergeriesCacheKey);
+      if (cached != null) {
+        final updated = cached
+            .map(
+              (item) => item['id']?.toString() == bergerie.id
+                  ? bergerie.toMap()
+                  : item,
+            )
+            .toList();
+
+        await _cache.saveList(
+          _allBergeriesCacheKey,
+          updated,
+        );
+      }
+    } catch (_) {}
   }
 
   @override
