@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/widgets/app_back_bar.dart';
+import '../../../core/config/bergerie_config.dart';
+import '../../../core/config/public_bergerie_config.dart';
 
 import '../../clients/models/client_model.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
@@ -186,6 +188,21 @@ class _AddBergeriePageState
         await _repository.updateBergerie(bergerie);
       } else {
         await _repository.addBergerie(bergerie);
+
+        // Crée immédiatement une identité publique minimale pour que
+        // l'URL /bergerie/<slug> soit disponible dès la création.
+        final branding = BergerieConfig(
+          bergerieId: bergerie.id,
+          nomBergerie: bergerie.nom,
+          nomApplication: bergerie.nom,
+          couleurPrimaire: const Color(0xFF1597B7),
+          couleurSecondaire: const Color(0xFFF59A00),
+          couleurFond: Colors.white,
+          slogan: 'Une meilleure gestion pour une meilleure bergerie',
+          active: bergerie.active,
+        );
+
+        await PublicBergerieConfigService.instance.save(branding);
       }
 
       if (!mounted) return;
