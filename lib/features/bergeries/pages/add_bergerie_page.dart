@@ -42,6 +42,8 @@ class _AddBergeriePageState
   TextEditingController();
   final _responsableController =
   TextEditingController();
+  final _responsableTelephoneController = TextEditingController();
+  final _responsableMotDePasseController = TextEditingController();
   final _observationsController =
   TextEditingController();
 
@@ -50,6 +52,9 @@ class _AddBergeriePageState
 
   final FirebaseClientRepository _clientRepository =
   FirebaseClientRepository();
+
+  final FirebaseUtilisateurRepository _utilisateurRepository =
+      FirebaseUtilisateurRepository();
 
   final Uuid _uuid = const Uuid();
 
