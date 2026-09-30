@@ -152,6 +152,38 @@ class FirebaseBergerieRepository implements BergerieRepository {
       }
     }
   }
+  Future<BergerieModel?> getBergerieBySlug(String slug) async {
+    final trimmedSlug = slug.trim().toLowerCase();
+    if (trimmedSlug.isEmpty) return null;
+
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('slug', isEqualTo: trimmedSlug)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      final doc = snapshot.docs.first;
+      final bergerie = BergerieModel.fromMap({
+        ...doc.data(),
+        'id': doc.id,
+      });
+
+      try {
+        await _cache.saveList(
+          _cacheKey(doc.id),
+          [{...doc.data(), 'id': doc.id}],
+        );
+      } catch (_) {}
+
+      return bergerie;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ====================================================
   // BERGERIES D'UN CLIENT
   // ====================================================
