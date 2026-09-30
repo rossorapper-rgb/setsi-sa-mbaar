@@ -64,6 +64,7 @@ class _AddBergeriePageState
 
   bool _isSaving = false;
   bool _isLoadingClients = true;
+  bool _connexionTelephoneModifieManuellement = false;
   @override
   void initState() {
     super.initState();
@@ -399,6 +400,18 @@ class _AddBergeriePageState
                 controller: _telephoneController,
                 keyboardType:
                 TextInputType.phone,
+                onChanged: (value) {
+                  if (!widget.isEdition &&
+                      !_connexionTelephoneModifieManuellement) {
+                    _responsableTelephoneController.value =
+                        _responsableTelephoneController.value.copyWith(
+                      text: value,
+                      selection: TextSelection.collapsed(
+                        offset: value.length,
+                      ),
+                    );
+                  }
+                },
                 decoration:
                 const InputDecoration(
                   labelText: "Téléphone",
@@ -448,6 +461,9 @@ class _AddBergeriePageState
                   controller:
                       _responsableTelephoneController,
                   keyboardType: TextInputType.phone,
+                  onChanged: (value) {
+                    _connexionTelephoneModifieManuellement = true;
+                  },
                   decoration: const InputDecoration(
                     labelText: "Téléphone de connexion *",
                     prefixIcon: Icon(Icons.phone),
