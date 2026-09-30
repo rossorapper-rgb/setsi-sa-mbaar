@@ -32,12 +32,14 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
 
   Future<void> _chargerBergerie() async {
     try {
-      final bergerie =
-          await _repository.getBergerieBySlug(widget.slug);
+      // L'accès public se fait avant authentification.
+      // On résout donc d'abord l'ID via la configuration publique.
+      final publicBergerieId =
+          await _repository.getBergerieIdByPublicSlug(widget.slug);
 
       if (!mounted) return;
 
-      if (bergerie == null || !bergerie.active) {
+      if (publicBergerieId == null || publicBergerieId.isEmpty) {
         setState(() {
           _loading = false;
           _error = 'Bergerie introuvable ou inactive.';
@@ -46,7 +48,7 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
       }
 
       setState(() {
-        _bergerieId = bergerie.id;
+        _bergerieId = publicBergerieId;
         _branding = widget.slug.trim().toLowerCase() == 'baraka'
             ? BergerieConfig.baraka()
             : null;
