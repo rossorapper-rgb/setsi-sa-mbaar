@@ -151,6 +151,9 @@ class _AddBergeriePageState
             : _uuid.v4(),
 
         clientId: _clientSelectionne!.id,
+        slug: widget.isEdition
+            ? widget.bergerie!.slugEffectif
+            : BergerieModel.slugifier(_nomController.text),
 
         nom: _nomController.text.trim(),
         adresse: _adresseController.text.trim(),
