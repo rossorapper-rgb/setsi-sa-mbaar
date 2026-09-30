@@ -13,9 +13,11 @@ class LoginPage extends StatefulWidget {
   const LoginPage({
     super.key,
     this.bergerieId,
+    this.initialBranding,
   });
 
   final String? bergerieId;
+  final BergerieConfig? initialBranding;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -33,10 +35,18 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialBranding != null) {
+      _branding = PublicBergerieConfig.fromBergerieConfig(
+        widget.initialBranding!,
+      );
+      _brandingLoading = false;
+    }
     _chargerBranding();
   }
 
   Future<void> _chargerBranding() async {
+    if (widget.initialBranding != null) return;
+
     try {
       final config =
           await PublicBergerieConfigService.instance.load(widget.bergerieId);
