@@ -21,7 +21,7 @@ FirebaseBergerieRepository();
 final FirebaseMoutonRepository _moutonRepository =
 FirebaseMoutonRepository();
 
-late Future<List<BergerieModel>> _futureBergeries;
+Future<List<BergerieModel>> _futureBergeries = Future.value(<BergerieModel>[]);
 List<BergerieModel> _bergeries = [];
 
 @override
