@@ -270,10 +270,17 @@ const SizedBox(height: 15),
 
         if (!mounted) return;
 
-        if (result == true) {
+        if (result is BergerieModel) {
           setState(() {
-            _loadBergeries();
+            _bergeries = _bergeries
+                .map(
+                  (b) => b.id == result.id ? result : b,
+                )
+                .toList();
+            _futureBergeries = Future.value(_bergeries);
           });
+        } else if (result == true) {
+          _loadBergeries();
         }
       },
       icon: const Icon(Icons.arrow_forward),
