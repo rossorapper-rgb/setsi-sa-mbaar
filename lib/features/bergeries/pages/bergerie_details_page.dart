@@ -136,8 +136,9 @@ contentPadding: EdgeInsets.zero,
 leading: const Icon(Icons.phone),
 title: const Text("Téléphone"),
 subtitle: Text(
-_client?.telephone ??
-widget.bergerie.telephone,
+widget.bergerie.telephone.isEmpty
+? "-"
+: widget.bergerie.telephone,
 ),
 ),
 
