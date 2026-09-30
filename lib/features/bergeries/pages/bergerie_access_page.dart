@@ -47,7 +47,7 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
 
       setState(() {
         _bergerieId = bergerie.id;
-        _branding = bergerie.id == BergerieConfig.baraka().bergerieId
+        _branding = widget.slug.trim().toLowerCase() == 'baraka'
             ? BergerieConfig.baraka()
             : null;
         _loading = false;
