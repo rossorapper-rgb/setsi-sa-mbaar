@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../auth/login/login_page.dart';
 import '../../../core/config/bergerie_config.dart';
+import '../../../core/config/public_bergerie_config.dart';
 import '../repository/firebase_bergerie_repository.dart';
 
 class BergerieAccessPage extends StatefulWidget {
@@ -47,11 +48,27 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
         return;
       }
 
+      final publicConfig =
+          await PublicBergerieConfigService.instance.load(
+        publicBergerieId,
+      );
+
+      final branding = BergerieConfig(
+        bergerieId: publicConfig.bergerieId,
+        nomBergerie: publicConfig.nomBergerie,
+        nomApplication: publicConfig.nomApplication,
+        logo: publicConfig.logo,
+        imageAccueil: publicConfig.imageAccueil,
+        couleurPrimaire: publicConfig.couleurPrimaire,
+        couleurSecondaire: publicConfig.couleurSecondaire,
+        couleurFond: publicConfig.couleurFond,
+        slogan: publicConfig.slogan,
+        active: publicConfig.active,
+      );
+
       setState(() {
         _bergerieId = publicBergerieId;
-        _branding = widget.slug.trim().toLowerCase() == 'baraka'
-            ? BergerieConfig.baraka()
-            : null;
+        _branding = branding;
         _loading = false;
       });
     } catch (_) {
