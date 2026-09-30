@@ -23,7 +23,11 @@ class InterventionsPage extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/dashboard/bergerie'),
+          onPressed: () => context.go(
+            CurrentUserService.instance.isAdmin
+                ? '/dashboard/admin'
+                : '/dashboard/bergerie',
+          ),
         ),
         title: const Text('Interventions'),
       ),
