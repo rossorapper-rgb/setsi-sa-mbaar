@@ -128,6 +128,12 @@ class PublicBergerieConfigService {
     }
 
     if (!snapshot.exists || snapshot.data() == null) {
+      if (id == BergerieConfig.baraka().bergerieId) {
+        return PublicBergerieConfig.fromBergerieConfig(
+          BergerieConfig.baraka(),
+        );
+      }
+
       return id == PublicBergerieConfig.defaut().bergerieId
           ? PublicBergerieConfig.defaut()
           : PublicBergerieConfig(
