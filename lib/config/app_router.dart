@@ -9,6 +9,7 @@ import '../features/dashboard/bergerie/bergerie_dashboard_page.dart';
 import '../features/clients/pages/clients_page.dart';
 import '../features/clients/pages/add_client_page.dart';
 import '../features/bergeries/pages/bergeries_page.dart';
+import '../features/bergeries/pages/bergerie_access_page.dart';
 import '../features/moutons/pages/mes_moutons_page.dart';
 import '../features/moutons/pages/add_mouton_page.dart';
 import '../features/interventions/pages/interventions_page.dart';
@@ -205,8 +206,11 @@ final GoRouter appRouter = GoRouter(
     final session = CurrentUserService.instance;
     final isLogin = state.matchedLocation == '/login';
 
+    final isBergerieAccess = state.matchedLocation.startsWith('/bergerie/');
+
     if (!session.isLoggedIn) {
-      return isLogin ? null : '/login';
+      if (isLogin || isBergerieAccess) return null;
+      return '/login';
     }
 
     if (isLogin) {
@@ -216,6 +220,12 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
+    GoRoute(
+      path: '/bergerie/:slug',
+      builder: (context, state) => BergerieAccessPage(
+        slug: state.pathParameters['slug'] ?? '',
+      ),
+    ),
     GoRoute(
       path: '/login',
       builder: (context, state) => LoginPage(
