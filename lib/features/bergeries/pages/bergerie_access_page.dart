@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../auth/login/login_page.dart';
+import '../../../core/config/bergerie_config.dart';
 import '../repository/firebase_bergerie_repository.dart';
 
 class BergerieAccessPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
       FirebaseBergerieRepository();
 
   String? _bergerieId;
+  BergerieConfig? _branding;
   bool _loading = true;
   String? _error;
 
@@ -45,6 +47,9 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
 
       setState(() {
         _bergerieId = bergerie.id;
+        _branding = bergerie.id == BergerieConfig.baraka().bergerieId
+            ? BergerieConfig.baraka()
+            : null;
         _loading = false;
       });
     } catch (_) {
@@ -78,6 +83,9 @@ class _BergerieAccessPageState extends State<BergerieAccessPage> {
       );
     }
 
-    return LoginPage(bergerieId: _bergerieId);
+    return LoginPage(
+      bergerieId: _bergerieId,
+      initialBranding: _branding,
+    );
   }
 }
