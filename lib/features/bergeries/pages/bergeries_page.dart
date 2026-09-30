@@ -21,7 +21,7 @@ FirebaseBergerieRepository();
 final FirebaseMoutonRepository _moutonRepository =
 FirebaseMoutonRepository();
 
-Future<List<BergerieModel>> _futureBergeries = Future.value(<BergerieModel>[]);
+Future<List<BergerieModel>>? _futureBergeries;
 List<BergerieModel> _bergeries = [];
 
 @override
@@ -79,7 +79,9 @@ onPressed: _ouvrirAjout,
 icon: const Icon(Icons.add),
 label: const Text("Nouvelle"),
 ),
-body: FutureBuilder<List<BergerieModel>>(
+body: _futureBergeries == null
+      ? const Center(child: CircularProgressIndicator())
+      : FutureBuilder<List<BergerieModel>>(
 future: _futureBergeries,
 builder: (context, snapshot) {
 if (snapshot.connectionState ==
