@@ -127,13 +127,26 @@ class PublicBergerieConfigService {
           .get(const GetOptions(source: Source.cache));
     }
 
-    if (!snapshot.exists || snapshot.data() == null) {
-      if (id == BergerieConfig.baraka().bergerieId) {
+    if (id == BergerieConfig.baraka().bergerieId) {
+      final config = snapshot.exists && snapshot.data() != null
+          ? PublicBergerieConfig.fromMap(snapshot.data()!)
+          : null;
+
+      // Baraka est notre bergerie modèle : tant que sa configuration
+      // publique n'a pas été personnalisée, on utilise son identité dédiée.
+      if (config == null ||
+          config.nomApplication.trim().isEmpty ||
+          config.nomApplication.trim() ==
+              PublicBergerieConfig.defaut().nomApplication) {
         return PublicBergerieConfig.fromBergerieConfig(
           BergerieConfig.baraka(),
         );
       }
 
+      return config;
+    }
+
+    if (!snapshot.exists || snapshot.data() == null) {
       return id == PublicBergerieConfig.defaut().bergerieId
           ? PublicBergerieConfig.defaut()
           : PublicBergerieConfig(
