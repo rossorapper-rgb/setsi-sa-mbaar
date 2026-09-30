@@ -227,6 +227,39 @@ class FirebaseBergerieRepository implements BergerieRepository {
     }
   }
 
+  /// Résout une URL publique sans authentification.
+  ///
+  /// La collection bergerie_public_config est lisible publiquement
+  /// par les règles Firestore. On utilise donc son nom pour résoudre
+  /// le slug avant la connexion de l'utilisateur.
+  Future<String?> getBergerieIdByPublicSlug(String slug) async {
+    final trimmedSlug = slug.trim().toLowerCase();
+    if (trimmedSlug.isEmpty) return null;
+
+    try {
+      final snapshot = await _firestore
+          .collection('bergerie_public_config')
+          .get();
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final nom = data['nomBergerie']?.toString() ?? '';
+        if (BergerieModel.slugifier(nom) == trimmedSlug &&
+            data['active'] != false) {
+          final id = data['bergerieId']?.toString().trim();
+          return id != null && id.isNotEmpty ? id : doc.id;
+        }
+      }
+    } catch (_) {}
+
+    // Compatibilité immédiate avec la bergerie modèle.
+    if (trimmedSlug == 'baraka') {
+      return '8e870f6d-1f3a-4ce8-b1d6-2dff3be364b3';
+    }
+
+    return null;
+  }
+
   // ====================================================
   // BERGERIES D'UN CLIENT
   // ====================================================
