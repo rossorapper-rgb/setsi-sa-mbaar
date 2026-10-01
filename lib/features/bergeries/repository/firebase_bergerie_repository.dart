@@ -114,7 +114,7 @@ class FirebaseBergerieRepository implements BergerieRepository {
       // Migration automatique des anciennes bergeries : si une bergerie
       // existe sans configuration publique, on crée sa configuration
       // manquante lorsque l'administrateur ouvre la liste.
-      unawaited(_creerConfigsPubliquesManquantes(bergeries));
+      unawaited(creerConfigsPubliquesManquantes(bergeries));
 
       return bergeries;
     }
