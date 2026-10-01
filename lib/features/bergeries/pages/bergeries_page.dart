@@ -32,6 +32,10 @@ _loadBergeries();
 
 Future<void> _loadBergeries() async {
   final liste = await _repository.getAllBergeries();
+
+  // Répare immédiatement les configurations publiques manquantes
+  // pour toutes les bergeries visibles par l'administrateur.
+  await _repository.creerConfigsPubliquesManquantes(liste);
   if (!mounted) return;
   setState(() {
     _bergeries = liste;
