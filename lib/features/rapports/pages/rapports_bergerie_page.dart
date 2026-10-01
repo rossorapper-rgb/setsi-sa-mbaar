@@ -310,7 +310,7 @@ class _RapportsBergeriePageState extends State<RapportsBergeriePage> {
     final solde = _ventes - _depenses;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: config.couleurPrimaire,
         foregroundColor: Colors.white,
