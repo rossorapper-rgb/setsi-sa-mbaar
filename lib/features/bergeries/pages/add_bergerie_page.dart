@@ -210,7 +210,10 @@ class _AddBergeriePageState
         final updatedPublicConfig = BergerieConfig(
           bergerieId: bergerie.id,
           nomBergerie: bergerie.nom,
-          nomApplication: publicConfig.nomApplication.trim().isEmpty
+          nomApplication: publicConfig.nomApplication.trim().isEmpty ||
+                  publicConfig.nomApplication.trim() == 'SET\'SI' ||
+                  publicConfig.nomApplication.trim() ==
+                      PublicBergerieConfig.defaut().nomApplication
               ? bergerie.nom
               : publicConfig.nomApplication,
           logo: publicConfig.logo,
