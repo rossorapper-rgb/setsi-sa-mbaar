@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/session/current_user_service.dart';
 import '../../../core/session/local_business_cache_service.dart';
@@ -148,24 +149,23 @@ class FirebaseBergerieRepository implements BergerieRepository {
   Future<void> _creerConfigsPubliquesManquantes(
       List<BergerieModel> bergeries,
       ) async {
-    try {
-      final snapshot = await _firestore
-          .collection('bergerie_public_config')
-          .get();
+    // On traite chaque bergerie indépendamment. Cela évite qu'une erreur
+    // sur une ancienne configuration empêche les autres migrations.
+    for (final bergerie in bergeries) {
+      try {
+        final configRef = _firestore
+            .collection('bergerie_public_config')
+            .doc(bergerie.id);
 
-      final idsExistants = snapshot.docs
-          .map((doc) => doc.id)
-          .toSet();
-
-      for (final bergerie in bergeries) {
-        if (idsExistants.contains(bergerie.id)) {
+        // On vérifie uniquement le document attendu au lieu de lire toute
+        // la collection. La migration reste ainsi robuste même si les
+        // règles ou l'indexation de la collection évoluent.
+        final existing = await configRef.get();
+        if (existing.exists) {
           continue;
         }
 
-        await _firestore
-            .collection('bergerie_public_config')
-            .doc(bergerie.id)
-            .set({
+        await configRef.set({
           'bergerieId': bergerie.id,
           'nomBergerie': bergerie.nom,
           'nomApplication': bergerie.nom,
@@ -177,12 +177,23 @@ class FirebaseBergerieRepository implements BergerieRepository {
           'slogan': 'Une meilleure gestion pour une meilleure bergerie',
           'active': bergerie.active,
         });
+
+        debugPrint(
+          'CONFIG PUBLIQUE CRÉÉE : ' + bergerie.nom + ' (' + bergerie.id + ')',
+        );
+      } catch (e, stackTrace) {
+        // La migration ne doit jamais bloquer l'affichage de la liste Admin,
+        // mais l'erreur doit être visible pour pouvoir corriger la cause.
+        debugPrint(
+          'ERREUR CONFIG PUBLIQUE [' + bergerie.nom + ' / ' + bergerie.id + '] : ' + e.toString(),
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+          label: 'STACK TRACE CONFIG PUBLIQUE',
+        );
       }
-    } catch (_) {
-      // La migration ne doit jamais bloquer l'affichage de la liste Admin.
     }
   }
-
   @override
   Future<BergerieModel?> getBergerieById(
       String id,
