@@ -10,28 +10,34 @@ class SetsiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // La configuration a été chargée au démarrage de l'application
-    // selon le bergerieId de l'utilisateur connecté.
-    final bergerieConfig = CurrentBergerieConfig.instance.config;
+    return AnimatedBuilder(
+      animation: CurrentBergerieConfig.instance,
+      builder: (context, _) {
+        // La configuration est chargée au démarrage selon le bergerieId
+        // de l'utilisateur connecté. Le même écouteur permet aussi de
+        // reconstruire immédiatement le thème après une personnalisation.
+        final bergerieConfig = CurrentBergerieConfig.instance.config;
 
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: bergerieConfig.nomApplication,
-      theme: AppTheme.lightThemeForBergerie(bergerieConfig),
-      routerConfig: appRouter,
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: bergerieConfig.nomApplication,
+          theme: AppTheme.lightThemeForBergerie(bergerieConfig),
+          routerConfig: appRouter,
 
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
 
-      supportedLocales: const [
-        Locale('fr', 'FR'),
-        Locale('en', 'US'),
-      ],
+          supportedLocales: const [
+            Locale('fr', 'FR'),
+            Locale('en', 'US'),
+          ],
 
-      locale: const Locale('fr', 'FR'),
+          locale: const Locale('fr', 'FR'),
+        );
+      },
     );
   }
 }
