@@ -146,7 +146,7 @@ class FirebaseBergerieRepository implements BergerieRepository {
     return [];
   }
 
-  Future<void> _creerConfigsPubliquesManquantes(
+  Future<void> creerConfigsPubliquesManquantes(
       List<BergerieModel> bergeries,
       ) async {
     // On traite chaque bergerie indépendamment. Cela évite qu'une erreur
