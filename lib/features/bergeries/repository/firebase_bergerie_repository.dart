@@ -101,7 +101,7 @@ class FirebaseBergerieRepository implements BergerieRepository {
               .collection(_collection)
               .get();
 
-      return snapshot.docs
+      final bergeries = snapshot.docs
           .map(
             (doc) => BergerieModel.fromMap({
           ...doc.data(),
@@ -109,6 +109,13 @@ class FirebaseBergerieRepository implements BergerieRepository {
         }),
       )
           .toList();
+
+      // Migration automatique des anciennes bergeries : si une bergerie
+      // existe sans configuration publique, on crée sa configuration
+      // manquante lorsque l'administrateur ouvre la liste.
+      unawaited(_creerConfigsPubliquesManquantes(bergeries));
+
+      return bergeries;
     }
 
     // Un responsable ou un technicien ne consulte que sa bergerie.
@@ -136,6 +143,44 @@ class FirebaseBergerieRepository implements BergerieRepository {
 
     // Les autres profils ne doivent pas accéder à la liste générale.
     return [];
+  }
+
+  Future<void> _creerConfigsPubliquesManquantes(
+      List<BergerieModel> bergeries,
+      ) async {
+    try {
+      final snapshot = await _firestore
+          .collection('bergerie_public_config')
+          .get();
+
+      final idsExistants = snapshot.docs
+          .map((doc) => doc.id)
+          .toSet();
+
+      for (final bergerie in bergeries) {
+        if (idsExistants.contains(bergerie.id)) {
+          continue;
+        }
+
+        await _firestore
+            .collection('bergerie_public_config')
+            .doc(bergerie.id)
+            .set({
+          'bergerieId': bergerie.id,
+          'nomBergerie': bergerie.nom,
+          'nomApplication': bergerie.nom,
+          'logo': null,
+          'imageAccueil': null,
+          'couleurPrimaire': 0xFF1597B7,
+          'couleurSecondaire': 0xFFF59A00,
+          'couleurFond': 0xFFFFFFFF,
+          'slogan': 'Une meilleure gestion pour une meilleure bergerie',
+          'active': bergerie.active,
+        });
+      }
+    } catch (_) {
+      // La migration ne doit jamais bloquer l'affichage de la liste Admin.
+    }
   }
 
   @override
