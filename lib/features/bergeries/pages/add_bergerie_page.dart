@@ -198,6 +198,31 @@ class _AddBergeriePageState
 
       if (widget.isEdition) {
         await _repository.updateBergerie(bergerie);
+
+        // La configuration publique doit toujours rester synchronisée
+        // avec les informations essentielles de la bergerie.
+        // On conserve les personnalisations existantes (logo, couleurs,
+        // image d'accueil, slogan...) et on met seulement à jour
+        // l'identité de la bergerie et son statut.
+        final publicConfig =
+            await PublicBergerieConfigService.instance.load(bergerie.id);
+
+        final updatedPublicConfig = BergerieConfig(
+          bergerieId: bergerie.id,
+          nomBergerie: bergerie.nom,
+          nomApplication: publicConfig.nomApplication.trim().isEmpty
+              ? bergerie.nom
+              : publicConfig.nomApplication,
+          logo: publicConfig.logo,
+          imageAccueil: publicConfig.imageAccueil,
+          couleurPrimaire: publicConfig.couleurPrimaire,
+          couleurSecondaire: publicConfig.couleurSecondaire,
+          couleurFond: publicConfig.couleurFond,
+          slogan: publicConfig.slogan,
+          active: bergerie.active,
+        );
+
+        await PublicBergerieConfigService.instance.save(updatedPublicConfig);
       } else {
         await _repository.addBergerie(bergerie);
 
