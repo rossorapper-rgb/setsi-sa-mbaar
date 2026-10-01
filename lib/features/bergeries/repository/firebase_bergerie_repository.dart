@@ -275,30 +275,48 @@ class FirebaseBergerieRepository implements BergerieRepository {
     final trimmedSlug = slug.trim().toLowerCase();
     if (trimmedSlug.isEmpty) return null;
 
-    try {
+    Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> chargerConfigs(
+      Source source,
+    ) async {
       final snapshot = await _firestore
           .collection('bergerie_public_config')
-          .get();
+          .get(GetOptions(source: source));
+      return snapshot.docs;
+    }
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final nom = data['nomBergerie']?.toString() ?? '';
-        final slugNom = BergerieModel.slugifier(nom);
-        final slugSansPrefixe = slugNom.startsWith('bergerie-')
-            ? slugNom.substring('bergerie-'.length)
-            : slugNom;
-
-        // Accepte le slug complet généré à partir du nom
-        // (ex. bergerie-test-cayor) ainsi que sa forme courte
-        // (ex. test-cayor), utilisée par certains liens d'accès.
-        if ((slugNom == trimmedSlug ||
-                slugSansPrefixe == trimmedSlug) &&
-            data['active'] != false) {
-          final id = data['bergerieId']?.toString().trim();
-          return id != null && id.isNotEmpty ? id : doc.id;
-        }
+    // La configuration publique est lisible sans authentification.
+    // On privilégie le serveur, puis le cache Firestore si le serveur
+    // n'est momentanément pas disponible (notamment juste après
+    // une déconnexion ou hors connexion).
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs = [];
+    try {
+      docs = await chargerConfigs(Source.server);
+    } catch (_) {
+      try {
+        docs = await chargerConfigs(Source.cache);
+      } catch (_) {
+        docs = [];
       }
-    } catch (_) {}
+    }
+
+    for (final doc in docs) {
+      final data = doc.data();
+      final nom = data['nomBergerie']?.toString() ?? '';
+      final slugNom = BergerieModel.slugifier(nom);
+      final slugSansPrefixe = slugNom.startsWith('bergerie-')
+          ? slugNom.substring('bergerie-'.length)
+          : slugNom;
+
+      // Accepte le slug complet généré à partir du nom
+      // (ex. bergerie-test-cayor) ainsi que sa forme courte
+      // (ex. test-cayor), utilisée par certains liens d'accès.
+      if ((slugNom == trimmedSlug ||
+              slugSansPrefixe == trimmedSlug) &&
+          data['active'] != false) {
+        final id = data['bergerieId']?.toString().trim();
+        return id != null && id.isNotEmpty ? id : doc.id;
+      }
+    }
 
     // Compatibilité immédiate avec la bergerie modèle.
     if (trimmedSlug == 'baraka') {
