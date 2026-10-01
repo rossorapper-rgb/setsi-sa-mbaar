@@ -225,10 +225,9 @@ class BergerieDrawer extends StatelessWidget {
                       ).toString()
                     : '/login';
 
-                Router.neglect(
-                  context,
-                  () => context.go(loginUri),
-                );
+                // Remplace directement la route actuelle pour éviter
+                // de rester sur /bergerie/:slug après la déconnexion.
+                context.replace(loginUri);
               },
             ),
           ],
