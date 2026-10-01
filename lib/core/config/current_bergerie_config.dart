@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-import '../config/bergerie_config.dart';
 import 'bergerie_config.dart';
 import 'firebase_bergerie_config_repository.dart';
 
