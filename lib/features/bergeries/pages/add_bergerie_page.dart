@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/widgets/app_back_bar.dart';
 import '../../../core/config/bergerie_config.dart';
 import '../../../core/config/public_bergerie_config.dart';
+import '../../../core/config/firebase_bergerie_config_repository.dart';
 
 import '../../clients/models/client_model.dart';
 import '../../clients/repositories/firebase_client_repository.dart';
@@ -52,6 +53,9 @@ class _AddBergeriePageState
 
   final FirebaseClientRepository _clientRepository =
   FirebaseClientRepository();
+
+  final FirebaseBergerieConfigRepository _bergerieConfigRepository =
+      FirebaseBergerieConfigRepository();
 
   final FirebaseUtilisateurRepository _utilisateurRepository =
       FirebaseUtilisateurRepository();
@@ -243,6 +247,25 @@ class _AddBergeriePageState
         );
 
         await PublicBergerieConfigService.instance.save(branding);
+
+        // Crée aussi la configuration interne utilisée après connexion.
+        // Elle permet au tableau de bord et aux pages de la bergerie
+        // d'utiliser immédiatement son identité au lieu de la configuration
+        // générique SET'SI.
+        final configInterne = BergerieConfig(
+          bergerieId: bergerie.id,
+          nomBergerie: bergerie.nom,
+          nomApplication: bergerie.nom,
+          couleurPrimaire: const Color(0xFF1597B7),
+          couleurSecondaire: const Color(0xFFF59A00),
+          couleurFond: Colors.white,
+          slogan: 'Une meilleure gestion pour une meilleure bergerie',
+          telephone: bergerie.telephone,
+          adresse: bergerie.adresse,
+          active: bergerie.active,
+        );
+
+        await _bergerieConfigRepository.save(configInterne);
 
         // Une nouvelle bergerie doit disposer immédiatement de son
         // compte Responsable principal. Les autres sous-comptes
