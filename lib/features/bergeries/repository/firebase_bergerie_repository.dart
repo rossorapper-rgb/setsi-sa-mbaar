@@ -179,13 +179,13 @@ class FirebaseBergerieRepository implements BergerieRepository {
         });
 
         debugPrint(
-          'CONFIG PUBLIQUE CRÉÉE : ' + bergerie.nom + ' (' + bergerie.id + ')',
+          'CONFIG PUBLIQUE CRÉÉE : ${bergerie.nom} (${bergerie.id})',
         );
       } catch (e, stackTrace) {
         // La migration ne doit jamais bloquer l'affichage de la liste Admin,
         // mais l'erreur doit être visible pour pouvoir corriger la cause.
         debugPrint(
-          'ERREUR CONFIG PUBLIQUE [' + bergerie.nom + ' / ' + bergerie.id + '] : ' + e.toString(),
+          'ERREUR CONFIG PUBLIQUE [${bergerie.nom} / ${bergerie.id}] : ${e.toString()}',
         );
         debugPrintStack(
           stackTrace: stackTrace,
