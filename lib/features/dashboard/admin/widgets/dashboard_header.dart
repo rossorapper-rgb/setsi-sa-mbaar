@@ -77,7 +77,7 @@ class DashboardHeader extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     Text(
-                      "Bienvenue sur votre espace de gestion SET'SI SA MBAAR.",
+                      "Bienvenue sur votre espace d'administration SET'SI SA MBAAR.",
                       style: AppTextStyles.body.copyWith(
                         color: AppColors.subtitle,
                       ),
@@ -181,7 +181,7 @@ class DashboardHeader extends StatelessWidget {
                 filled: true,
                 fillColor: const Color(0xffF7F8FC),
                 hintText:
-                "Rechercher un client, un mouton, une intervention...",
+                "Rechercher un client ou une bergerie...",
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
