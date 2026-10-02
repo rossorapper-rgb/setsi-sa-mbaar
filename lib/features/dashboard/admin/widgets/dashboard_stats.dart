@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:setsi_sa_mbaar/core/session/current_user_service.dart';
 import 'package:setsi_sa_mbaar/core/theme/app_colors.dart';
 import 'package:setsi_sa_mbaar/core/widgets/stat_card.dart';
-import 'package:setsi_sa_mbaar/features/utilisateurs/models/user_role.dart';
 import 'package:setsi_sa_mbaar/providers/dashboard_provider.dart';
 
 class DashboardStats extends ConsumerWidget {
@@ -13,158 +11,52 @@ class DashboardStats extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dashboardAsync = ref.watch(dashboardProvider);
-
-    return dashboardAsync.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(30),
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      error: (error, stackTrace) => Card(
+    return ref.watch(dashboardProvider).when(
+      loading: () => const Center(child: Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator())),
+      error: (error, _) => Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.error_outline, color: Colors.red),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "Impossible de charger les statistiques.\nErreur : $error",
-                ),
-              ),
-              IconButton(
-                onPressed: () => ref.invalidate(dashboardProvider),
-                icon: const Icon(Icons.refresh),
-                tooltip: "Réessayer",
-              ),
+              Expanded(child: Text("Impossible de charger les statistiques.\nErreur : $error")),
+              IconButton(onPressed: () => ref.invalidate(dashboardProvider), icon: const Icon(Icons.refresh)),
             ],
           ),
         ),
       ),
       data: (dashboard) {
-        final role = CurrentUserService.instance.role;
-        final List<_DashboardStatData> cards;
-
-        if (role == UserRole.client) {
-          cards = [
-            _DashboardStatData(
-              title: "Mes moutons",
-              value: dashboard.moutons.toString(),
-              subtitle: "Moutons enregistrés",
-              icon: Icons.pets_rounded,
-              color: AppColors.info,
-              route: "/moutons",
-            ),
-            _DashboardStatData(
-              title: "Mes gestations",
-              value: dashboard.gestations.toString(),
-              subtitle: "Gestations en cours",
-              icon: Icons.favorite_rounded,
-              color: Colors.orange,
-              route: "/gestations",
-            ),
-            _DashboardStatData(
-              title: "Mes interventions",
-              value: dashboard.interventions.toString(),
-              subtitle: "Interventions",
-              icon: Icons.medical_services_rounded,
-              color: AppColors.warning,
-              route: "/interventions",
-            ),
-            _DashboardStatData(
-              title: "Mes paiements",
-              value: dashboard.revenusFormat,
-              subtitle: "Paiements enregistrés",
-              icon: Icons.payments_rounded,
-              color: AppColors.success,
-              route: "/paiements",
-            ),
-          ];
-        } else {
-          cards = [
-            _DashboardStatData(
-              title: "Moutons",
-              value: dashboard.moutons.toString(),
-              subtitle: "Votre troupeau",
-              icon: Icons.pets_rounded,
-              color: AppColors.info,
-              route: "/bergeries",
-            ),
-            _DashboardStatData(
-              title: "Gestations",
-              value: dashboard.gestations.toString(),
-              subtitle: "En cours",
-              icon: Icons.favorite_rounded,
-              color: Colors.orange,
-              route: "/gestations",
-            ),
-            _DashboardStatData(
-              title: "À surveiller",
-              value: "0",
-              subtitle: "Aucune alerte",
-              icon: Icons.medical_services_rounded,
-              color: AppColors.warning,
-              route: "/interventions",
-            ),
-            _DashboardStatData(
-              title: "Alimentation",
-              value: "OK",
-              subtitle: "Stocks à vérifier",
-              icon: Icons.grass_rounded,
-              color: Colors.orange,
-              route: "/interventions",
-            ),
-          ];
-        }
+        final cards = [
+          _Stat("Clients", dashboard.clients, "Clients enregistrés", Icons.people_alt_rounded, AppColors.info, "/clients"),
+          _Stat("Clients actifs", dashboard.clientsActifs, "Clients actifs", Icons.person_rounded, AppColors.success, "/clients"),
+          _Stat("Bergeries", dashboard.bergeries, "Bergeries enregistrées", Icons.home_work_rounded, AppColors.primary, "/bergeries"),
+          _Stat("Bergeries actives", dashboard.bergeriesActives, "Bergeries actives", Icons.home_work_rounded, AppColors.warning, "/bergeries"),
+        ];
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final int crossAxisCount;
-
-            if (width >= 1250) {
-              crossAxisCount = 4;
-            } else if (width >= 780) {
-              crossAxisCount = 3;
-            } else if (width >= 520) {
-              crossAxisCount = 2;
-            } else {
-              crossAxisCount = 1;
-            }
-
-            // Hauteur explicite pour éviter tout débordement vertical.
-            final mainAxisExtent = switch (crossAxisCount) {
-              1 => 92.0,
-              2 => 112.0,
-              3 => 112.0,
-              _ => 112.0,
-            };
-
+            final columns = constraints.maxWidth >= 1250 ? 4 : constraints.maxWidth >= 780 ? 3 : constraints.maxWidth >= 520 ? 2 : 1;
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: cards.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
+                crossAxisCount: columns,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                mainAxisExtent: mainAxisExtent,
+                mainAxisExtent: constraints.maxWidth < 520 ? 92 : 112,
               ),
               itemBuilder: (context, index) {
                 final card = cards[index];
                 return StatCard(
                   title: card.title,
-                  value: card.value,
+                  value: card.value.toString(),
                   subtitle: card.subtitle,
                   evolution: "",
                   icon: card.icon,
                   color: card.color,
-                  onTap: card.route == null
-                      ? null
-                      : () => context.go(card.route!),
+                  onTap: () => context.go(card.route),
                 );
               },
             );
@@ -175,20 +67,13 @@ class DashboardStats extends ConsumerWidget {
   }
 }
 
-class _DashboardStatData {
+class _Stat {
   final String title;
-  final String value;
+  final int value;
   final String subtitle;
   final IconData icon;
   final Color color;
-  final String? route;
+  final String route;
 
-  const _DashboardStatData({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    this.route,
-  });
+  const _Stat(this.title, this.value, this.subtitle, this.icon, this.color, this.route);
 }
