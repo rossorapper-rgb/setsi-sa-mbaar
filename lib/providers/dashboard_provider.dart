@@ -46,13 +46,8 @@ final dashboardProvider = FutureProvider<DashboardState>((ref) async {
     );
   }
 
-  final results = await Future.wait([
-    FirebaseClientRepository().getClients(),
-    FirebaseBergerieRepository().getAllBergeries(),
-  ]);
-
-  final clients = results[0];
-  final bergeries = results[1];
+  final clients = await FirebaseClientRepository().getClients();
+  final bergeries = await FirebaseBergerieRepository().getAllBergeries();
 
   return DashboardState(
     clients: clients.length,
