@@ -232,7 +232,7 @@ final GoRouter appRouter = GoRouter(
         bergerieId: _loginBergerieId(state),
       ),
     ),
-    GoRoute(path: '/dashboard/admin', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const DashboardAdminPage()),
+    GoRoute(path: '/dashboard/admin', redirect: (context, state) => _adminOnlyRedirect(), builder: (context, state) => const DashboardAdminPage()),
     GoRoute(path: '/dashboard/bergerie', redirect: (context, state) => _sessionRedirect(), builder: (context, state) => const BergerieDashboardPage()),
     GoRoute(path: '/clients', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const ClientsPage()),
     GoRoute(path: '/clients/add', redirect: (context, state) => _adminOrResponsableRedirect(), builder: (context, state) => const AddClientPage()),
