@@ -50,6 +50,23 @@ class FirebaseMoutonRepository {
       ],
     );
 
+    // Si le nom de la brebis change, les gestations doivent conserver
+    // le même nom que la fiche du mouton. On met d'abord à jour le cache
+    // local, puis Firestore en arrière-plan afin de rester fonctionnel
+    // immédiatement hors connexion.
+    final ancienNom = cached
+        .where((item) => item['id']?.toString() == mouton.id)
+        .map((item) => item['nom']?.toString() ?? '')
+        .firstOrNull;
+
+    if (ancienNom != null && ancienNom != mouton.nom) {
+      await _mettreAJourNomBrebisDansGestations(
+        moutonId: mouton.id,
+        bergerieId: mouton.bergerieId,
+        nouveauNom: mouton.nom,
+      );
+    }
+
     // set() permet aussi de fonctionner hors ligne si le document n'est
     // pas encore présent dans le cache local.
     unawaited(
@@ -58,6 +75,57 @@ class FirebaseMoutonRepository {
           .doc(mouton.id)
           .set(mouton.toMap()),
     );
+  }
+
+  /// Maintient le nom de la brebis synchronisé dans les gestations
+  /// qui lui sont rattachées.
+  Future<void> _mettreAJourNomBrebisDansGestations({
+    required String moutonId,
+    required String bergerieId,
+    required String nouveauNom,
+  }) async {
+    final key = 'gestations_$bergerieId';
+    final cached = await _cache.loadList(key);
+
+    if (cached != null) {
+      final updated = cached.map((item) {
+        final current = Map<String, dynamic>.from(item);
+        if (current['brebisId']?.toString() == moutonId) {
+          current['nomFemelle'] = nouveauNom;
+          current['dateModification'] =
+              Timestamp.fromDate(DateTime.now());
+        }
+        return current;
+      }).toList();
+
+      await _cache.saveList(key, updated);
+    }
+
+    unawaited(() async {
+      try {
+        final snapshot = await _firestore
+            .collection('gestations')
+            .where('brebisId', isEqualTo: moutonId)
+            .where('bergerieId', isEqualTo: bergerieId)
+            .get();
+
+        if (snapshot.docs.isEmpty) return;
+
+        final batch = _firestore.batch();
+
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {
+            'nomFemelle': nouveauNom,
+            'dateModification': Timestamp.fromDate(DateTime.now()),
+          });
+        }
+
+        await batch.commit();
+      } catch (_) {
+        // Firestore conserve les écritures locales et les synchronisera
+        // dès que la connexion revient.
+      }
+    }());
   }
 
   /// Archiver un mouton localement puis synchroniser.
