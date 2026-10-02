@@ -54,13 +54,15 @@ class _BergerieDetailsPageState extends State<BergerieDetailsPage> {
       ),
     );
 
-    if (result is BergerieModel && context.mounted) {
+    if (!mounted) return;
+
+    if (result is BergerieModel) {
       Navigator.pop(context, result);
     }
   }
 
   void _ouvrirApplication() {
-    context.push('/bergerie/' + widget.bergerie.slugEffectif);
+    context.push('/bergerie/${widget.bergerie.slugEffectif}');
   }
 
   @override
